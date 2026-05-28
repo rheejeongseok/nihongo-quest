@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 192.168.0.114 -p 3001",
-    "build": "next build",
+    "build": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "next start",
     "lint": "next lint"
   },
