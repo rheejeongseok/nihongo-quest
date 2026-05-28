@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 // https://news.web.nhk/newsweb 참조 할 사이트
 
@@ -8,24 +9,33 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
-    // 0. Vercel 런타임 (/tmp/dev.db) 스키마 테이블 미존재 시 자가 복구 푸시
+    // 0. Vercel 런타임 (/tmp/dev.db) 스키마 테이블 미존재 시 자가 복구 (빌드된 SQLite 파일 복제)
     try {
       await prisma.user.findFirst();
     } catch (dbError) {
-      console.log("[SEED ENGINE] 테이블이 존재하지 않거나 DB가 초기화되지 않았습니다. 실시간 스키마 푸시를 진행합니다...");
+      console.log("[SEED ENGINE] 테이블이 존재하지 않거나 DB가 초기화되지 않았습니다. 빌드된 SQLite 템플릿 복사를 진행합니다...");
       try {
-        execSync('npx prisma db push --accept-data-loss', {
-          env: {
-            ...process.env,
-            DATABASE_URL: process.env.DATABASE_URL || 'file:./dev.db'
+        const srcDbPath = path.join(process.cwd(), 'prisma', 'dev.db');
+        const destDbPath = '/tmp/dev.db';
+
+        if (fs.existsSync(srcDbPath)) {
+          const destDir = path.dirname(destDbPath);
+          if (!fs.existsSync(destDir)) {
+            fs.mkdirSync(destDir, { recursive: true });
           }
-        });
-        console.log("[SEED ENGINE] 스키마 테이블 생성 완료!");
-      } catch (pushError) {
-        console.error("[SEED ENGINE] 런타임 스키마 생성 실패:", pushError);
+          fs.copyFileSync(srcDbPath, destDbPath);
+          console.log("[SEED ENGINE] 빌드된 SQLite 템플릿을 /tmp/dev.db 로 고속 복사 완료!");
+          
+          // 복사 후 재연결 확인
+          await prisma.user.findFirst();
+        } else {
+          throw new Error(`빌드 템플릿 SQLite 파일을 찾을 수 없습니다: ${srcDbPath}`);
+        }
+      } catch (copyError) {
+        console.error("[SEED ENGINE] 런타임 DB 복사 실패:", copyError);
         return NextResponse.json({ 
           success: false, 
-          error: "데이터베이스 테이블 구조 생성 실패: " + pushError.message 
+          error: "데이터베이스 테이블 구조 생성 실패 (파일 복제 오류): " + copyError.message 
         }, { status: 500 });
       }
     }
