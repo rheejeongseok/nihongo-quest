@@ -15,7 +15,7 @@ export async function POST() {
     } catch (dbError) {
       console.log("[SEED ENGINE] 테이블이 존재하지 않거나 DB가 초기화되지 않았습니다. 빌드된 SQLite 템플릿 복사를 진행합니다...");
       try {
-        const srcDbPath = path.join(process.cwd(), 'prisma', 'dev.db');
+        const srcDbPath = path.join(process.cwd(), 'prisma', 'template.db');
         const destDbPath = '/tmp/dev.db';
 
         if (fs.existsSync(srcDbPath)) {
