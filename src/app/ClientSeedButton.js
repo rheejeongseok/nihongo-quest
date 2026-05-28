@@ -14,7 +14,7 @@ export default function ClientSeedButton() {
       if (data.success) {
         setDone(true);
         setTimeout(() => {
-          window.location.reload(); // 새로고침해서 로드맵 띄우기
+          window.location.href = '/'; // 홈으로 리다이렉션하여 강제 갱신
         }, 1200);
       } else {
         alert("시딩 실패: " + data.error);
