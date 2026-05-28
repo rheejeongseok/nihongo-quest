@@ -2860,10 +2860,15 @@ export async function POST() {
       });
     });
 
-    // 🏆 대망의 벌크 데이터 최종 꽂기 (스테이지당 1,020개 * 5 = 총 5,100개 레코드 일체 주입!)
+    // 🏆 대망의 벌크 데이터 최종 꽂기 (SQLite 제한을 피하기 위해 300개씩 청크 분할 삽입)
     console.log(`[SEED ENGINE] 총 생성 퀴즈 개수: ${quizzesToInsert.length}개`);
 
-    await prisma.quiz.createMany({ data: quizzesToInsert });
+    const chunkSize = 300;
+    for (let i = 0; i < quizzesToInsert.length; i += chunkSize) {
+      const chunk = quizzesToInsert.slice(i, i + chunkSize);
+      await prisma.quiz.createMany({ data: chunk });
+      console.log(`[SEED ENGINE] ${i + chunk.length}/${quizzesToInsert.length}개 퀴즈 삽입 완료`);
+    }
 
     return NextResponse.json({
       success: true,
