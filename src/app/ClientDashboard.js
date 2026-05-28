@@ -118,7 +118,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       </div>
 
       {/* 0. 상시 데이터 동기화 패널 (최상단 노출) */}
-      <div className="glass-premium-card rainbow-border" 
+      <div className="glass-premium-card rainbow-border sync-panel-premium" 
         onMouseMove={handleMouseMove} 
         onMouseLeave={handleMouseLeave}
         style={{
@@ -161,7 +161,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       </div>
 
       {/* 1. 상단 정보 대시보드 카드 그리드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+      <div className="dashboard-info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '24px' }}>
         
         {/* 프로필 및 포인트 카드 */}
         <div className="glass-premium-card rainbow-border" 
@@ -277,7 +277,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
             <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '8px' }}>
               🏆 전설적인 업적 메달 컬렉션 (호버 시 조건 확인)
             </span>
-            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', gap: '8px' }}>
+            <div className="achievement-medals-box" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', gap: '8px' }}>
               {[
                 { id: 'first_clear', title: '첫걸음마 🐣', desc: '아무 스테이지 1회 완수' },
                 { id: 'perfect_clear', title: '무결점의 신 💯', desc: '스테이지 5문제 만점 달성' },
@@ -337,9 +337,9 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           🏟️ N1 실전 아레나 (N1 Premium Arenas)
         </h2>
         
-        <div style={{
+        <div className="arena-cards-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '28px',
           width: '100%'
         }}>
@@ -425,7 +425,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           justifyContent: 'center',
           zIndex: 2000
         }}>
-          <div className="premium-card animate-scale" style={{
+          <div className="premium-card animate-scale modal-premium-content" style={{
             maxWidth: '850px',
             width: '90%',
             padding: '48px 60px',
@@ -442,7 +442,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
             </p>
 
             {/* 소분류: [쉬움 🌱] [보통 🍱] [어려움 ⚡] */}
-            <div style={{
+            <div className="difficulty-btn-grid" style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr',
               gap: '10px',

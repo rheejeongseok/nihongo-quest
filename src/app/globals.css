@@ -401,3 +401,153 @@ body {
   }
 }
 
+/* ========================================================
+   5. RESPONSIVE WEB DESIGN - MOBILE & TABLET OPTIMIZATION
+   ======================================================== */
+@media (max-width: 768px) {
+  /* 1. 글로벌 컨테이너 & 레이아웃 */
+  .container {
+    padding: 0 16px;
+  }
+  
+  /* 2. 헤더 네비게이션 최적화 */
+  .header-glass .container {
+    height: auto !important;
+    padding: 16px 12px !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: center !important;
+  }
+  
+  .header-glass .container > div {
+    gap: 12px !important;
+  }
+  
+  .header-glass nav {
+    gap: 12px !important;
+    font-size: 0.85rem !important;
+  }
+  
+  /* 3. 대시보드 및 리셋/동기화 패널 */
+  .sync-panel-premium {
+    flex-direction: column !important;
+    gap: 16px !important;
+    text-align: center !important;
+    padding: 20px 16px !important;
+  }
+  
+  .sync-panel-premium button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* 4. 정보 카드 그리드 간격 조율 */
+  .dashboard-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* 5. 5대 업적 메달 홀 - 모바일 가로 스크롤 활성화 */
+  .achievement-medals-box {
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    padding: 8px 4px !important;
+    gap: 12px !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+    scrollbar-width: none; /* 파이어폭스 */
+  }
+  
+  .achievement-medals-box::-webkit-scrollbar {
+    display: none; /* 크롬, 사파리 */
+  }
+  
+  .achievement-medals-box > div {
+    flex-shrink: 0 !important;
+    min-width: 65px !important;
+  }
+
+  /* 6. 아레나 카드 그리드 반응형 */
+  .arena-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  /* 7. 프리미엄 난이도 선택 모달 */
+  .modal-premium-content {
+    padding: 32px 20px !important;
+    width: 95% !important;
+  }
+  
+  .modal-premium-content h3 {
+    font-size: 1.2rem !important;
+  }
+  
+  .modal-premium-content .difficulty-btn-grid {
+    grid-template-columns: 1fr !important; /* 모바일은 세로로 쫙 */
+    gap: 8px !important;
+  }
+
+  /* 8. 퀴즈 실전 플레이 화면 모바일 최적화 */
+  .play-arena-grid {
+    grid-template-columns: 1fr !important; /* 모바일에서는 그림판 2단을 무조건 세로 1열로 */
+    gap: 24px !important;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr !important; /* 사지선다를 모바일은 세로 1열로 배치해 텍스트 짤림 방지 */
+  }
+
+  .report-summary-grid {
+    grid-template-columns: 1fr !important; /* 결과 리포트 요약을 세로 1열로 조율 */
+    gap: 16px !important;
+  }
+
+  /* 9. 나의 일본어 단어장 모바일 최적화 */
+  .vocabulary-grid {
+    grid-template-columns: 1fr !important; /* 모바일 단어장 세로 1열로 변경 */
+    gap: 16px !important;
+  }
+
+  /* 10. 스마트 오답 노트 모바일 최적화 */
+  .wrong-note-card {
+    flex-direction: column !important; /* 오답 카드를 가로 플렉스에서 세로 정렬로 변경 */
+    align-items: stretch !important;
+    gap: 16px !important;
+    padding: 20px !important;
+  }
+
+  .wrong-info-container {
+    margin-right: 0 !important;
+    gap: 16px !important;
+  }
+
+  .wrong-btn-actions {
+    flex-direction: row !important; /* 세로 정렬이던 두 버튼을 모바일 가로 1:1 배치로 최적화 */
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .wrong-btn-actions button {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 모바일 초소형 디바이스 대응 */
+  h1 {
+    font-size: 1.7rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  .glow-btn, .outline-btn, .glass-neon-btn {
+    padding: 8px 16px !important;
+    font-size: 0.8rem !important;
+  }
+}
+

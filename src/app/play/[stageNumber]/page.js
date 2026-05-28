@@ -843,7 +843,7 @@ export default function PlayStagePage({ params }) {
             {stage.title} [{jlptLevel} • {difficulty}] 코스를 성공적으로 완수하셨습니다!
           </p>
 
-          <div style={{
+          <div className="report-summary-grid" style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '20px',
@@ -882,7 +882,7 @@ export default function PlayStagePage({ params }) {
         </div>
       ) : (
         /* ==================== [3.5 캘리그래피그림판 연동 2단 레이아웃] ==================== */
-        <div style={{
+        <div className="play-arena-grid" style={{
           display: 'grid',
           gridTemplateColumns: (isDrawingOpen && hasDrawingFeature) ? '1.2fr 1fr' : '1fr',
           gap: '30px',
@@ -1082,7 +1082,7 @@ export default function PlayStagePage({ params }) {
                   <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
                     💡 참고용 객관식 사지선다형 보기 (객관식으로 즉시 맞추기 가능)
                   </span>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     {currentQuiz.options?.map((option, idx) => (
                       <button
                         key={idx}

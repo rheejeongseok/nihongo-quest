@@ -103,7 +103,7 @@ export default function WrongNotesPage() {
             return (
               <div 
                 key={item.id} 
-                className="premium-card"
+                className="premium-card wrong-note-card"
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -113,7 +113,7 @@ export default function WrongNotesPage() {
                 }}
               >
                 {/* 오답 상세 정보 */}
-                <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexGrow: 1, marginRight: '24px' }}>
+                <div className="wrong-info-container" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexGrow: 1, marginRight: '24px' }}>
                   {/* 빨간색 느낌의 오답 경고 원형 */}
                   <div style={{
                     width: '60px',
@@ -161,7 +161,7 @@ export default function WrongNotesPage() {
                 </div>
 
                 {/* 제어 버튼 묶음 */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                <div className="wrong-btn-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
                   <button 
                     onClick={() => speak(quiz.japaneseWord)}
                     className="outline-btn"
