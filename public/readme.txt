@@ -1,0 +1,1 @@
+NihongoQuest Static Public Folder.

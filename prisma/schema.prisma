@@ -1,0 +1,82 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              String        @id @default(uuid())
+  email           String        @unique
+  username        String
+  points          Int           @default(0)
+  currentStreak   Int           @default(0)
+  maxStreak       Int           @default(0)
+  lastActiveDate  DateTime?
+  badges          String        @default("[]") // JSON 배열 문자열
+  createdAt       DateTime      @default(now())
+  
+  bookmarks       Bookmark[]
+  wrongAnswers    WrongAnswer[]
+  quizAttempts    QuizAttempt[]
+}
+
+model Stage {
+  id          String    @id @default(uuid())
+  stageNumber Int       @unique
+  title       String
+  category    String    // CHARACTERS, VOCAB, GRAMMAR, LISTENING, WORDLE
+  difficulty  String    // EASY, MEDIUM, HARD
+  quizzes     Quiz[]
+}
+
+model Quiz {
+  id            String   @id @default(uuid())
+  stageId       String
+  stage         Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  
+  quizType      String   // MULTIPLE_CHOICE, WORDLE, LISTENING
+  questionText  String
+  japaneseWord  String
+  pronunciation String
+  correctAnswer String
+  wrongAnswers  String   // JSON 배열 문자열
+  hint          String?
+  
+  attempts      QuizAttempt[]
+  wrongNotes    WrongAnswer[]
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word      String
+  meaning   String
+  reading   String
+  savedAt   DateTime @default(now())
+}
+
+model WrongAnswer {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  reviewCount Int      @default(1)
+  isResolved  Boolean  @default(false)
+  lastFailed  DateTime @default(now())
+}
+
+model QuizAttempt {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId     String
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  isCorrect  Boolean
+  timeTaken  Int
+  solvedAt   DateTime @default(now())
+}
