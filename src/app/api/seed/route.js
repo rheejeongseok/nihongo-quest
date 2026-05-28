@@ -9,11 +9,20 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
-    // 0. Vercel 런타임 (/tmp/dev.db) 스키마 테이블 미존재 시 자가 복구 (빌드된 SQLite 파일 복제)
+    // 0. Vercel 런타임 (/tmp/dev.db) 테이블 미존재 혹은 데이터 유실 시 자가 복구 (빌드된 SQLite 파일 복제)
+    let shouldCopy = false;
     try {
-      await prisma.user.findFirst();
+      const userCount = await prisma.user.count();
+      const stageCount = await prisma.stage.count();
+      if (userCount === 0 || stageCount === 0) {
+        shouldCopy = true;
+      }
     } catch (dbError) {
-      console.log("[SEED ENGINE] 테이블이 존재하지 않거나 DB가 초기화되지 않았습니다. 빌드된 SQLite 템플릿 복사를 진행합니다...");
+      shouldCopy = true;
+    }
+
+    if (shouldCopy) {
+      console.log("[SEED ENGINE] DB 데이터가 비어 있거나 테이블이 존재하지 않습니다. SQLite 템플릿 복사를 수행합니다...");
       try {
         const srcDbPath = path.join(process.cwd(), 'prisma', 'template.db');
         const destDbPath = '/tmp/dev.db';
@@ -24,10 +33,11 @@ export async function POST() {
             fs.mkdirSync(destDir, { recursive: true });
           }
           fs.copyFileSync(srcDbPath, destDbPath);
-          console.log("[SEED ENGINE] 빌드된 SQLite 템플릿을 /tmp/dev.db 로 고속 복사 완료!");
+          console.log("[SEED ENGINE] 완제품 SQLite 템플릿을 /tmp/dev.db 로 고속 복사 완료!");
           
-          // 복사 후 재연결 확인
-          await prisma.user.findFirst();
+          // 복사 후 검증
+          const checkCount = await prisma.stage.count();
+          console.log(`[SEED ENGINE] 복사 후 스테이지 개수: ${checkCount}개`);
         } else {
           throw new Error(`빌드 템플릿 SQLite 파일을 찾을 수 없습니다: ${srcDbPath}`);
         }
