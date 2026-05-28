@@ -25,7 +25,13 @@ export async function POST() {
       console.log("[SEED ENGINE] DB 데이터가 비어 있거나 테이블이 존재하지 않습니다. SQLite 템플릿 복사를 수행합니다...");
       try {
         const srcDbPath = path.join(process.cwd(), 'prisma', 'template.db');
-        const destDbPath = '/tmp/dev.db';
+        
+        // DATABASE_URL 환경변수에서 'file:' 프리픽스를 떼어내고 목적지 경로를 동적으로 추출
+        const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
+        const rawPath = dbUrl.replace(/^file:/, '');
+        const destDbPath = path.isAbsolute(rawPath) 
+          ? rawPath 
+          : path.join(process.cwd(), rawPath);
 
         if (fs.existsSync(srcDbPath)) {
           const destDir = path.dirname(destDbPath);
