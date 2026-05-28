@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { execSync } from 'child_process';
 
 // https://news.web.nhk/newsweb 참조 할 사이트
 
@@ -7,6 +8,28 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
+    // 0. Vercel 런타임 (/tmp/dev.db) 스키마 테이블 미존재 시 자가 복구 푸시
+    try {
+      await prisma.user.findFirst();
+    } catch (dbError) {
+      console.log("[SEED ENGINE] 테이블이 존재하지 않거나 DB가 초기화되지 않았습니다. 실시간 스키마 푸시를 진행합니다...");
+      try {
+        execSync('npx prisma db push --accept-data-loss', {
+          env: {
+            ...process.env,
+            DATABASE_URL: process.env.DATABASE_URL || 'file:./dev.db'
+          }
+        });
+        console.log("[SEED ENGINE] 스키마 테이블 생성 완료!");
+      } catch (pushError) {
+        console.error("[SEED ENGINE] 런타임 스키마 생성 실패:", pushError);
+        return NextResponse.json({ 
+          success: false, 
+          error: "데이터베이스 테이블 구조 생성 실패: " + pushError.message 
+        }, { status: 500 });
+      }
+    }
+
     // 1. 기존 데이터 전체 초기화 (동기화 재시딩용)
     await prisma.quizAttempt.deleteMany({});
     await prisma.wrongAnswer.deleteMany({});
