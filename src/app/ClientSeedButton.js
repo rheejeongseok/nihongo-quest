@@ -56,7 +56,7 @@ export default function ClientSeedButton() {
       ) : (
         <>
           <span>🌱</span>
-          <span>고품질 100+개 학습 데이터 주입하기</span>
+          <span>고품질 5,100+개 학습 데이터 주입하기</span>
         </>
       )}
     </button>
