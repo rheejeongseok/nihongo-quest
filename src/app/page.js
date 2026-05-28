@@ -1,10 +1,53 @@
+import fs from 'fs';
+import path from 'path';
 import prisma from '@/lib/prisma';
 import ClientDashboard from './ClientDashboard';
 import ClientSeedButton from './ClientSeedButton';
 
 export const dynamic = 'force-dynamic';
 
+// Vercel 런타임 자가 복구 헬퍼 (데이터 없을 시 완제품 template.db 자동 복제)
+async function ensureDatabaseIsReady() {
+  let shouldCopy = false;
+  try {
+    const userCount = await prisma.user.count();
+    const stageCount = await prisma.stage.count();
+    if (userCount === 0 || stageCount === 0) {
+      shouldCopy = true;
+    }
+  } catch (dbError) {
+    shouldCopy = true;
+  }
+
+  if (shouldCopy) {
+    console.log("[HOME ENGINE] DB 데이터가 비어 있거나 테이블이 존재하지 않습니다. SQLite 템플릿 복사를 수행합니다...");
+    try {
+      const srcDbPath = path.join(process.cwd(), 'prisma', 'template.db');
+      
+      const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
+      const rawPath = dbUrl.replace(/^file:/, '');
+      const destDbPath = path.isAbsolute(rawPath) 
+        ? rawPath 
+        : path.join(process.cwd(), rawPath);
+
+      if (fs.existsSync(srcDbPath)) {
+        const destDir = path.dirname(destDbPath);
+        if (!fs.existsSync(destDir)) {
+          fs.mkdirSync(destDir, { recursive: true });
+        }
+        fs.copyFileSync(srcDbPath, destDbPath);
+        console.log("[HOME ENGINE] 완제품 SQLite 템플릿 복사 완료!");
+      }
+    } catch (copyError) {
+      console.error("[HOME ENGINE] DB 자가 복구 실패:", copyError);
+    }
+  }
+}
+
 export default async function HomePage() {
+  // 런타임 DB 체크 및 자가 복구
+  await ensureDatabaseIsReady();
+
   // 데이터베이스에서 스테이지 목록 조회
   let stages = [];
   let user = null;
