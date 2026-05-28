@@ -17,7 +17,7 @@
   --card-bg: #ffffff;
   --card-border: rgba(85, 124, 85, 0.15);
   --neon-glow: 0 4px 20px rgba(85, 124, 85, 0.1);
-  --custom-font: 'Pretendard', 'Nanum Gothic', 'Noto Sans JP', sans-serif;
+  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
   --custom-radius: 16px;
   --glass-bg: rgba(255, 255, 255, 0.8);
 }
@@ -34,7 +34,7 @@
   --card-bg: #161724;
   --card-border: rgba(0, 240, 255, 0.25);
   --neon-glow: 0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(255, 0, 127, 0.2);
-  --custom-font: 'Pretendard', 'Nanum Gothic', 'Outfit', 'Noto Sans JP', sans-serif;
+  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
   --custom-radius: 8px; /* 사이버틱한 각진 느낌 */
   --glass-bg: rgba(22, 23, 36, 0.85);
 }
@@ -51,7 +51,7 @@
   --card-bg: #ffffff;
   --card-border: rgba(255, 148, 148, 0.25);
   --neon-glow: 0 8px 24px rgba(255, 148, 148, 0.2);
-  --custom-font: 'Pretendard', 'Nanum Gothic', 'Noto Sans JP', sans-serif;
+  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
   --custom-radius: 28px; /* 극도의 라운드 */
   --glass-bg: rgba(255, 255, 255, 0.9);
 }
@@ -68,7 +68,7 @@
   --card-bg: #fdfcf7;
   --card-border: #d7caaa;
   --neon-glow: none;
-  --custom-font: 'Nanum Gothic', 'Pretendard', 'Noto Sans JP', serif;
+  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
   --custom-radius: 4px;
   --glass-bg: rgba(253, 252, 247, 0.9);
   /* 모눈종이 그리드 오버레이용 배경 추가 */
