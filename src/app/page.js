@@ -69,11 +69,11 @@ export default async function HomePage() {
   return (
     <div className="container" style={{ padding: '40px 24px', minHeight: 'calc(100vh - 76px)' }}>
       {/* 타이틀 헤더 */}
-      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '12px', display: 'inline-flex', alignItems: 'center', gap: '12px' }}>
-          🌸 일본어 퀴즈 퀘스트 <span style={{ color: 'var(--accent-color)' }}>NihongoQuest</span>
+      <div className="home-banner-wrapper">
+        <h1 className="home-banner-title">
+          🌸 일본어 퀴즈 퀘스트 <span className="logo-highlight">NihongoQuest</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>
+        <p className="home-banner-desc">
           게임을 깨듯이 한 단계씩 즐겁게 헤쳐나가는 나만의 일본어 공부 모험
         </p>
       </div>

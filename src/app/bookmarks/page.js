@@ -50,14 +50,14 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '800px', padding: '40px 24px' }}>
+    <div className="container" style={{ maxWidth: '1280px', padding: '40px 24px' }}>
       
       {/* 뒤로가기 및 헤더 */}
       <div style={{ marginBottom: '32px' }}>
         <Link href="/" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: '700', fontSize: '0.9rem' }}>
-          ← 로드맵 홈으로 이동
+          ← 메인으로 이동
         </Link>
-        <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <h1 style={{ fontWeight: '900', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           ⭐ 나의 일본어 단어장 (Vocabulary)
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '6px' }}>
@@ -97,7 +97,7 @@ export default function BookmarksPage() {
             {bookmarks.map((item) => (
               <div 
                 key={item.id} 
-                className="premium-card"
+                className="premium-card wrong-note-card"
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -124,7 +124,7 @@ export default function BookmarksPage() {
                 </div>
 
                 {/* 제어 버튼 */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                <div className="wrong-btn-actions" style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
                   <button 
                     onClick={() => speak(item.word)}
                     style={{

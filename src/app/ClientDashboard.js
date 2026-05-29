@@ -24,6 +24,27 @@ export default function ClientDashboard({ initialStages, initialUser }) {
   // 🏆 [3.8.5 프리미엄 업적 콜렉션 상태]
   const [unlockedAchievements, setUnlockedAchievements] = useState({});
 
+  // 🎯 스마트 복습 & 단어 카운트 실시간 상태
+  const [wrongCount, setWrongCount] = useState(0);
+  const [bookmarkCount, setBookmarkCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        const r1 = await fetch('/api/wrong-notes');
+        const d1 = await r1.json();
+        if (d1.success) setWrongCount(d1.wrongAnswers.length);
+        
+        const r2 = await fetch('/api/bookmarks');
+        const d2 = await r2.json();
+        if (d2.success) setBookmarkCount(d2.bookmarks.length);
+      } catch (e) {
+        console.error("복습 데이터 집계 에러:", e);
+      }
+    }
+    fetchCounts();
+  }, []);
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem('nihongo_quest_achievements');
@@ -34,6 +55,75 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       console.error("업적 로딩 에러:", e);
     }
   }, []);
+
+  // 🌸 NHK 실시간 뉴스 브리핑 상태 및 지능형 보관함(Saved Box) 시스템
+  const [nhkNews, setNhkNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [expandedNews, setExpandedNews] = useState(null); // 펼쳐진 뉴스 인덱스 토글
+  const [savedNews, setSavedNews] = useState([]); // 보관된 뉴스 배열
+  const [activeNewsTab, setActiveNewsTab] = useState('REALTIME'); // 뉴스 탭 토글 ('REALTIME' vs 'SAVED')
+
+  // 피셔-예이츠 무작위 셔플 알고리즘 (균등 분포 셔플)
+  function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // 1. 컴포넌트 마운트 시 localStorage 저장 뉴스 자동 복원
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nihongo_quest_saved_news');
+      if (saved) {
+        setSavedNews(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("저장 뉴스 로딩 에러:", e);
+    }
+  }, []);
+
+  // 2. 실시간 뉴스 로드 및 무작위 셔플 가동
+  useEffect(() => {
+    async function fetchNhkNews() {
+      try {
+        setNewsLoading(true);
+        const res = await fetch('/api/nhk-news');
+        const data = await res.json();
+        if (data.success) {
+          // 최신 뉴스를 받아오자마자 무작위로 섞어서 언제나 신선하게 렌더링!
+          const shuffled = shuffleArray(data.news);
+          setNhkNews(shuffled);
+        }
+      } catch (e) {
+        console.error("NHK 뉴스 로드 에러:", e);
+      } finally {
+        setNewsLoading(false);
+      }
+    }
+    fetchNhkNews();
+  }, []);
+
+  // 3. 나만의 뉴스 보관함 저장/삭제 토글러
+  const toggleSaveNews = (item) => {
+    try {
+      const isAlreadySaved = savedNews.some(n => n.link === item.link);
+      let updated;
+      if (isAlreadySaved) {
+        // 이미 저장된 뉴스인 경우 제거 (보관 취소)
+        updated = savedNews.filter(n => n.link !== item.link);
+      } else {
+        // 새로운 뉴스를 보관함에 주입
+        updated = [item, ...savedNews];
+      }
+      setSavedNews(updated);
+      localStorage.setItem('nihongo_quest_saved_news', JSON.stringify(updated));
+    } catch (e) {
+      console.error("뉴스 보관 토글 에러:", e);
+    }
+  };
 
   // 모달 팝업 상태 관리
   const [selectedStage, setSelectedStage] = useState(null);
@@ -86,6 +176,11 @@ export default function ClientDashboard({ initialStages, initialUser }) {
 
   // 🔮 [3.8.8 명품 글래스모피즘] 3D 입체 틸트 & 마우스 광택 실시간 좌표 핸들러
   const handleMouseMove = (e) => {
+    // 모바일(768px 이하) 혹은 터치 기기에서는 스크롤 및 레이아웃을 위해 틸트 작동을 완전히 배제
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      return;
+    }
+
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -94,47 +189,34 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     const xc = x / rect.width - 0.5;
     const yc = y / rect.height - 0.5;
     
-    const rotateX = yc * -10; // 자연스럽고 은은한 10도 틸팅
-    const rotateY = xc * 10;
+    // 큰 카드 영역에서도 심한 요동 없이 우아하고 기품 있게 3도로 정밀 완화
+    const rotateX = yc * -3; 
+    const rotateY = xc * 3;
     
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.015)`;
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.008)`;
     card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
     card.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
   };
 
   const handleMouseLeave = (e) => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      return;
+    }
     const card = e.currentTarget;
     card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '40px', position: 'relative' }}>
-      
-      {/* 🌌 뒷편에서 몽환적으로 일렁이는 오로라 백그라운드 구체 오버레이 */}
-      <div className="aurora-bg">
-        <div className="aurora-blob aurora-blob-1" />
-        <div className="aurora-blob aurora-blob-2" />
-        <div className="aurora-blob aurora-blob-3" />
-      </div>
-
-      {/* 0. 상시 데이터 동기화 패널 (최상단 노출) */}
+    <div>      {/* 0. 상시 데이터 동기화 패널 (최상단 노출) */}
       <div className="glass-premium-card rainbow-border sync-panel-premium" 
         onMouseMove={handleMouseMove} 
         onMouseLeave={handleMouseLeave}
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '20px 32px',
-          background: 'rgba(255, 255, 255, 0.04)',
-          borderWidth: '1.5px'
-        }}
       >
-        <div>
-          <span style={{ fontWeight: '900', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="sync-panel-content">
+          <span className="sync-panel-title">
             🌱 최신 자격증 문항 데이터 동기화
           </span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+          <span className="sync-panel-desc">
             실전 최고난도 JLPT N1 완벽 대비용 초대형 5000+개 퀴즈 풀로 초기화 및 갱신합니다.
           </span>
         </div>
@@ -142,13 +224,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         <button
           onClick={handleSyncData}
           disabled={syncing || syncDone}
-          className="glass-neon-btn"
-          style={{
-            padding: '10px 24px',
-            fontSize: '0.85rem',
-            opacity: syncing || syncDone ? 0.8 : 1,
-            cursor: syncing || syncDone ? 'not-allowed' : 'pointer'
-          }}
+          className="glass-neon-btn sync-panel-btn"
         >
           {syncing ? (
             <>⏳ 주입 중...</>
@@ -161,256 +237,309 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       </div>
 
       {/* 1. 상단 정보 대시보드 카드 그리드 */}
-      <div className="dashboard-info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '24px' }}>
+      <div className="dashboard-info-grid">
         
         {/* 프로필 및 포인트 카드 */}
-        <div className="glass-premium-card rainbow-border" 
+        <div className="glass-premium-card rainbow-border info-card-wrapper" 
           onMouseMove={handleMouseMove} 
           onMouseLeave={handleMouseLeave}
-          style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '190px' }}
         >
-          <div>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: '900', marginBottom: '8px', color: 'var(--text-primary)' }}>
+          <div className="card-header-group">
+            <h3 className="card-title">
               👋 어서오세요, {user.username}님!
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            <p className="card-desc">
               오늘도 즐거운 일본어 모험이 당신을 기다립니다.
             </p>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '20px' }}>
+          <div className="card-footer-group">
             <div>
-              <span style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', display: 'block' }}>누적 포인트</span>
-              <span style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--accent-color)', textShadow: '0 2px 8px var(--accent-glow)' }}>
-                {user.points} <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>pts</span>
+              <span className="card-stat-label">누적 포인트</span>
+              <span className="card-stat-value">
+                {user.points} <span className="card-stat-unit">pts</span>
               </span>
             </div>
-            <span style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))' }}>🏆</span>
+            <span className="card-large-emoji">🏆</span>
           </div>
         </div>
 
         {/* 일일 학습 스트릭 카드 */}
-        <div className="glass-premium-card rainbow-border" 
+        <div className="glass-premium-card rainbow-border info-card-wrapper" 
           onMouseMove={handleMouseMove} 
           onMouseLeave={handleMouseLeave}
-          style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '190px' }}
         >
-          <div>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: '900', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="card-header-group">
+            <h3 className="card-title">
               🔥 일일 학습 스트릭
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            <p className="card-desc">
               매일 연속으로 학습을 이어가고 스트릭 불꽃을 꺼뜨리지 마세요!
             </p>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '20px' }}>
+          <div className="card-footer-group">
             <div>
-              <span style={{ fontSize: '2.2rem', fontWeight: '900', color: '#ff6b6b', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                {user.currentStreak} <span style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>일째 연속</span>
+              <span className="card-stat-value streak-color">
+                {user.currentStreak} <span className="card-stat-unit-text">일째 연속</span>
               </span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+              <span className="card-stat-label-small">
                 최대 기록: {user.maxStreak}일 연속 학습
               </span>
             </div>
             {/* 스트릭 잔디 심기 미니 연출 */}
-            <div style={{ display: 'flex', gap: '4px' }}>
+            <div className="streak-grass-container">
               {[1, 2, 3, 4, 5].map((day) => (
                 <div 
                   key={day}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '4px',
-                    background: day <= user.currentStreak ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: day <= user.currentStreak ? 'var(--neon-glow)' : 'none'
-                  }}
+                  className={`streak-grass-node ${day <= user.currentStreak ? 'active' : 'inactive'}`}
                 />
               ))}
             </div>
           </div>
         </div>
 
-        {/* 나의 학습 칭호 & 배지 보드 및 프리미엄 업적 메달 홀 */}
-        <div className="glass-premium-card rainbow-border" 
+        {/* 스마트 복습 & 단어 센터 (비로그인 환경 최적화 퀵 패스) */}
+        <div className="glass-premium-card rainbow-border info-card-wrapper large-card" 
           onMouseMove={handleMouseMove} 
           onMouseLeave={handleMouseLeave}
-          style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '230px' }}
         >
-          <div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🎖️ 획득한 배지 & 업적
+          <div className="card-header-group">
+            <h3 className="card-title">
+              🎯 스마트 복습 & 단어 센터
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '12px' }}>
-              정복한 스테이지 배지와 업적 메달 컬렉션입니다.
+            <p className="card-desc">
+              틀린 오답을 복습하고, 퀴즈 도중 수집한 나만의 단어장을 한눈에 관리하세요.
             </p>
-            
-            {/* 기본 배지 목록 */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-              {parsedBadges.map((badge, idx) => (
-                <span 
-                  key={idx} 
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    backdropFilter: 'blur(4px)',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    padding: '4px 10px',
-                    borderRadius: '100px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                  }}
-                >
-                  🎓 {badge}
-                </span>
-              ))}
-            </div>
           </div>
 
-          {/* 🏆 영롱한 5대 전설 업적 메달 홀 */}
-          <div style={{
-            background: 'rgba(255,255,255,0.04)',
-            backdropFilter: 'blur(4px)',
-            padding: '12px',
-            borderRadius: '12px',
-            border: '1px dashed rgba(255,255,255,0.15)'
-          }}>
-            <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-              🏆 전설적인 업적 메달 컬렉션 (호버 시 조건 확인)
-            </span>
-            <div className="achievement-medals-box" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', gap: '8px' }}>
-              {[
-                { id: 'first_clear', title: '첫걸음마 🐣', desc: '아무 스테이지 1회 완수' },
-                { id: 'perfect_clear', title: '무결점의 신 💯', desc: '스테이지 5문제 만점 달성' },
-                { id: 'n1_slayer', title: 'N1 격파자 ⚔️', desc: '최고급 N1 스테이지 완수' },
-                { id: 'combo_master', title: '콤보 신화 🔥', desc: '연속 5문제 정답 콤보 달성' },
-                { id: 'calligraphy_pro', title: '붓글씨달인 🖌️', desc: '손글씨 주관식으로 3회 성공' }
-              ].map((ach) => {
-                const isUnlocked = !!unlockedAchievements[ach.id];
-                return (
-                  <div 
-                    key={ach.id}
-                    title={`${ach.title}: ${ach.desc}${isUnlocked ? ' (달성완료! 🎉)' : ' (미달성 🔒)'}`}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      cursor: 'help',
-                      opacity: isUnlocked ? 1 : 0.35,
-                      filter: isUnlocked ? 'none' : 'grayscale(100%)',
-                      transition: 'all 0.2s',
-                      transform: isUnlocked ? 'scale(1.05)' : 'scale(1)'
-                    }}
-                  >
-                    <span style={{ 
-                      fontSize: '1.8rem', 
-                      background: isUnlocked ? 'rgba(255, 159, 67, 0.15)' : 'transparent',
-                      padding: '4px',
-                      borderRadius: '50%',
-                      border: isUnlocked ? '1.5px solid #ff9f43' : '1.5px solid transparent',
-                      boxShadow: isUnlocked ? '0 4px 10px rgba(255, 159, 67, 0.25)' : 'none',
-                    }}>
-                      {ach.id === 'first_clear' && '🐣'}
-                      {ach.id === 'perfect_clear' && '💯'}
-                      {ach.id === 'n1_slayer' && '⚔️'}
-                      {ach.id === 'combo_master' && '🔥'}
-                      {ach.id === 'calligraphy_pro' && '🖌️'}
-                    </span>
-                    <span style={{ fontSize: '0.65rem', fontWeight: '800', marginTop: '4px', color: isUnlocked ? 'var(--accent-color)' : 'var(--text-secondary)' }}>
-                      {ach.id === 'first_clear' && '첫걸음마'}
-                      {ach.id === 'perfect_clear' && '무결점'}
-                      {ach.id === 'n1_slayer' && 'N1격파'}
-                      {ach.id === 'combo_master' && '콤보신화'}
-                      {ach.id === 'calligraphy_pro' && '붓글씨'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="study-hub-box">
+            <a href="/wrong-notes" className="study-hub-item wrong-hub">
+              <span>📓 스마트 오답노트 복습</span>
+              <span className="pulse-ani study-hub-badge wrong-badge">
+                {wrongCount}개 대기
+              </span>
+            </a>
+
+            <a href="/bookmarks" className="study-hub-item bookmark-hub">
+              <span>⭐ 나의 일본어 단어장</span>
+              <span className="study-hub-badge bookmark-badge">
+                {bookmarkCount}개 단어
+              </span>
+            </a>
           </div>
         </div>
 
       </div>
 
+      {/* 1.5. [N1 PREMIUM] NHK 실시간 시사 & 사회 뉴스 브리핑 (N1 학습 지원 아코디언 센터) */}
+      <div className="glass-premium-card rainbow-border nhk-news-briefing-card">
+        <div className="nhk-news-header">
+          <div className="nhk-news-header-title-box">
+            <h2 className="nhk-news-header-title">
+              📰 NHK 실시간 시사 & 사회 뉴스 브리핑
+            </h2>
+            <p className="nhk-news-header-desc">
+              현지 최신 뉴스를 직독직해하며 N1 기출 한자 및 핵심 사회 어휘를 학습하는 프리미엄 보조 센터
+            </p>
+          </div>
+          <span className={`nhk-status-badge ${nhkNews.length > 0 && nhkNews[0].link.includes('nhk') ? 'realtime' : 'fallback'}`}>
+            {newsLoading ? "⏳ 분석 중" : nhkNews.length > 0 && nhkNews[0].link.includes('nhk') ? "● LIVE 실시간 수집" : "📚 N1 기출 시사 특강"}
+          </span>
+        </div>
+
+        {/* 📥 럭셔리 캡슐 탭 전환기 */}
+        <div className="nhk-news-tabs">
+          <button 
+            className={`nhk-tab-btn ${activeNewsTab === 'REALTIME' ? 'active' : ''}`}
+            onClick={() => { setActiveNewsTab('REALTIME'); setExpandedNews(null); }}
+          >
+            📰 실시간 시사 뉴스
+          </button>
+          <button 
+            className={`nhk-tab-btn ${activeNewsTab === 'SAVED' ? 'active' : ''}`}
+            onClick={() => { setActiveNewsTab('SAVED'); setExpandedNews(null); }}
+          >
+            📥 저장된 뉴스 복습 <span className="nhk-tab-count">{savedNews.length}</span>
+          </button>
+        </div>
+
+        {newsLoading ? (
+          /* 스켈레톤 로더 */
+          <div className="nhk-skeleton-container">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="nhk-skeleton-item">
+                <div className="nhk-skeleton-line title" />
+                <div className="nhk-skeleton-line desc" />
+              </div>
+            ))}
+          </div>
+        ) : activeNewsTab === 'SAVED' && savedNews.length === 0 ? (
+          /* 보관함이 비어 있을 때 유려한 명품 복습 가이드 뷰 */
+          <div className="nhk-empty-saved-box fade-in">
+            <span className="nhk-empty-emoji">📥</span>
+            <h5 className="nhk-empty-title">아직 보관된 시사 뉴스가 없습니다</h5>
+            <p className="nhk-empty-desc">
+              [실시간 시사 뉴스] 탭에서 학습하고 싶은 훌륭한 지문을 발견하면 <strong style={{color:'var(--accent-color)'}}>'📥 보관'</strong> 버튼을 클릭하여 담아보세요. 이곳에서 언제든 다시 어휘 분석과 한국어 번역 가이드를 펼치며 완벽 복습하실 수 있습니다!
+            </p>
+          </div>
+        ) : (
+          <div className="nhk-news-list">
+            {(activeNewsTab === 'REALTIME' ? nhkNews.slice(0, 5) : savedNews).map((item, idx) => {
+              const isExpanded = expandedNews === idx;
+              const isSaved = savedNews.some(n => n.link === item.link);
+              return (
+                <div 
+                  key={idx} 
+                  className={`nhk-news-item ${isExpanded ? 'active' : ''}`}
+                >
+                  {/* 뉴스 제목 및 간략 보기 영역 */}
+                  <div 
+                    className="nhk-news-item-trigger"
+                    onClick={() => setExpandedNews(isExpanded ? null : idx)}
+                  >
+                    <div className="nhk-news-item-title-row">
+                      <span className="nhk-news-emoji">📰</span>
+                      <h4 className="nhk-news-item-title">{item.title}</h4>
+                      
+                      {/* 💾 뉴스 저장 / 삭제 토글 칩 단추 */}
+                      <button 
+                        className={`nhk-save-btn ${isSaved ? 'saved' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); toggleSaveNews(item); }}
+                      >
+                        {isSaved ? "💾 보관됨" : "📥 보관"}
+                      </button>
+
+                      <span className="nhk-toggle-arrow">{isExpanded ? '▲' : '▼'}</span>
+                    </div>
+                    <div className="nhk-news-meta-row">
+                      <span className="nhk-meta-date">
+                        {item.pubDate ? new Date(item.pubDate).toLocaleDateString('ko-KR', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : '최신 시사'}
+                      </span>
+                      <span className="nhk-meta-category">N1 사회시사</span>
+                    </div>
+                  </div>
+
+                  {/* 아코디언 콘텐츠 영역 (단어 정리 및 번역 제공) */}
+                  {isExpanded && (
+                    <div className="nhk-accordion-content fade-in">
+                      <p className="nhk-news-raw-desc">
+                        <strong>[일본어 원문]</strong><br />
+                        {item.description}
+                      </p>
+                      
+                      <div className="nhk-news-analysis-box">
+                        {/* 1. N1 핵심 어휘집 */}
+                        <div className="nhk-analysis-subsect">
+                          <h5 className="nhk-subsect-title">🌸 N1 필수 시사 어휘</h5>
+                          <div className="nhk-words-grid">
+                            {item.n1Words && item.n1Words.length > 0 ? (
+                              item.n1Words.map((wordObj, wIdx) => (
+                                <div key={wIdx} className="nhk-word-chip-wrapper">
+                                  <span className="nhk-word-badge">{wordObj.word}</span>
+                                  <div className="nhk-word-details">
+                                    <span className="nhk-word-reading">[{wordObj.reading}]</span>
+                                    <span className="nhk-word-meaning">{wordObj.meaning}</span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="nhk-no-words">기출 어휘 분석 중...</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 2. 번역 가이드 */}
+                        <div className="nhk-analysis-subsect translation-subsect">
+                          <h5 className="nhk-subsect-title">📓 한국어 독해 번역 가이드</h5>
+                          <p className="nhk-translation-text">{item.translation}</p>
+                        </div>
+                      </div>
+
+                      {/* 하단 단독 원문 앵커 링크 */}
+                      <div className="nhk-item-footer">
+                        <a 
+                          href={item.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="nhk-raw-link-btn"
+                        >
+                          NHK 공식 기사 원문 보기 🔗
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* 2. 대망의 5대 카테고리 독립형 실전 아레나 */}
-      <div style={{ marginTop: '20px' }}>
-        <h2 style={{ fontSize: '1.6rem', fontWeight: '900', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="arena-section-container">
+        <h2 className="arena-section-title">
           🏟️ N1 실전 아레나 (N1 Premium Arenas)
         </h2>
         
-        <div className="arena-cards-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '28px',
-          width: '100%'
-        }}>
+        <div className="arena-cards-grid">
           {initialStages.map((stage) => {
             const meta = categoryMeta[stage.category] || { emoji: '❓', color: 'gray', label: '학습' };
             
             return (
               <div 
                 key={stage.id}
-                className="glass-premium-card rainbow-border interactive-arena"
+                className="glass-premium-card rainbow-border interactive-arena arena-card-wrapper"
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  padding: '28px',
-                  borderColor: 'rgba(255,255,255,0.08)',
-                  boxShadow: `0 8px 30px rgba(0, 0, 0, 0.02), 0 0 20px ${meta.color}0a`,
-                  minHeight: '260px'
+                  boxShadow: `0 8px 30px rgba(0, 0, 0, 0.02), 0 0 20px ${meta.color}0a`
                 }}
               >
                 {/* 상단: 카테고리 정보 및 아이콘 */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                    <span style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))' }}>{meta.emoji}</span>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      fontWeight: '800',
-                      background: `${meta.color}22`,
-                      color: meta.color,
-                      padding: '4px 10px',
-                      borderRadius: '100px',
-                      border: `1px solid ${meta.color}66`
-                    }}>
+                <div className="arena-card-body-wrapper">
+                  <div className="arena-card-top">
+                    <span className="arena-card-emoji">{meta.emoji}</span>
+                    <span 
+                      className="arena-card-badge"
+                      style={{
+                        background: `${meta.color}22`,
+                        color: meta.color,
+                        border: `1px solid ${meta.color}66`
+                      }}
+                    >
                       {meta.label}
                     </span>
                   </div>
 
-                  <h4 style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  <h4 className="arena-card-title">
                     {stage.title}
                   </h4>
                   
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  <p className="arena-card-desc">
                     5,000+개 N1 최고난도 기출 풀에서 무작위 라이브 추출
                   </p>
                 </div>
 
                 {/* 하단: 입장 버튼 및 매칭 명세 */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                <div className="arena-card-footer">
+                  <span className="arena-card-footer-label">
                     독자 아레나 코스
                   </span>
                   <button 
                     onClick={() => openDifficultyModal(stage)}
-                    className="glass-neon-btn" 
-                    style={{
-                      padding: '10px 24px',
-                      fontSize: '0.85rem',
-                      fontWeight: '800'
-                    }}
+                    className="glass-neon-btn arena-card-btn" 
                   >
                     아레나 입장 ➔
                   </button>
                 </div>
-
               </div>
             );
           })}
         </div>
-
       </div>
 
       {/* ==================== [3.0 JLPT 대분류 탭 + 상중하 난이도 조절 우아한 모달 팝업] ==================== */}
@@ -428,7 +557,6 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           <div className="premium-card animate-scale modal-premium-content" style={{
             maxWidth: '850px',
             width: '90%',
-            padding: '48px 60px',
             border: '2px solid var(--accent-color)',
             boxShadow: 'var(--neon-glow)',
             textAlign: 'center'

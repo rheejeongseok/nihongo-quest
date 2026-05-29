@@ -54,8 +54,8 @@ export async function GET(request, { params }) {
     // 3. 240문항 풀에서 실시간 완전 무작위 셔플링
     const fullyShuffledPool = shuffleArray(allQuizzesInPool);
 
-    // 4. 무작위 5문항 동적 추출
-    let selectedQuizzes = fullyShuffledPool.slice(0, 5);
+    // 4. 무작위 10문항 동적 추출
+    let selectedQuizzes = fullyShuffledPool.slice(0, 10);
 
     // 5. 보기 셔플하여 정답 위치 무작위화 (wrongAnswers가 존재하는 모든 퀴즈 확장)
     selectedQuizzes = selectedQuizzes.map(quiz => {

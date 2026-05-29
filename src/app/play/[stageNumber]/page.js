@@ -554,7 +554,7 @@ export default function PlayStagePage({ params }) {
       // 2. 무결점 클리어 업적 (만점)
       const currentFinalScore = userScore + (isCorrectAns ? 1 : 0);
       if (currentFinalScore === quizzes.length) {
-        unlockAchievement('perfect_clear', '💯 무결점의 신', '한 스테이지에서 5문제 모두 맞히기!', '💯');
+        unlockAchievement('perfect_clear', '💯 무결점의 신', '한 스테이지에서 모든 문제 모두 맞히기!', '💯');
       }
 
       // 3. N1 스테이지 전체 격파 업적
@@ -764,8 +764,8 @@ export default function PlayStagePage({ params }) {
       {/* 1. 상단 진행 상태바 */}
       {!gameCompleted && (
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'nowrap' }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '10px', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
+          <div className="stage-info-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span className="white-space-normal" style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
               <span>STAGE {stage.stageNumber} • {stage.title}</span>
               
               {/* JLPT 급수 배지 */}
@@ -882,10 +882,7 @@ export default function PlayStagePage({ params }) {
         </div>
       ) : (
         /* ==================== [3.5 캘리그래피그림판 연동 2단 레이아웃] ==================== */
-        <div className="play-arena-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: (isDrawingOpen && hasDrawingFeature) ? '1.2fr 1fr' : '1fr',
-          gap: '30px',
+        <div className={`play-arena-grid ${isDrawingOpen && hasDrawingFeature ? 'drawing-active' : ''}`} style={{
           transition: 'all 0.4s ease'
         }}>
           
@@ -898,8 +895,8 @@ export default function PlayStagePage({ params }) {
               style={{ padding: '36px', display: 'flex', flexDirection: 'column', gap: '20px', background: 'rgba(255,255,255,0.04)' }}
             >
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="play-action-bar-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                <div className="play-btn-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button 
                     onClick={() => speak(currentQuiz.japaneseWord)}
                     className="outline-btn"
@@ -1041,12 +1038,12 @@ export default function PlayStagePage({ params }) {
                   ✍️ 손글씨 주관식 정답 입력
                 </span>
 
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div className="input-submit-group" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <input
                     type="text"
                     value={typedAnswer}
                     onChange={(e) => setTypedAnswer(e.target.value)}
-                    placeholder={hasDrawingFeature ? "오른쪽 그림판에 글씨를 쓰거나 직접 입력하세요." : "정답을 직접 키보드로 입력하세요."}
+                    placeholder={hasDrawingFeature ? "그림판에 쓰거나 직접 입력" : "정답 입력"}
                     disabled={submitted}
                     style={{
                       flexGrow: 1,
@@ -1096,7 +1093,8 @@ export default function PlayStagePage({ params }) {
                           padding: '10px 14px',
                           fontSize: '0.8rem',
                           textAlign: 'left',
-                          whiteSpace: 'nowrap',
+                          whiteSpace: 'normal',
+                          wordBreak: 'break-all',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis'
                         }}
