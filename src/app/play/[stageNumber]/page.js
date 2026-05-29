@@ -727,8 +727,8 @@ export default function PlayStagePage({ params }) {
     const xc = x / rect.width - 0.5;
     const yc = y / rect.height - 0.5;
     
-    const rotateX = yc * -6; // 플레이 몰입 방해를 막기 위해 아주 미세한 6도 틸팅
-    const rotateY = xc * 6;
+    const rotateX = yc * -1; // 플레이 몰입 방해를 막기 위해 아주 미세한 6도 틸팅
+    const rotateY = xc * 1;
     
     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.006)`;
     card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
@@ -890,8 +890,8 @@ export default function PlayStagePage({ params }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
             <div className="glass-premium-card rainbow-border" 
-              onMouseMove={handleMouseMove} 
-              onMouseLeave={handleMouseLeave}
+              // onMouseMove={handleMouseMove} 
+              // onMouseLeave={handleMouseLeave}
               style={{ padding: '36px', display: 'flex', flexDirection: 'column', gap: '20px', background: 'rgba(255,255,255,0.04)' }}
             >
               

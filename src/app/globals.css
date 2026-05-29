@@ -846,8 +846,8 @@ h2 {
 }
 
 .premium-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 12px 30px var(--accent-glow);
+  /* transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 12px 30px var(--accent-glow); */
 }
 
 /* ========================================================
