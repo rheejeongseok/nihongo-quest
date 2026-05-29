@@ -56,36 +56,12 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     }
   }, []);
 
-  // 🌸 NHK 실시간 뉴스 브리핑 상태 및 지능형 보관함(Saved Box) 시스템
+  // 🌸 NHK 실시간 뉴스 브리핑 상태
   const [nhkNews, setNhkNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
-  const [expandedNews, setExpandedNews] = useState(null); // 펼쳐진 뉴스 인덱스 토글
-  const [savedNews, setSavedNews] = useState([]); // 보관된 뉴스 배열
-  const [activeNewsTab, setActiveNewsTab] = useState('REALTIME'); // 뉴스 탭 토글 ('REALTIME' vs 'SAVED')
+  const [expandedNews, setExpandedNews] = useState(null);
 
-  // 피셔-예이츠 무작위 셔플 알고리즘 (균등 분포 셔플)
-  function shuffleArray(array) {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  // 1. 컴포넌트 마운트 시 localStorage 저장 뉴스 자동 복원
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('nihongo_quest_saved_news');
-      if (saved) {
-        setSavedNews(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error("저장 뉴스 로딩 에러:", e);
-    }
-  }, []);
-
-  // 2. 실시간 뉴스 로드 및 무작위 셔플 가동
+  // 실시간 뉴스 로드 (API에서 이미 랜덤 5개 반환)
   useEffect(() => {
     async function fetchNhkNews() {
       try {
@@ -93,9 +69,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         const res = await fetch('/api/nhk-news');
         const data = await res.json();
         if (data.success) {
-          // 최신 뉴스를 받아오자마자 무작위로 섞어서 언제나 신선하게 렌더링!
-          const shuffled = shuffleArray(data.news);
-          setNhkNews(shuffled);
+          setNhkNews(data.news);
         }
       } catch (e) {
         console.error("NHK 뉴스 로드 에러:", e);
@@ -105,25 +79,6 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     }
     fetchNhkNews();
   }, []);
-
-  // 3. 나만의 뉴스 보관함 저장/삭제 토글러
-  const toggleSaveNews = (item) => {
-    try {
-      const isAlreadySaved = savedNews.some(n => n.link === item.link);
-      let updated;
-      if (isAlreadySaved) {
-        // 이미 저장된 뉴스인 경우 제거 (보관 취소)
-        updated = savedNews.filter(n => n.link !== item.link);
-      } else {
-        // 새로운 뉴스를 보관함에 주입
-        updated = [item, ...savedNews];
-      }
-      setSavedNews(updated);
-      localStorage.setItem('nihongo_quest_saved_news', JSON.stringify(updated));
-    } catch (e) {
-      console.error("뉴스 보관 토글 에러:", e);
-    }
-  };
 
   // 모달 팝업 상태 관리
   const [selectedStage, setSelectedStage] = useState(null);
@@ -330,7 +285,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
 
       </div>
 
-      {/* 1.5. [N1 PREMIUM] NHK 실시간 시사 & 사회 뉴스 브리핑 (N1 학습 지원 아코디언 센터) */}
+      {/* 1.5. [N1 PREMIUM] NHK 랜덤 시사 & 사회 뉴스 브리핑 */}
       <div className="glass-premium-card rainbow-border nhk-news-briefing-card">
         <div className="nhk-news-header">
           <div className="nhk-news-header-title-box">
@@ -338,28 +293,12 @@ export default function ClientDashboard({ initialStages, initialUser }) {
               📰 NHK 실시간 시사 & 사회 뉴스 브리핑
             </h2>
             <p className="nhk-news-header-desc">
-              현지 최신 뉴스를 직독직해하며 N1 기출 한자 및 핵심 사회 어휘를 학습하는 프리미엄 보조 센터
+              매번 랜덤으로 선별된 5개 뉴스로 N1 기출 한자 및 핵심 사회 어휘를 학습하세요
             </p>
           </div>
-          <span className={`nhk-status-badge ${nhkNews.length > 0 && nhkNews[0].link.includes('nhk') ? 'realtime' : 'fallback'}`}>
-            {newsLoading ? "⏳ 분석 중" : nhkNews.length > 0 && nhkNews[0].link.includes('nhk') ? "● LIVE 실시간 수집" : "📚 N1 기출 시사 특강"}
+          <span className={`nhk-status-badge ${!newsLoading && nhkNews.length > 0 ? 'realtime' : 'fallback'}`}>
+            {newsLoading ? "⏳ 로딩 중" : `🎲 랜덤 ${nhkNews.length}선`}
           </span>
-        </div>
-
-        {/* 📥 럭셔리 캡슐 탭 전환기 */}
-        <div className="nhk-news-tabs">
-          <button 
-            className={`nhk-tab-btn ${activeNewsTab === 'REALTIME' ? 'active' : ''}`}
-            onClick={() => { setActiveNewsTab('REALTIME'); setExpandedNews(null); }}
-          >
-            📰 실시간 시사 뉴스
-          </button>
-          <button 
-            className={`nhk-tab-btn ${activeNewsTab === 'SAVED' ? 'active' : ''}`}
-            onClick={() => { setActiveNewsTab('SAVED'); setExpandedNews(null); }}
-          >
-            📥 저장된 뉴스 복습 <span className="nhk-tab-count">{savedNews.length}</span>
-          </button>
         </div>
 
         {newsLoading ? (
@@ -372,20 +311,10 @@ export default function ClientDashboard({ initialStages, initialUser }) {
               </div>
             ))}
           </div>
-        ) : activeNewsTab === 'SAVED' && savedNews.length === 0 ? (
-          /* 보관함이 비어 있을 때 유려한 명품 복습 가이드 뷰 */
-          <div className="nhk-empty-saved-box fade-in">
-            <span className="nhk-empty-emoji">📥</span>
-            <h5 className="nhk-empty-title">아직 보관된 시사 뉴스가 없습니다</h5>
-            <p className="nhk-empty-desc">
-              [실시간 시사 뉴스] 탭에서 학습하고 싶은 훌륭한 지문을 발견하면 <strong style={{color:'var(--accent-color)'}}>'📥 보관'</strong> 버튼을 클릭하여 담아보세요. 이곳에서 언제든 다시 어휘 분석과 한국어 번역 가이드를 펼치며 완벽 복습하실 수 있습니다!
-            </p>
-          </div>
         ) : (
           <div className="nhk-news-list">
-            {(activeNewsTab === 'REALTIME' ? nhkNews.slice(0, 5) : savedNews).map((item, idx) => {
+            {nhkNews.map((item, idx) => {
               const isExpanded = expandedNews === idx;
-              const isSaved = savedNews.some(n => n.link === item.link);
               return (
                 <div 
                   key={idx} 
@@ -400,23 +329,14 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                       <span className="nhk-news-emoji">📰</span>
                       <h4 className="nhk-news-item-title">{item.title}</h4>
                       
-                      {/* 💾 뉴스 저장 / 삭제 토글 칩 단추 */}
-                      <button 
-                        className={`nhk-save-btn ${isSaved ? 'saved' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); toggleSaveNews(item); }}
-                      >
-                        {isSaved ? "💾 보관됨" : "📥 보관"}
-                      </button>
-
                       <span className="nhk-toggle-arrow">{isExpanded ? '▲' : '▼'}</span>
                     </div>
                     <div className="nhk-news-meta-row">
                       <span className="nhk-meta-date">
                         {item.pubDate ? new Date(item.pubDate).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
                           month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
+                          day: 'numeric'
                         }) : '최신 시사'}
                       </span>
                       <span className="nhk-meta-category">N1 사회시사</span>
