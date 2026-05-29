@@ -153,13 +153,14 @@ h2 {
 .header-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 2px;
   text-decoration: none;
 }
 
 .logo-emoji {
-  font-size: 1.8rem;
-  animation: pulse 3s infinite;
+  font-size: 2.4rem;
+	margin-top:-5px;
+  /* animation: pulse 3s infinite; */
 }
 
 .logo-text {
@@ -846,8 +847,8 @@ h2 {
 }
 
 .premium-card:hover {
-  /* transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 12px 30px var(--accent-glow); */
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 30px var(--accent-glow);
 }
 
 /* ========================================================
@@ -1026,6 +1027,7 @@ html, body {
 
   .logo-emoji {
     font-size: 1.4rem !important;
+		margin-top:-0.2rem;
   }
 
   .header-theme-wrapper {
@@ -1074,8 +1076,12 @@ html, body {
   }
   
   .sync-panel-premium span {
+		display:inline-flex;
+		margin-top:1.4vw;
     font-size: calc(0.85rem + 0.4vw) !important;
     justify-content: center !important;
+		word-break:keep-all;
+		line-height:3.6vw;
   }
   
   .sync-panel-premium span:last-child {
@@ -1083,10 +1089,11 @@ html, body {
   }
   
   .sync-panel-premium button {
-    width: 100% !important;
+    width: 60% !important;
     padding: 2.5vw !important;
     font-size: calc(0.75rem + 0.2vw) !important;
     border-radius: 2vw !important;
+		justify-content:center;
   }
 
   /* [6. 대시보드 정보 그리드 - 모바일 1열 100% 웅장 배치 환원] */
