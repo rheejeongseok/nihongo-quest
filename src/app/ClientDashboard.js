@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 
 export default function ClientDashboard({ initialStages, initialUser }) {
@@ -8,6 +9,11 @@ export default function ClientDashboard({ initialStages, initialUser }) {
 
   const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const getSyncHeaders = (extra = {}) => {
     const username = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터';
@@ -156,6 +162,20 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     setChosenDifficulty('EASY');
   };
 
+  // 🏟️ 드로워 메뉴에서 아레나 모달 열기 - 커스텀 이벤트 수신
+  useEffect(() => {
+    const handleOpenArenaModal = (e) => {
+      const stageIndex = e.detail?.stageIndex ?? 0;
+      const stage = initialStages[stageIndex];
+      if (stage) {
+        openDifficultyModal(stage);
+      }
+    };
+    window.addEventListener('open-arena-modal', handleOpenArenaModal);
+    return () => window.removeEventListener('open-arena-modal', handleOpenArenaModal);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialStages]);
+
   const handleStartPlay = () => {
     if (!selectedStage) return;
     // 선택한 급수(N2/N1)와 세부 난이도(EASY/MEDIUM/HARD)를 동시에 쿼리 파라미터로 실어 라우팅 실행
@@ -182,7 +202,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     const rotateX = yc * -3; 
     const rotateY = xc * 3;
     
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.008)`;
+    card.style.transform = `perspective(62.5rem) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.008)`;
     card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
     card.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
   };
@@ -192,7 +212,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       return;
     }
     const card = e.currentTarget;
-    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
+    card.style.transform = `perspective(62.5rem) rotateX(0deg) rotateY(0deg) scale(1)`;
   };
 
   return (
@@ -437,8 +457,44 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         )}
       </div>
 
-      {/* 2. 대망의 5대 카테고리 독립형 실전 아레나 */}
-      <div className="arena-section-container">
+      {/* 🚀 모바일 전용 아레나 팝업 트리거 단축 버튼 (하단 플로팅 고정 고도화 - React Portal로 스태킹 컨텍스트 완벽 이탈) */}
+      {mounted && createPortal(
+        <div className="mobile-only animate-scale" style={{ 
+          position: 'fixed', 
+          bottom: '1.25rem', 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          width: '90%', 
+          maxWidth: '26.25rem', 
+          zIndex: 999999 
+        }}>
+          <button
+            onClick={() => {
+              // 기본값으로 첫 번째 스테이지가 선택된 채로 모달을 띄워줌
+              setSelectedStage(initialStages[0]);
+            }}
+            className="glass-neon-btn"
+            style={{
+              width: '100%',
+              justifyContent: 'center',
+              padding: '0.9375rem 1.25rem',
+              fontSize: '0.92rem',
+              borderRadius: '100px',
+              boxShadow: 'var(--neon-glow)',
+              backdropFilter: 'blur(0.75rem)',
+              WebkitBackdropFilter: 'blur(0.75rem)',
+              background: 'var(--card-bg)',
+              border: '1.5px solid var(--accent-color)'
+            }}
+          >
+            🏟️ N1 실전 아레나 챌린지 시작하기 ➔
+          </button>
+        </div>,
+        document.body
+      )}
+
+      {/* 2. 대망의 5대 카테고리 독립형 실전 아레나 (PC 전용으로 모바일 은폐) */}
+      <div className="arena-section-container pc-only">
         <h2 className="arena-section-title">
           🏟️ N1 실전 아레나 (N1 Premium Arenas)
         </h2>
@@ -500,7 +556,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         </div>
       </div>
 
-      {/* ==================== [3.0 JLPT 대분류 탭 + 상중하 난이도 조절 우아한 모달 팝업] ==================== */}
+      {/* ==================== [3.0 JLPT 5대 아레나 실시간 통합 변경 + 상중하 난이도 조절 우아한 모달 팝업] ==================== */}
       {selectedStage && (
         <div style={{
           position: 'fixed',
@@ -513,26 +569,67 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           zIndex: 2000
         }}>
           <div className="premium-card animate-scale modal-premium-content" style={{
-            maxWidth: '850px',
-            width: '90%',
+            maxWidth: '38.75rem',
+            width: '92%',
             border: '2px solid var(--accent-color)',
             boxShadow: 'var(--neon-glow)',
-            textAlign: 'center'
+            textAlign: 'center',
+            padding: '1.5rem'
           }}>
-            <span style={{ fontSize: '3rem', display: 'block', marginBottom: '12px' }}>🎓</span>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '8px' }}>
-              {selectedStage.title}
+            <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '8px' }}>🏟️</span>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '900', marginBottom: '4px' }}>
+              N1 실전 아레나 챌린지
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
-              최고난도 **JLPT N1** 실전 테스트입니다. 도전하고 싶은 **세부 난이도**를 선택해 주세요!
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '1.25rem' }}>
+              도전하실 아레나 코스와 세부 난이도를 선택해 주세요!
             </p>
 
-            {/* 소분류: [쉬움 🌱] [보통 🍱] [어려움 ⚡] */}
+            {/* 1. 5대 아레나 실시간 코스 변환기 그리드 */}
+            <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>
+              🎯 코스 선택
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(6.25rem, 1fr))', gap: '0.375rem', marginBottom: '1.25rem' }}>
+              {initialStages.map((stage) => {
+                const meta = categoryMeta[stage.category] || { emoji: '❓', color: 'gray', label: '학습' };
+                const isSelected = selectedStage.id === stage.id;
+                return (
+                  <button
+                    key={stage.id}
+                    onClick={() => setSelectedStage(stage)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.5rem 0.25rem',
+                      borderRadius: '0.75rem',
+                      background: isSelected ? 'var(--bg-secondary)' : 'rgba(255,255,255,0.02)',
+                      border: isSelected ? `2px solid ${meta.color}` : '1.5px solid var(--card-border)',
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all 0.2s ease',
+                      boxShadow: isSelected ? `0 0 0.625rem ${meta.color}20` : 'none'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.4rem' }}>{meta.emoji}</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '900', whiteSpace: 'nowrap' }}>
+                      {stage.title.split(' ')[0]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 2. 세부 난이도 선택 (쉬움 🌱, 보통 🍱, 어려움 ⚡) */}
+            <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>
+              ⚡ 난이도 설정
+            </div>
             <div className="difficulty-btn-grid" style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '10px',
-              marginBottom: '32px'
+              gap: '0.5rem',
+              marginBottom: '1.75rem'
             }}>
               {['EASY', 'MEDIUM', 'HARD'].map((diff) => {
                 const isActive = chosenDifficulty === diff;
@@ -544,15 +641,16 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                     key={diff}
                     onClick={() => setChosenDifficulty(diff)}
                     style={{
-                      padding: '12px 6px',
-                      borderRadius: 'var(--custom-radius)',
+                      padding: '0.6875rem 0.25rem',
+                      borderRadius: '0.625rem',
                       background: isActive ? colors[diff] : 'var(--bg-secondary)',
                       color: isActive ? '#ffffff' : 'var(--text-secondary)',
                       border: `1.5px solid ${isActive ? colors[diff] : 'var(--card-border)'}`,
+                      fontFamily: 'inherit',
                       fontWeight: '800',
-                      fontSize: '0.85rem',
+                      fontSize: '0.8rem',
                       cursor: 'pointer',
-                      boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+                      boxShadow: isActive ? '0 0.25rem 0.625rem rgba(0,0,0,0.1)' : 'none',
                       transition: 'all 0.2s'
                     }}
                   >
@@ -563,20 +661,20 @@ export default function ClientDashboard({ initialStages, initialUser }) {
             </div>
 
             {/* 모달 제어 */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center' }}>
               <button 
                 onClick={() => setSelectedStage(null)}
                 className="outline-btn"
-                style={{ padding: '12px 24px', fontSize: '0.9rem' }}
+                style={{ padding: '0.625rem 1.25rem', fontSize: '0.82rem', flex: 1 }}
               >
                 닫기
               </button>
               <button 
                 onClick={handleStartPlay}
                 className="glow-btn"
-                style={{ padding: '12px 32px', fontSize: '0.9rem' }}
+                style={{ padding: '0.625rem 1.5rem', fontSize: '0.82rem', flex: 1 }}
               >
-                모험 시작 ➔
+                아레나 입장 ➔
               </button>
             </div>
 

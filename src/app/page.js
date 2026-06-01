@@ -71,7 +71,7 @@ export default async function HomePage() {
   const isDbEmpty = stages.length === 0;
 
   return (
-    <div className="container" style={{ padding: '40px 24px', minHeight: 'calc(100vh - 76px)' }}>
+    <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', minHeight: 'calc(100vh - 5rem)' }}>
       {/* 타이틀 헤더 */}
       <div className="home-banner-wrapper">
         <h1 className="home-banner-title">

@@ -1,6 +1,14 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&display=swap');
 
+/* PC/모바일 반응형 분리 유틸 */
+.mobile-only {
+  display: none !important;
+}
+.pc-only {
+  display: flex !important;
+}
+
 /* ========================================================
    1. DESIGN SYSTEM - 4 VARIANT EMOTIONS (THEMES)
    ======================================================== */
@@ -121,9 +129,9 @@ h2 {
    3. MODERN PREMIUM UTILITIES & GLASSMORPHISM
    ======================================================== */
 .container {
-  max-width: 1280px; /* 3.8 프리텐다드 대화면 1280px 확장 */
+  max-width: 80rem; /* 1280px → 80rem */
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 1.5rem; /* 24px → 1.5rem */
   position: relative;
   z-index: 1;
 }
@@ -146,7 +154,7 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 80px; /* 80px로 한층 여유롭고 웅장하게 확장 */
+  height: 5rem; /* 80px → 5rem */
   transition: all 0.3s ease;
 }
 
@@ -158,8 +166,8 @@ h2 {
 }
 
 .logo-emoji {
-  font-size: 2.4rem;
-	margin-top:-5px;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin-top: -0.3rem; /* -5px → -0.3rem */
   /* animation: pulse 3s infinite; */
 }
 
@@ -243,6 +251,9 @@ h2 {
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: -2;
   overflow: hidden;
+  /* iOS Safari에서 filter:blur()가 overflow:hidden을 탈출하는 버그를 차단 */
+  clip-path: inset(0);
+  contain: paint;
   background-color: var(--bg-primary);
   pointer-events: none;
   transition: background-color 0.6s ease;
@@ -250,10 +261,10 @@ h2 {
 
 .aurora-blob {
   position: absolute;
-  width: 700px;
-  height: 700px;
+  width: clamp(18rem, 50vw, 43.75rem); /* 700px → clamp */
+  height: clamp(18rem, 50vw, 43.75rem);
   border-radius: 50%;
-  filter: blur(130px);
+  filter: blur(8rem); /* 130px → 8rem */
   opacity: 0.15;
   mix-blend-mode: screen;
   pointer-events: none;
@@ -268,39 +279,39 @@ h2 {
 
 .aurora-blob-2 {
   background: #ffb37e;
-  bottom: -20%; right: -10%;
+  bottom: -20%; right: 0%; /* right: -10% → 0%로 수정 - 오른쪽 밖으로 터져나와 blur가 html overflow 유발 */
   animation-delay: -6s;
   animation-duration: 30s;
 }
 
 .aurora-blob-3 {
   background: #90b4fc;
-  top: 35%; left: 45%;
+  top: 35%; left: 40%; /* 45% → 40%로 안전하게 조정 */
   animation-delay: -12s;
   animation-duration: 35s;
 }
 
 @keyframes float-aurora {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  33% { transform: translate(120px, 90px) scale(1.15) rotate(120deg); }
-  66% { transform: translate(-100px, 140px) scale(0.9) rotate(240deg); }
+  33% { transform: translate(5vw, 5vh) scale(1.1) rotate(120deg); } /* px → vw/vh 전환으로 콘테이너 밍겨나오지 않음 */
+  66% { transform: translate(-4vw, 7vh) scale(0.9) rotate(240deg); }
   100% { transform: translate(0, 0) scale(1) rotate(360deg); }
 }
 
 /* 🔮 극의에 달한 프리미엄 글래스모피즘 카드 */
 .glass-premium-card {
-  background: rgba(255, 255, 255, 0.65); /* 투명도를 0.65로 높여 라이트 모드 시인성 비약적 향상 */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1.5px solid rgba(0, 0, 0, 0.06); /* 테두리 경계선을 차분하고 선명하게 조율 */
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(1.25rem); /* 20px → 1.25rem */
+  -webkit-backdrop-filter: blur(1.25rem);
+  border: 1.5px solid rgba(0, 0, 0, 0.06);
   border-radius: var(--custom-radius);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.04), 
-              inset 0 1px 2px rgba(255, 255, 255, 0.5); /* 은은한 상단 반사광 */
-  padding: 24px;
+  box-shadow: 0 0.75rem 2.188rem rgba(0, 0, 0, 0.04),
+              inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  padding: 1.5rem; /* 24px → 1.5rem */
   position: relative;
-  overflow: visible; /* 3D 틸팅 대응 */
+  overflow: visible;
   transform-style: preserve-3d;
-  perspective: 1000px;
+  perspective: 62.5rem; /* 1000px → 62.5rem */
   transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.1s ease, color 0.3s ease;
 }
 
@@ -389,10 +400,10 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 32px;
+  padding: 1.25rem 2rem; /* 20px 32px → rem */
   background: rgba(255, 255, 255, 0.04);
   border-width: 1.5px;
-  margin-bottom: 24px; /* 아래 대시보드 그리드와의 쾌적한 틈새 간격 확보 */
+  margin-bottom: 1.5rem; /* 24px → 1.5rem */
 }
 
 .sync-panel-content {
@@ -423,10 +434,10 @@ h2 {
 /* 대시보드 정보 그리드 */
 .dashboard-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* 아레나 카드와 폭 완벽 대칭 */
-  gap: 28px; /* 아레나 카드와 갭 대칭 */
+  grid-template-columns: repeat(auto-fit, minmax(23.75rem, 1fr)); /* 380px → 23.75rem */
+  gap: 1.75rem; /* 28px → 1.75rem */
   justify-content: center;
-  align-items: stretch; /* 가장 큰 카드에 맞춰 똑같이 높이 자동 정렬 */
+  align-items: stretch;
   width: 100%;
 }
 
@@ -434,13 +445,13 @@ h2 {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 6px;
-  min-height: 130px; /* 150px에서 130px로 더 슬림하게 축소 */
-  padding: 14px 18px !important; /* 내부 패딩 추가 다이어트 */
+  gap: 0.375rem;
+  min-height: 8.125rem; /* 130px → 8.125rem */
+  padding: 0.875rem 1.125rem !important; /* 14px 18px → rem */
 }
 
 .info-card-wrapper.large-card {
-  min-height: 130px;
+  min-height: 8.125rem; /* 130px → 8.125rem */
 }
 
 .card-header-group {
@@ -676,6 +687,7 @@ h2 {
 /* N1 실전 아레나 섹션 */
 .arena-section-container {
   margin-top: 40px;
+	flex-direction:column;
 }
 
 .arena-section-title {
@@ -689,8 +701,8 @@ h2 {
 
 .arena-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* 최소 폭을 380px로 키워 웅장함 확보 */
-  gap: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(23.75rem, 1fr)); /* 380px → 23.75rem */
+  gap: 1.75rem; /* 28px → 1.75rem */
   width: 100%;
 }
 
@@ -698,9 +710,9 @@ h2 {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 28px;
+  padding: 1.75rem; /* 28px → 1.75rem */
   border-color: rgba(255,255,255,0.08);
-  min-height: 280px; /* 최소 높이를 280px로 원복하여 큼직하고 고급스러운 비주얼 선사 */
+  min-height: 17.5rem; /* 280px → 17.5rem */
 }
 
 .arena-card-body-wrapper {
@@ -764,20 +776,20 @@ h2 {
 /* 🔮 극강의 네온 유리 캡슐 버튼 */
 .glass-neon-btn {
   background: var(--card-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(0.5rem); /* 8px → 0.5rem */
+  -webkit-backdrop-filter: blur(0.5rem);
   color: var(--accent-color);
   border: 1.5px solid var(--accent-color);
-  padding: 12px 28px;
+  padding: 0.75rem 1.75rem; /* 12px 28px → rem */
   border-radius: 100px;
   font-weight: 800;
   font-size: 0.9rem;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05),
-              0 0 10px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 0.25rem 0.938rem rgba(0, 0, 0, 0.05),
+              0 0 0.625rem rgba(0, 0, 0, 0.02);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem; /* 8px → 0.5rem */
   transition: all 0.3s ease;
   position: relative;
   z-index: 10;
@@ -795,7 +807,7 @@ h2 {
   background-color: var(--accent-color);
   color: #ffffff;
   border: none;
-  padding: 10px 20px;
+  padding: 0.625rem 1.25rem; /* 10px 20px → rem */
   border-radius: var(--custom-radius);
   font-weight: 600;
   font-size: 0.95rem;
@@ -803,7 +815,8 @@ h2 {
   box-shadow: var(--neon-glow);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+	justify-content:center;
+  gap: 0.5rem; /* 8px → 0.5rem */
 }
 
 .glow-btn:hover {
@@ -815,12 +828,12 @@ h2 {
   background: var(--card-bg);
   color: var(--text-primary);
   border: 1.5px solid var(--card-border);
-  padding: 10px 20px;
+  padding: 0.625rem 1.25rem; /* 10px 20px → rem */
   border-radius: var(--custom-radius);
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.03);
 }
 
 .outline-btn:hover {
@@ -833,7 +846,7 @@ h2 {
   border: 1px solid var(--card-border);
   border-radius: var(--custom-radius);
   box-shadow: var(--neon-glow);
-  padding: 24px;
+  padding: 1.5rem; /* 24px → 1.5rem */
   position: relative;
   overflow: hidden;
 }
@@ -892,9 +905,9 @@ h2 {
    ======================================================== */
 /* 전역 가로 스크롤 완전 격리 차단 */
 html, body {
-  max-width: 100vw !important;
+  max-width: 100% !important; /* 100vw → 100% (vw는 스크롤바 포함으로 overflow 유발) */
   overflow-x: hidden !important;
-  width: 100vw !important;
+  width: 100% !important;
 }
 
 @media (max-width: 768px) {
@@ -906,8 +919,8 @@ html, body {
   
   .container {
     padding: 0 4vw !important; /* 기기 너비의 4% 패딩 부여 */
-    max-width: 100vw !important;
-    width: 100vw !important;
+    max-width: 100% !important; /* 100vw → 100% */
+    width: 100% !important;
     overflow-x: hidden !important;
   }
   
@@ -994,7 +1007,32 @@ html, body {
     padding: 3px 8px !important;
   }
 
-  /* [3. 프리미엄 카드 모바일 유동식 레이아웃] */
+  /* [3. 프리미엄 카드 모바일 유동식 레이아웃 & 가로 스크롤 완전 차단 가드] */
+  html, body, #__next, main, .container {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+
+  body {
+    padding-bottom: 5.75rem !important; /* 92px → 5.75rem */
+  }
+
+  /* 📱 모바일 드로워 오픈 시 하단 고정 버튼 우아하게 페이드 아웃 및 뷰포트 하단 낙하 */
+  body[data-drawer-open='true'] .mobile-only {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    transform: translate(-50%, 35px) !important; /* 아래로 부드럽게 하강 침강하며 은폐 */
+  }
+
+  /* 플로팅 고정 버튼의 움직임을 한없이 럭셔리하게 만드는 트랜지션 서명 */
+  .mobile-only {
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s !important;
+  }
+
   .glass-premium-card, .premium-card {
     padding: 4vw !important; /* 고정 px 대신 뷰포트 비례 패딩 */
     min-height: auto !important;
@@ -1002,71 +1040,267 @@ html, body {
     width: 100% !important;
   }
   
-  /* [4. 헤더 네비게이션 모바일 2단 명품 캡슐 분할 레이아웃 - 철저한 rem 반응형 패딩 적용] */
+  /* [4. 콤팩트 모바일 1단 헤더 - 로고와 햄버거 트리거만 간결 정렬] */
+  .mobile-only {
+    display: flex !important;
+  }
+  .pc-only {
+    display: none !important;
+  }
+
   header.header-glass .container.header-container {
-    display: grid !important;
-    grid-template-columns: 1fr auto !important; /* 왼쪽 로고, 오른쪽 테마 스위처 */
-    grid-template-rows: auto auto !important; /* 1단 로고/스위처, 2단 네비게이션 */
-    gap: 0.75rem !important;
-    padding: 1.75rem 1rem 1.125rem 1rem !important; /* 고정 px 완벽 격파! rem 반응형 패딩 적용 */
+    display: flex !important;
+    justify-content: space-between !important;
     align-items: center !important;
-    height: auto !important;
-    flex-direction: unset !important;
+    height: 3.75rem !important; /* 60px → 3.75rem */
+    padding: 0 1rem !important; /* 16px → 1rem */
+    gap: 0 !important;
+    grid-template-columns: unset !important;
+    grid-template-rows: unset !important;
   }
 
   .header-logo {
-    grid-column: 1 / 2 !important;
-    grid-row: 1 / 2 !important;
     display: flex !important;
     align-items: center !important;
   }
 
   .header-logo .logo-text {
-    font-size: 1.15rem !important; /* 모바일 로고 크기 축소 */
+    font-size: 1.1rem !important; /* 모바일 로고 콤팩트화 */
   }
 
   .logo-emoji {
-    font-size: 1.4rem !important;
-		margin-top:-0.2rem;
+    font-size: 1.35rem !important;
+    margin-top: -3px !important;
   }
 
-  .header-theme-wrapper {
-    grid-column: 2 / 3 !important;
-    grid-row: 1 / 2 !important;
-    justify-self: end !important;
+  /* 모바일 햄버거 버튼 트리거 */
+  .mobile-menu-trigger {
+    background: none !important;
+    border: none !important;
+    color: var(--text-primary) !important;
+    font-size: 1.8rem !important;
+    cursor: pointer !important;
     display: flex !important;
     align-items: center !important;
-  }
-
-  /* 테마 셀렉터 버튼 모바일 콤팩트화 */
-  .header-theme-wrapper button {
-    padding: 6px 10px !important;
-    font-size: 0.78rem !important;
-    gap: 4px !important;
-  }
-
-  .header-nav {
-    grid-column: 1 / 3 !important; /* 2단 전체 영역 장악 */
-    grid-row: 2 / 3 !important;
-    display: flex !important;
-    width: 100% !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
     padding: 4px !important;
-    background: rgba(255, 255, 255, 0.04) !important;
-    border-radius: 100px !important;
-    border: 1px solid var(--card-border) !important;
-    gap: 4px !important;
+    outline: none !important;
+    transition: transform 0.2s ease !important;
   }
 
-  .nav-item {
-    flex: 1 !important; /* 세 메뉴가 가로 폭을 정확히 1/3씩 균등 분할! */
-    text-align: center !important;
-    font-size: 0.8rem !important; /* 절대 찌그러지지 않는 콤팩트 명품 크기 */
-    padding: 8px 0 !important;
+  .mobile-menu-trigger:active {
+    transform: scale(0.9) !important;
+  }
+
+  /* ========================================================
+     모바일 사이드 드로워 슬라이드 메뉴 프리미엄 디자인
+     ======================================================== */
+  .mobile-drawer-overlay {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+  }
+
+  .mobile-drawer-content {
+    width: 18.4375rem !important; /* 295px → 18.4375rem */
+    max-width: 82vw !important;
+    height: 100% !important;
+    background: var(--card-bg) !important;
+    border-left: 1.5px solid var(--card-border) !important;
+    box-shadow: -0.5rem 0 2.2rem rgba(0, 0, 0, 0.12) !important; /* -8px 35px → rem */
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 1.625rem 1.25rem !important; /* 26px 20px → rem */
+    position: relative !important;
+    transform: translateX(100%);
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    animation: drawer-slide-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+
+  /* 얇고 세련된 모던 드로워 전용 세로 스크롤바 디자인 */
+  .mobile-drawer-content::-webkit-scrollbar {
+    width: 3px !important;
+  }
+  .mobile-drawer-content::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+  .mobile-drawer-content::-webkit-scrollbar-thumb {
+    background: var(--card-border) !important;
+    border-radius: 10px !important;
+  }
+
+  @keyframes drawer-slide-left {
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .drawer-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1.2px solid var(--card-border) !important;
+    padding-bottom: 0.875rem !important; /* 14px → 0.875rem */
+    margin-bottom: 1.5rem !important; /* 24px → 1.5rem */
+  }
+
+  .drawer-logo {
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.5px !important;
+    color: var(--text-primary) !important;
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+
+  .drawer-close-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--text-secondary) !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    transition: transform 0.2s ease !important;
+  }
+
+  .drawer-close-btn:active {
+    transform: scale(0.85) !important;
+  }
+
+  .drawer-section {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important; /* 8px → 0.5rem */
+    margin-bottom: 1.5rem !important; /* 24px → 1.5rem */
+  }
+
+  .drawer-sec-label {
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    opacity: 0.8 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .drawer-theme-box {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .drawer-theme-box > div {
+    width: 100% !important;
+  }
+
+  .drawer-theme-box button.outline-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px 14px !important;
+    border-radius: var(--custom-radius) !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    background: var(--card-bg) !important;
+    border: 1.5px solid var(--card-border) !important;
+    color: var(--text-primary) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .drawer-theme-box button.outline-btn + div {
+    width: 100% !important;
+  }
+
+  .drawer-nav {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important; /* 8px → 0.5rem */
+  }
+
+  .drawer-nav-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 16px !important; /* 터치하기 넉넉하고 시크한 패딩 */
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+    border-radius: 10px !important;
+    border: none !important; /* 칙칙하고 올드한 보더 완전 파쇄! */
+    background: rgba(120, 120, 120, 0.05) !important; /* 뒷배경이 맑게 투영되는 은은한 틴트 */
+    box-shadow: none !important; /* 그림자 삭제로 플랫 모던함 극대화 */
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .drawer-nav-item:hover {
+    color: var(--accent-color) !important;
+    background: rgba(120, 120, 120, 0.09) !important;
+    transform: translateX(4px) !important; /* 시크하게 오른쪽으로 미끄러지는 마이크로 인터랙션 */
+  }
+
+  .drawer-nav-item.active {
+    color: var(--accent-color) !important;
+    background: rgba(85, 124, 85, 0.07) !important; /* 은은한 영롱함을 입힌 틴팅 */
+    font-weight: 800 !important;
+  }
+
+  /* 세련미의 극치: 활성화 상태 시 좌측에 아주 얇게 맺히는 테마 컬러 포인트 바 */
+  .drawer-nav-item.active::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 25% !important;
+    height: 50% !important;
+    width: 3.5px !important;
+    background: var(--accent-color) !important;
     border-radius: 100px !important;
+  }
+
+  .drawer-footer {
+    margin-top: 1.5rem !important; /* 24px → 1.5rem */
+    border-top: 1px solid var(--card-border) !important;
+    padding-top: 1rem !important; /* 16px → 1rem */
+    text-align: center !important;
+    padding-bottom: 0.75rem !important; /* 12px → 0.75rem */
+  }
+
+  .drawer-footer p {
+    font-size: 0.7rem !important;
+    color: var(--text-secondary) !important;
+    font-weight: 700 !important;
+  }
+
+  .version-label {
+    font-size: 0.6rem !important;
+    color: var(--text-secondary) !important;
+    opacity: 0.5 !important;
+    display: block !important;
+    margin-top: 4px !important;
   }
 
   /* [5. 동기화 패널 유동형 정렬] */
+  /* [모바일 글래스모피즘 흐릿함 파쇄 및 선명도 극대화 치트키] */
+  .glass-premium-card {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    background: var(--card-bg) !important; /* 흐릿한 투명도 제거, 테마 고유의 단단하고 쨍한 카드 배경 대입 */
+    border: 1.5px solid var(--card-border) !important; /* 경계선을 확실하고 맑게 복원 */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05) !important;
+  }
+
   .sync-panel-premium {
     flex-direction: column !important;
     gap: 3vw !important;
@@ -1596,8 +1830,8 @@ html, body {
   /* [N1 PREMIUM NHK 뉴스 박스 모바일 최적화] */
   .nhk-news-briefing-card {
     padding: 4vw 4.5vw !important;
-    margin-top: 24px !important;
-    margin-bottom: 24px !important;
+    margin-top: 1.5rem !important; /* 24px → 1.5rem */
+    margin-bottom: 1.5rem !important;
     border-radius: 3vw !important;
   }
 
@@ -1798,10 +2032,10 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 30px;
+  padding: 2.5rem 1.875rem; /* 40px 30px → rem */
   text-align: center;
   border: 1px dashed var(--card-border);
-  border-radius: 16px;
+  border-radius: 1rem; /* 16px → 1rem */
   background: rgba(255, 255, 255, 0.005);
   width: 100%;
 }
@@ -1836,13 +2070,13 @@ html, body {
    🌸 [N1 PREMIUM CORE] NHK 실시간 시사 뉴스 브리핑 비주얼 시스템
    ======================================================== */
 .nhk-news-briefing-card {
-  margin-top: 36px;
-  margin-bottom: 36px;
-  padding: 24px 28px !important;
+  margin-top: 2.25rem; /* 36px → 2.25rem */
+  margin-bottom: 2.25rem;
+  padding: 1.5rem 1.75rem !important; /* 24px 28px → rem */
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--custom-radius);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.03); /* 8px 32px → rem */
 }
 
 .nhk-news-header {
@@ -2152,13 +2386,13 @@ html, body {
    ========================================================================= */
 
 .sync-hub-premium-card {
-  margin-top: 16px;
-  margin-bottom: 24px;
-  padding: 24px !important;
+  margin-top: 1rem; /* 16px → 1rem */
+  margin-bottom: 1.5rem; /* 24px → 1.5rem */
+  padding: 1.5rem !important; /* 24px → 1.5rem */
   background: rgb(197 195 143 / 45%) !important;
-  backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(1rem) saturate(180%); /* 16px → 1rem */
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 20px !important;
+  border-radius: 1.25rem !important; /* 20px → 1.25rem */
 }
 
 .sync-hub-header {
@@ -2470,6 +2704,66 @@ html, body {
     opacity: 1;
     box-shadow: 0 0 12px #2ed573;
   }
+}
+
+/* 🛠️ 일본어 학습도구 드롭다운 아이템 스타일 */
+.tools-dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 12px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  text-decoration: none !important;
+  border-radius: calc(var(--custom-radius) - 6px) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.tools-dropdown-item:hover {
+  background: var(--bg-secondary) !important;
+  color: var(--accent-color) !important;
+}
+
+/* ========================================================
+   PC 상단 헤더 버튼 통일 프리미엄 패밀리 룩 스타일
+   ======================================================== */
+.header-premium-btn {
+  height: 2.375rem !important; /* 38px → 2.375rem */
+  padding: 0 1rem !important; /* 16px → 1rem */
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  border-radius: 100px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem !important; /* 6px → 0.375rem */
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1px solid var(--card-border) !important;
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.02) !important;
+}
+
+/* 호버 시 세련된 공중 부양과 무지개 광채 발산 */
+.header-premium-btn:hover {
+  border-color: var(--accent-color) !important;
+  box-shadow: var(--neon-glow) !important;
+  transform: translateY(-1.5px) !important;
+}
+
+/* 닉네임 칩에 대해서만 은은한 오로라 광채 그라데이션 포인트 적용 */
+.header-premium-btn.sync-chip {
+  background: linear-gradient(135deg, rgba(255, 148, 148, 0.12) 0%, rgba(177, 159, 251, 0.12) 100%) !important;
+  border: 1px solid rgba(255, 148, 148, 0.25) !important;
+  text-shadow: 0 0 5px rgba(255, 148, 148, 0.3) !important;
+}
+
+.header-premium-btn.sync-chip:hover {
+  background: linear-gradient(135deg, rgba(255, 148, 148, 0.22) 0%, rgba(177, 159, 251, 0.22) 100%) !important;
+  border-color: var(--accent-color) !important;
 }
 
 

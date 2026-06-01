@@ -73,6 +73,28 @@ export default function PlayStagePage({ params }) {
   const strokeTimeRef = useRef([]);
   const startTimeRef = useRef(0);
 
+  // 📱 모바일 그림판 터치 스크롤 방지: passive: false로 DOM 이벤트 직접 등록
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const preventScroll = (e) => {
+      if (isDrawingRef.current) {
+        e.preventDefault(); // passive: false 이벤트만 여기서 preventDefault 가능
+      }
+    };
+
+    // React onTouchMove는 passive:true로 등록되어 preventDefault가 동작하지 않음
+    // 직접 DOM에 passive:false로 등록해야 추적 중 스크롤이 차단됨
+    canvas.addEventListener('touchmove', preventScroll, { passive: false });
+    canvas.addEventListener('touchstart', preventScroll, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('touchmove', preventScroll);
+      canvas.removeEventListener('touchstart', preventScroll);
+    };
+  }, []);
+
   // 📖 일본어 상용한자 및 카나 글자별 획수 가이드 사전
   const strokeMap = {
     '言': 7, '語': 14, '本': 5, '日': 4, '勉': 10, '強': 11, '学': 8, '習': 11,
@@ -295,7 +317,7 @@ export default function PlayStagePage({ params }) {
   };
 
   const startDrawing = (e) => {
-    e.preventDefault();
+    // preventDefault는 passive:false DOM 리스너에서만 호출 - React 합성이벤트(passive)에서는 경고 발생
     isDrawingRef.current = true;
     const pos = getMousePos(e);
     
@@ -307,7 +329,7 @@ export default function PlayStagePage({ params }) {
 
   const draw = (e) => {
     if (!isDrawingRef.current || !canvasRef.current) return;
-    e.preventDefault();
+    // preventDefault는 passive:false DOM 리스너에서만 호출 (touch-action:none + DOM 리스너가 스크롤 차단)
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -760,7 +782,7 @@ export default function PlayStagePage({ params }) {
   const hasDrawingFeature = stage && stage.category !== 'VOCAB' && stage.category !== 'LISTENING';
 
   return (
-    <div className="container" style={{ maxWidth: '1280px', padding: '40px 24px', position: 'relative' }}>
+    <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', position: 'relative' }}>
       
       {/* 🌌 뒷편에서 몽환적으로 일렁이는 오로라 백그라운드 구체 오버레이 */}
       <div className="aurora-bg">
@@ -774,7 +796,7 @@ export default function PlayStagePage({ params }) {
         <div style={{ marginBottom: '32px' }}>
           <div className="stage-info-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span className="white-space-normal" style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-              <span>STAGE {stage.stageNumber} • {stage.title}</span>
+              <span>{stage.title}</span>
               
               {/* JLPT 급수 배지 */}
               <span style={{
@@ -925,7 +947,12 @@ export default function PlayStagePage({ params }) {
                         borderColor: isDrawingOpen ? 'var(--accent-color)' : 'var(--card-border)'
                       }}
                     >
+											<span className="pc-only">
                       🖌️ 손글씨 판별 그림판 {isDrawingOpen ? '접기' : '켜기'}
+											</span>
+											<span className="mobile-only">
+                      🖌️ 손글씨 {isDrawingOpen ? '접기' : '켜기'}
+											</span>
                     </button>
                   )}
                 </div>
@@ -1324,7 +1351,11 @@ export default function PlayStagePage({ params }) {
                     width: '100%',
                     height: '100%',
                     cursor: 'crosshair',
-                    zIndex: 1
+                    zIndex: 1,
+                    /* 터치 스크롤 완전 차단 - 그림 그리는 동안 페이지가 움직이지 않도록 */
+                    touchAction: 'none',
+                    WebkitTouchCallout: 'none',
+                    userSelect: 'none',
                   }}
                 />
               </div>
@@ -1413,8 +1444,8 @@ export default function PlayStagePage({ params }) {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',  /* 100vw → 100% (vw는 fixed 요소에서 스크롤바 너비 포함하여 가로 스크롤 유발) */
+          height: '100%',
           pointerEvents: 'none',
           zIndex: 99999
         }}

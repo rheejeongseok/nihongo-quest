@@ -32,17 +32,8 @@ export default function ClientThemeSelector() {
       {/* 셀렉터 버튼 */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="outline-btn"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 14px',
-          borderColor: activeTheme.color,
-          fontSize: '0.9rem',
-          borderRadius: 'var(--custom-radius)',
-          cursor: 'pointer'
-        }}
+        className="header-premium-btn"
+        style={{ borderColor: activeTheme.color }}
       >
         <span>{activeTheme.emoji}</span>
         <span style={{ fontWeight: '700' }}>{activeTheme.name}</span>
