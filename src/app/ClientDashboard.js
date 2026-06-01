@@ -6,16 +6,46 @@ import { useRouter } from 'next/navigation';
 export default function ClientDashboard({ initialStages, initialUser }) {
   const router = useRouter();
 
-  // 유저 정보 기본값 매핑
-  const user = initialUser || {
-    username: '학습자님',
-    points: 0,
-    currentStreak: 5,
-    maxStreak: 10,
-    badges: '["초보자"]'
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+
+  const getSyncHeaders = (extra = {}) => {
+    const username = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터';
+    return {
+      'x-nihongo-username': encodeURIComponent(username),
+      ...extra
+    };
   };
 
-  const parsedBadges = JSON.parse(user.badges);
+  // 실시간 유저 정보 로드
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/user', {
+          headers: getSyncHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          setUser(data.user);
+        } else {
+          setUser({
+            username: typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터',
+            points: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            badges: '["초보자"]'
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setUserLoading(false);
+      }
+    }
+    loadUser();
+  }, []);
+
+  const parsedBadges = user && user.badges ? JSON.parse(user.badges) : ["초보자"];
 
   // 상시 동기화 로딩 상태
   const [syncing, setSyncing] = useState(false);
@@ -31,11 +61,15 @@ export default function ClientDashboard({ initialStages, initialUser }) {
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const r1 = await fetch('/api/wrong-notes');
+        const r1 = await fetch('/api/wrong-notes', {
+          headers: getSyncHeaders()
+        });
         const d1 = await r1.json();
         if (d1.success) setWrongCount(d1.wrongAnswers.length);
         
-        const r2 = await fetch('/api/bookmarks');
+        const r2 = await fetch('/api/bookmarks', {
+          headers: getSyncHeaders()
+        });
         const d2 = await r2.json();
         if (d2.success) setBookmarkCount(d2.bookmarks.length);
       } catch (e) {
@@ -201,17 +235,21 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         >
           <div className="card-header-group">
             <h3 className="card-title">
-              👋 어서오세요, {user.username}님!
+              {userLoading ? (
+                <span className="card-skeleton-pulse">사용자 로드 중...</span>
+              ) : (
+                `👋 어서오세요, ${user?.username || '학습자'}님!`
+              )}
             </h3>
             <p className="card-desc">
-              오늘도 즐거운 일본어 모험이 당신을 기다립니다.
+              {userLoading ? "실시간 클라우드 프로필을 동기화하고 있습니다..." : "오늘도 즐거운 일본어 모험이 당신을 기다립니다."}
             </p>
           </div>
           <div className="card-footer-group">
             <div>
               <span className="card-stat-label">누적 포인트</span>
               <span className="card-stat-value">
-                {user.points} <span className="card-stat-unit">pts</span>
+                {userLoading ? "..." : user?.points} <span className="card-stat-unit">pts</span>
               </span>
             </div>
             <span className="card-large-emoji">🏆</span>
@@ -234,10 +272,10 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           <div className="card-footer-group">
             <div>
               <span className="card-stat-value streak-color">
-                {user.currentStreak} <span className="card-stat-unit-text">일째 연속</span>
+                {userLoading ? "..." : user?.currentStreak} <span className="card-stat-unit-text">일째 연속</span>
               </span>
               <span className="card-stat-label-small">
-                최대 기록: {user.maxStreak}일 연속 학습
+                최대 기록: {userLoading ? "..." : user?.maxStreak}일 연속 학습
               </span>
             </div>
             {/* 스트릭 잔디 심기 미니 연출 */}
@@ -245,7 +283,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
               {[1, 2, 3, 4, 5].map((day) => (
                 <div 
                   key={day}
-                  className={`streak-grass-node ${day <= user.currentStreak ? 'active' : 'inactive'}`}
+                  className={`streak-grass-node ${(!userLoading && day <= (user?.currentStreak || 0)) ? 'active' : 'inactive'}`}
                 />
               ))}
             </div>

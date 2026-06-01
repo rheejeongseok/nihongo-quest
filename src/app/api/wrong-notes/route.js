@@ -4,11 +4,23 @@ import prisma from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 // 오답노트 조회 (GET)
-export async function GET() {
+export async function GET(request) {
   try {
-    const user = await prisma.user.findFirst();
+    const rawUsername = request.headers.get("x-nihongo-username");
+    const username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+
+    let user = await prisma.user.findFirst({
+      where: { username }
+    });
+
     if (!user) {
-      return NextResponse.json({ success: true, wrongAnswers: [] });
+      user = await prisma.user.create({
+        data: {
+          email: `${username}@learning.com`,
+          username,
+          points: 0,
+        }
+      });
     }
 
     const wrongAnswers = await prisma.wrongAnswer.findMany({

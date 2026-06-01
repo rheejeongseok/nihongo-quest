@@ -10,15 +10,20 @@ export const dynamic = "force-dynamic";
 export async function POST() {
   try {
     // 0. Vercel 런타임 (/tmp/dev.db) 테이블 미존재 혹은 데이터 유실 시 자가 복구 (빌드된 SQLite 파일 복제)
+    const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
     let shouldCopy = false;
-    try {
-      const userCount = await prisma.user.count();
-      const stageCount = await prisma.stage.count();
-      if (userCount === 0 || stageCount === 0) {
+    
+    // SQLite 환경인 경우에만 자가 복구 판정 개시
+    if (dbUrl.startsWith('file:')) {
+      try {
+        const userCount = await prisma.user.count();
+        const stageCount = await prisma.stage.count();
+        if (userCount === 0 || stageCount === 0) {
+          shouldCopy = true;
+        }
+      } catch (dbError) {
         shouldCopy = true;
       }
-    } catch (dbError) {
-      shouldCopy = true;
     }
 
     if (shouldCopy) {
@@ -27,7 +32,6 @@ export async function POST() {
         const srcDbPath = path.join(process.cwd(), 'prisma', 'template.db');
         
         // DATABASE_URL 환경변수에서 'file:' 프리픽스를 떼어내고 목적지 경로를 동적으로 추출
-        const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
         const rawPath = dbUrl.replace(/^file:/, '');
         const destDbPath = path.isAbsolute(rawPath) 
           ? rawPath 

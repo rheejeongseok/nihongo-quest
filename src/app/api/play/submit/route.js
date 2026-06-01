@@ -7,13 +7,17 @@ export async function POST(request) {
   try {
     const { quizId, isCorrect, timeTaken, selectedAnswer } = await request.json();
 
-    // 1. 유저 조회 (첫 번째 유저를 디폴트로 사용)
-    let user = await prisma.user.findFirst();
+    // 1. 유저 조회
+    const rawUsername = request.headers.get("x-nihongo-username");
+    const username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+    let user = await prisma.user.findFirst({
+      where: { username }
+    });
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: 'nihongo@learning.com',
-          username: '니혼고마스터',
+          email: `${username}@learning.com`,
+          username,
           points: 0,
         }
       });

@@ -8,6 +8,11 @@ export const dynamic = 'force-dynamic';
 
 // Vercel 런타임 자가 복구 헬퍼 (데이터 없을 시 완제품 template.db 자동 복제)
 async function ensureDatabaseIsReady() {
+  const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
+  if (!dbUrl.startsWith('file:')) {
+    return; // PostgreSQL 등 외부 클라우드 DB는 자가 복구 불요
+  }
+
   let shouldCopy = false;
   try {
     const userCount = await prisma.user.count();
@@ -24,7 +29,6 @@ async function ensureDatabaseIsReady() {
     try {
       const srcDbPath = path.join(process.cwd(), 'prisma', 'template.db');
       
-      const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
       const rawPath = dbUrl.replace(/^file:/, '');
       const destDbPath = path.isAbsolute(rawPath) 
         ? rawPath 

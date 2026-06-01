@@ -453,6 +453,14 @@ export default function PlayStagePage({ params }) {
     }
   }, [currentIndex, currentQuiz, speak]);
 
+  const getSyncHeaders = (extra = {}) => {
+    const username = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터';
+    return {
+      'x-nihongo-username': encodeURIComponent(username),
+      ...extra
+    };
+  };
+
   // 단어 북마크 등록
   const handleAddBookmark = async () => {
     if (!currentQuiz || bookmarking) return;
@@ -460,10 +468,10 @@ export default function PlayStagePage({ params }) {
     try {
       const res = await fetch('/api/bookmarks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           word: currentQuiz.japaneseWord,
-          meaning: currentQuiz.correctAnswer,
+          meaning: currentQuiz.hint || currentQuiz.correctAnswer, // hint(진짜 한글 뜻)를 우선 저장!
           reading: currentQuiz.pronunciation
         })
       });
@@ -520,7 +528,7 @@ export default function PlayStagePage({ params }) {
     try {
       const res = await fetch('/api/play/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           quizId: currentQuiz.id,
           isCorrect: isCorrectAns,
@@ -647,7 +655,7 @@ export default function PlayStagePage({ params }) {
       try {
         const res = await fetch('/api/play/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             quizId: currentQuiz.id,
             isCorrect: isMatch,
