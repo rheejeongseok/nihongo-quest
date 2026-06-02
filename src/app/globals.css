@@ -387,6 +387,7 @@ h2 {
   transform-style: preserve-3d;
   perspective: 62.5rem; /* 1000px → 62.5rem */
   transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.1s ease, color 0.3s ease;
+  will-change: transform, box-shadow;
 }
 
 /* 🌟 호버 시 카드의 테두리와 은은한 입체감만 차분하고 세련되게 연출 (눈부심 및 글씨 번쩍거림 방지) */
@@ -3088,6 +3089,7 @@ html, body {
   transform-style: preserve-3d;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  will-change: transform;
 }
 
 .flashcard.flipped {
@@ -3367,6 +3369,511 @@ html, body {
     background-position: 0% 0%, -200% 0%;
   }
 }
+
+/* ========================================================
+   16. 🌱 왕초보 문자 비법서 & 손글씨 연습장 프리미엄 CSS
+   ======================================================== */
+.beginner-quest-board {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .beginner-quest-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+.beginner-left-pane, .beginner-right-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 탭 전환 바 */
+.beginner-tabs-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--card-border);
+  padding-bottom: 10px;
+}
+
+.beginner-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.beginner-tab-btn {
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  border-radius: 100px;
+  border: 1.5px solid transparent;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.beginner-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.beginner-tab-btn.active {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.beginner-pane-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+/* 50음도 그리드 레이아웃 */
+.alphabet-grid-container {
+  overflow-x: auto;
+  padding: 4px;
+  width: 100%;
+}
+
+.alphabet-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  min-width: 320px;
+}
+
+.alphabet-cell {
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  min-height: 70px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.alphabet-cell:not(.empty):hover {
+  transform: translateY(-4px) scale(1.03);
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 20px var(--accent-glow);
+}
+
+.alphabet-cell.active {
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+  border-color: var(--accent-color);
+  box-shadow: 0 6px 18px var(--accent-glow);
+}
+
+.alphabet-cell.active .cell-char,
+.alphabet-cell.active .cell-roman {
+  color: #ffffff !important;
+}
+
+.alphabet-cell.empty {
+  background: transparent;
+  border: 1px dashed rgba(0, 0, 0, 0.05);
+  cursor: default;
+  pointer-events: none;
+}
+
+:root[data-theme='cyber'] .alphabet-cell.empty {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.cell-char {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.cell-roman {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* 캔버스 드로잉 연습장 */
+.canvas-panel {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--custom-radius);
+  padding: 16px;
+  height: 100%;
+}
+
+.canvas-header-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.canvas-container-relative {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 420px;
+  margin: 0 auto 16px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--card-border);
+  background: var(--bg-secondary);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* 동양 서예 연습장의 십자 격자 점선 가이드 배경 */
+.canvas-traditional-grid-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-traditional-grid-bg::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+.canvas-traditional-grid-bg::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1px dashed rgba(0,0,0,0.03);
+  background-image: 
+    linear-gradient(45deg, rgba(0,0,0,0.02) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.02) 75%),
+    linear-gradient(45deg, rgba(0,0,0,0.02) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.02) 75%);
+  background-size: 100% 100%;
+}
+
+:root[data-theme='cyber'] .canvas-traditional-grid-bg::before {
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+}
+
+.drawing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: crosshair;
+  touch-action: none; /* 모바일 터치 시 브라우저 스크롤/바운스 방지 */
+}
+
+/* 캔버스 도구 콘트롤 바 */
+.canvas-tools-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.tools-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tools-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.color-palette {
+  display: flex;
+  gap: 6px;
+}
+
+.color-chip {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.color-chip:hover {
+  transform: scale(1.15);
+}
+
+.color-chip.active {
+  border-color: var(--text-primary);
+  transform: scale(1.15);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.brush-sizes {
+  display: flex;
+  gap: 4px;
+}
+
+.brush-btn {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border-radius: 6px;
+  border: 1.5px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.brush-btn.active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: var(--bg-secondary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.25s;
+}
+
+.action-btn.clear {
+  border: 1.5px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.action-btn.clear:hover {
+  background: var(--bg-secondary);
+}
+
+.action-btn.success {
+  background: var(--accent-color);
+  color: #ffffff;
+  border: 1.5px solid var(--accent-color);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.action-btn.success:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--accent-glow);
+}
+
+/* 💮 참잘했어요 캔버스 도장 찍기용 스탬프 애니메이션 */
+.canvas-stamp-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(5);
+  font-size: 8rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.canvas-stamp-overlay.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0.95;
+}
+
+/* 🎉 순수 CSS Confetti 입자 애니메이션 */
+.pure-confetti-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 99999;
+  overflow: hidden;
+}
+
+.pure-confetti-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: fallAndSpin 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes fallAndSpin {
+  0% {
+    transform: translateY(-50px) rotate(0deg) translateX(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(20vh) rotate(180deg) translateX(100px);
+  }
+  60% {
+    transform: translateY(50vh) rotate(360deg) translateX(-80px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(105vh) rotate(720deg) translateX(50px);
+    opacity: 0;
+  }
+}
+
+/* ========================================================
+   17. 🌱 왕초보 문자 비법서 코스 전용 모달 팝업 스타일
+   ======================================================== */
+.calligraphy-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.calligraphy-modal-window {
+  background: var(--glass-bg);
+  border: 1.5px solid var(--card-border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), var(--neon-glow);
+  width: 100%;
+  max-width: 1080px;
+  max-height: 90vh;
+  border-radius: var(--custom-radius);
+  overflow-y: auto;
+  position: relative;
+  animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.calligraphy-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 10px 24px;
+  border-bottom: 1.5px solid var(--card-border);
+}
+
+.calligraphy-modal-body {
+  padding: 24px;
+}
+
+.calligraphy-modal-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--card-border);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.calligraphy-modal-close-btn:hover {
+  background: #ff6b6b;
+  color: #ffffff;
+  border-color: #ff6b6b;
+  transform: rotate(90deg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 📱 모바일 환경 오십음도 그리드 압축 최적화 (가로 스크롤 완전 억제) */
+@media (max-width: 768px) {
+  .alphabet-grid {
+    gap: 6px !important;
+  }
+  
+  .alphabet-cell {
+    min-height: 48px !important;
+    padding: 6px 4px !important;
+    border-radius: 8px !important;
+  }
+  
+  .cell-char {
+    font-size: 1.15rem !important;
+  }
+  
+  .cell-roman {
+    font-size: 0.58rem !important;
+    margin-top: 1px !important;
+  }
+  
+  .alphabet-grid-container {
+    padding: 2px !important;
+  }
+
+	.calligraphy-modal-body {
+		padding:0.4rem !important;
+	}
+
+	.beginner-tabs-container {
+		justify-content:center;
+	}
+
+	.beginner-tab-btn {
+		padding:0.4rem 0.4rem !important;
+	}
+}
+
+
+
 
 
 

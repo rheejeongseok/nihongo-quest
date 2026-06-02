@@ -636,7 +636,105 @@ const predefinedExamples = {
  */
 export function getExampleSentence(word, meaning) {
   const cleanWord = word.trim();
+  const targetLevel = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_target_level') || 'N1') : 'N1';
   
+  if (targetLevel === 'BEGINNER') {
+    // 🌸 왕초보 스타터 전용 20대 일상 상황극 찰떡 예문 & 템플릿
+    const cleanMeaning = meaning
+      ? meaning.replace(/\s*\(정답은[^)]+\)/g, "").replace(/\[[^\]]+\]/g, "").trim()
+      : "학습 단어";
+
+    const beginnerTemplates = [
+      {
+        sentence: `すみません、ラーメン一杯に「${cleanWord}」を追加してください。`,
+        translation: `실례합니다, 라멘 한 잔에 「${cleanMeaning}」을(를) 추가해 주세요.`
+      },
+      {
+        sentence: `このおにぎりは美味しいですよ。ぜひ「${cleanWord}」してみてください！`,
+        translation: `이 주먹밥은 정말 맛있어요. 꼭 「${cleanMeaning}」해 보세요!`
+      },
+      {
+        sentence: `桜満開の公園を二人で「${cleanWord}」するのは本当にロマンチックですね。`,
+        translation: `벚꽃이 만개한 공원을 둘러보며 둘이서 「${cleanMeaning}」하는 것은 정말 로맨틱하네요.`
+      },
+      {
+        sentence: `今日から新しくバイトとして、「${cleanWord}」することになりました。よろしくお願いします！`,
+        translation: `오늘부터 새로 아르바이트생으로서, 「${cleanMeaning}」하게 되었습니다. 잘 부탁드립니다!`
+      },
+      {
+        sentence: `パスポートの確認と荷物の「${cleanWord}」をお願いいたします。`,
+        translation: `여권 확인과 수하물 「${cleanMeaning}」을(를) 부탁드립니다.`
+      },
+      {
+        sentence: `すみません、東京駅へはどうやって「${cleanWord}」すればいいですか？`,
+        translation: `실례합니다, 도쿄역에는 어떻게 「${cleanMeaning}」하면 됩니까?`
+      },
+      {
+        sentence: `静かな図書館で日本語の文法を「${cleanWord}」しています。`,
+        translation: `조용한 도서관에서 일본어 문법을 「${cleanMeaning}」하고 있습니다.`
+      },
+      {
+        sentence: `アイスコーヒーを飲みながら、週末の予定を「${cleanWord}」しましょう。`,
+        translation: `아이스 커피를 마시며, 주말 계획을 「${cleanMeaning}」합시다.`
+      },
+      {
+        sentence: `明日の東京は晴れですから、傘を持って「${cleanWord}」しなくても大丈夫です。`,
+        translation: `내일 도쿄는 맑기 때문에, 우산을 들고 「${cleanMeaning}」하지 않아도 괜찮습니다.`
+      },
+      {
+        sentence: `この可愛い服は今、２０％の「${cleanWord}」セール中ですよ。`,
+        translation: `이 귀여운 옷은 지금 20% 「${cleanMeaning}」 세일 중이에요.`
+      },
+      {
+        sentence: `新宿行きの電車がまもなく「${cleanWord}」しますので、お気をつけてください。`,
+        translation: `신주쿠행 전철이 곧 「${cleanMeaning}」하오니, 조심하시기 바랍니다.`
+      },
+      {
+        sentence: `約束の時間に遅れないように、早く「${cleanWord}」したほうがいいです。`,
+        translation: `약속 시간에 늦지 않도록, 일찍 「${cleanMeaning}」하는 편이 좋습니다.`
+      },
+      {
+        sentence: `話題の日本アニメ映画を映画館で「${cleanWord}」して、大感動しました。`,
+        translation: `화제의 일본 애니메이션 영화를 영화관에서 「${cleanMeaning}」하고 크게 감동했습니다.`
+      },
+      {
+        sentence: `京都の古いお寺や伝統的な街並みを「${cleanWord}」する旅行を計画しています。`,
+        translation: `교토의 오래된 사찰과 전통적인 거리 모습을 「${cleanMeaning}」하는 여행을 계획하고 있습니다.`
+      },
+      {
+        sentence: `お腹がとても空いているので、ラーメンの大盛りを「${cleanWord}」します。`,
+        translation: `배가 무척 고파서, 라멘 곱빼기를 「${cleanMeaning}」하겠습니다.`
+      },
+      {
+        sentence: `いつも優しく日本語を教えてくれて、本当に「${cleanWord}」しています。`,
+        translation: `언제나 친절하게 일본어를 가르쳐 주셔서, 정말 「${cleanMeaning}」하고 있습니다.`
+      },
+      {
+        sentence: `私の趣味は、日本のアニメを見ながらセリフを「${cleanWord}」することです。`,
+        translation: `제 취미는 일본 애니메이션을 보며 대사를 「${cleanMeaning}」하는 것입니다.`
+      },
+      {
+        sentence: `韓国から参りました。これから一生懸命「${cleanWord}」しますので、よろしくお願いします！`,
+        translation: `한국에서 왔습니다. 앞으로 열심히 「${cleanMeaning}」할 테니, 잘 부탁드립니다!`
+      },
+      {
+        sentence: `動物園で大人気の可愛いパンダを「${cleanWord}」することができました。`,
+        translation: `동물원에서 인기 만점인 귀여운 판다를 「${cleanMeaning}」할 수 있었습니다.`
+      },
+      {
+        sentence: `毎朝、公園を軽く走りながら健康を「${cleanWord}」しています。`,
+        translation: `매일 아침, 공원을 가볍게 달리며 건강을 「${cleanMeaning}」하고 있습니다.`
+      }
+    ];
+
+    let hash = 0;
+    for (let i = 0; i < cleanWord.length; i++) {
+      hash += cleanWord.charCodeAt(i);
+    }
+    const index = hash % beginnerTemplates.length;
+    return beginnerTemplates[index];
+  }
+
   if (predefinedExamples[cleanWord]) {
     return predefinedExamples[cleanWord];
   }

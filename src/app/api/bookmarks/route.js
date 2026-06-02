@@ -7,7 +7,11 @@ export const dynamic = 'force-dynamic';
 export async function GET(request) {
   try {
     const rawUsername = request.headers.get("x-nihongo-username");
-    const username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
+    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+    if (targetLevel === "BEGINNER") {
+      username = `${username}-beginner`;
+    }
 
     let user = await prisma.user.findFirst({
       where: { username }
@@ -38,7 +42,11 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const rawUsername = request.headers.get("x-nihongo-username");
-    const username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
+    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+    if (targetLevel === "BEGINNER") {
+      username = `${username}-beginner`;
+    }
     const { word, meaning, reading } = await request.json();
     
     let user = await prisma.user.findFirst({

@@ -9,7 +9,11 @@ export async function POST(request) {
 
     // 1. 유저 조회
     const rawUsername = request.headers.get("x-nihongo-username");
-    const username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
+    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
+    if (targetLevel === "BEGINNER") {
+      username = `${username}-beginner`;
+    }
     let user = await prisma.user.findFirst({
       where: { username }
     });
