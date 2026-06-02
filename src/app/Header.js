@@ -1019,7 +1019,15 @@ export default function Header() {
                 return (
                   <button
                     key={stage.id}
-                    onClick={() => setSelectedStage(stage)}
+                    onClick={() => {
+                      if (stage.category === 'CALLIGRAPHY') {
+                        // 아레나 모달 닫고 칠판 모달 열기
+                        setSelectedStage(null);
+                        window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
+                        return;
+                      }
+                      setSelectedStage(stage);
+                    }}
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
@@ -1096,13 +1104,18 @@ export default function Header() {
               <button 
                 onClick={() => {
                   if (!selectedStage) return;
+                  if (selectedStage.category === 'CALLIGRAPHY') {
+                    setSelectedStage(null);
+                    window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
+                    return;
+                  }
                   router.push(`/play/${selectedStage.stageNumber}?jlptLevel=${chosenJlpt}&difficulty=${chosenDifficulty}`);
                   setSelectedStage(null);
                 }}
                 className="glow-btn"
                 style={{ padding: '0.625rem 1.5rem', fontSize: '0.82rem', flex: 1 }}
               >
-                아레나 입장 ➔
+                {selectedStage?.category === 'CALLIGRAPHY' ? '손글씨 연습장 열기 ✍️' : '아레나 입장 ➔'}
               </button>
             </div>
 
