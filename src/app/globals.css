@@ -251,7 +251,7 @@ h2 {
   letter-spacing: -0.5px;
   color: var(--text-primary);
   background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%);
-  -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -451,7 +451,7 @@ h2 {
   pointer-events: none;
   opacity: 0.8;
   padding: 1px; /* 1px의 얇은 테두리 두께 확보 */
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude; /* 🌟 안쪽 면적을 투명하게 완전히 파내어 글씨 배경 침범 차단 */
   transition: opacity 0.3s, background 0.3s;
@@ -1231,7 +1231,7 @@ html, body {
     letter-spacing: -0.5px !important;
     color: var(--text-primary) !important;
     background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%) !important;
-    -webkit-background-clip: text !important;
+    background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
   }
 
@@ -2187,7 +2187,7 @@ html, body {
   color: var(--text-primary);
   margin-bottom: 6px !important;
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-color) 100%);
-  -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -2517,7 +2517,7 @@ html, body {
   font-weight: 800;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #1a1a1a 30%, #1a1a1a 100%);
-  -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
