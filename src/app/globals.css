@@ -1,5 +1,5 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
-@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&display=swap');
+@import url('https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css');
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&family=Outfit:wght@300;400;600;800&family=Quicksand:wght@400;500;600;700;900&display=swap');
 
 /* PC/모바일 반응형 분리 유틸 */
 .mobile-only {
@@ -19,13 +19,13 @@
   --bg-secondary: #f4eee1;
   --text-primary: #2d382e;
   --text-secondary: #5d6d5f;
-  --accent-color: #557c55; /* 대나무 녹빛 */
-  --accent-hover: #3d5e3d;
-  --accent-glow: rgba(85, 124, 85, 0.3);
+  --accent-color: #486b48; /* 가독성을 위해 살짝 묵직해진 대나무 녹빛 */
+  --accent-hover: #345234;
+  --accent-glow: rgba(72, 107, 72, 0.3);
   --card-bg: #ffffff;
-  --card-border: rgba(85, 124, 85, 0.15);
-  --neon-glow: 0 4px 20px rgba(85, 124, 85, 0.1);
-  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
+  --card-border: rgba(72, 107, 72, 0.15);
+  --neon-glow: 0 4px 20px rgba(72, 107, 72, 0.08);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
   --custom-radius: 16px;
   --glass-bg: rgba(255, 255, 255, 0.8);
 }
@@ -35,15 +35,15 @@
   --bg-primary: #08090d;
   --bg-secondary: #12131c;
   --text-primary: #ffffff;
-  --text-secondary: #8b92b6;
-  --accent-color: #00f0ff; /* 네온 사이언 */
+  --text-secondary: #9da5cc; /* 본문 판독성 향상을 위해 더 부드럽고 밝아진 서브 텍스트 */
+  --accent-color: #00d8e6; /* 눈부심을 정밀 억제한 일렉트릭 청록 */
   --accent-hover: #ff007f; /* 네온 핑크 */
-  --accent-glow: rgba(0, 240, 255, 0.4);
+  --accent-glow: rgba(0, 216, 230, 0.4);
   --card-bg: #161724;
-  --card-border: rgba(0, 240, 255, 0.25);
-  --neon-glow: 0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(255, 0, 127, 0.2);
-  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
-  --custom-radius: 8px; /* 사이버틱한 각진 느낌 */
+  --card-border: rgba(0, 240, 255, 0.22);
+  --neon-glow: 0 0 20px rgba(0, 240, 255, 0.35), 0 0 40px rgba(255, 0, 127, 0.2);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 8px;
   --glass-bg: rgba(22, 23, 36, 0.85);
 }
 
@@ -53,34 +53,101 @@
   --bg-secondary: #ffe8e8;
   --text-primary: #5c4343;
   --text-secondary: #9e8585;
-  --accent-color: #ff9494; /* 복숭아 코랄 */
-  --accent-hover: #e07c7c;
-  --accent-glow: rgba(255, 148, 148, 0.4);
+  --accent-color: #d56363; /* 흰색/핑크 배경 위에 칼날처럼 선명히 읽히는 딥 코랄 로즈 */
+  --accent-hover: #bd4d4d;
+  --accent-glow: rgba(213, 99, 99, 0.35);
   --card-bg: #ffffff;
-  --card-border: rgba(255, 148, 148, 0.25);
-  --neon-glow: 0 8px 24px rgba(255, 148, 148, 0.2);
-  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
-  --custom-radius: 28px; /* 극도의 라운드 */
+  --card-border: rgba(255, 148, 148, 0.2);
+  --neon-glow: 0 8px 24px rgba(255, 148, 148, 0.15);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 28px;
   --glass-bg: rgba(255, 255, 255, 0.9);
 }
 
 /* [Theme 4] 클래식 스터디 (Classic Academic) - Craft Grid Paper Vibe */
 :root[data-theme='academic'] {
-  --bg-primary: #faf6eb; /* 옛 서적 느낌의 종이색 */
+  --bg-primary: #faf6eb;
   --bg-secondary: #f0e6cf;
-  --text-primary: #1b263b; /* 미드나잇 만년필 청동색 */
+  --text-primary: #1b263b;
   --text-secondary: #506275;
   --accent-color: #1e4620; /* 칠판 올리브 그린 */
-  --accent-hover: #b89158; /* 골드 촉 색상 */
+  --accent-hover: #b89158;
   --accent-glow: rgba(30, 70, 32, 0.2);
   --card-bg: #fdfcf7;
   --card-border: #d7caaa;
   --neon-glow: none;
-  --custom-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans JP', sans-serif;
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
   --custom-radius: 4px;
   --glass-bg: rgba(253, 252, 247, 0.9);
-  /* 모눈종이 그리드 오버레이용 배경 추가 */
   --academic-grid: radial-gradient(rgba(215, 202, 170, 0.3) 1px, transparent 1px);
+}
+
+/* [Theme 5] 네온 드림 (Neon Dream) - Cyberpunk Vaporwave Pearl Vibe */
+:root[data-theme='neon-dream'] {
+  --bg-primary: #0a0b16;
+  --bg-secondary: #131527;
+  --text-primary: #ffffff;
+  --text-secondary: #a2a8d3;
+  --accent-color: #00d59a; /* 본문 텍스트 눈부심을 억제한 민트 에메랄드 */
+  --accent-hover: #ff007f;
+  --accent-glow: rgba(0, 213, 154, 0.4);
+  --card-bg: rgba(26, 28, 52, 0.7); /* 불투명도를 높여 카드가 더 단정히 분리되게 조율 */
+  --card-border: rgba(0, 255, 185, 0.25);
+  --neon-glow: 0 0 15px rgba(0, 255, 185, 0.35), 0 0 30px rgba(255, 0, 127, 0.2);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 12px;
+  --glass-bg: rgba(20, 22, 46, 0.9);
+}
+
+/* [Theme 6] 오로라 숲 (Nordic Frost) - Aurora Arctic Glacier Vibe */
+:root[data-theme='nordic-frost'] {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #121b2d;
+  --text-primary: #e6f1ff;
+  --text-secondary: #8892b0;
+  --accent-color: #00c0cb; /* 눈부심을 방지하고 가독성을 보장하는 딥 아쿠아 마린 */
+  --accent-hover: #00a4b0;
+  --accent-glow: rgba(0, 192, 203, 0.35);
+  --card-bg: rgba(18, 30, 49, 0.8);
+  --card-border: rgba(0, 242, 254, 0.2);
+  --neon-glow: 0 0 15px rgba(0, 242, 254, 0.3);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 20px;
+  --glass-bg: rgba(18, 30, 49, 0.9);
+}
+
+/* [Theme 7] 벨벳 로즈 (Velvet Rose) - Royal Burgundy Gothic Mystery */
+:root[data-theme='velvet-rose'] {
+  --bg-primary: #12090e;
+  --bg-secondary: #22121b;
+  --text-primary: #fff0f5;
+  --text-secondary: #c299a9;
+  --accent-color: #e25372; /* 벨벳 카펫과 조화를 이루는 눈이 편한 로즈 벨벳 */
+  --accent-hover: #ff6b8b;
+  --accent-glow: rgba(226, 83, 114, 0.3);
+  --card-bg: rgba(44, 21, 33, 0.7);
+  --card-border: rgba(255, 107, 139, 0.25);
+  --neon-glow: 0 4px 20px rgba(255, 107, 139, 0.2);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 10px;
+  --glass-bg: rgba(44, 21, 33, 0.9);
+}
+
+/* [Theme 8] 샤인 사하라 (Golden Sand) - Luxury Sahara Oasis Vibe */
+:root[data-theme='golden-sand'] {
+  --bg-primary: #faf6f0;
+  --bg-secondary: #f3eae0;
+  --text-primary: #3d3122;
+  --text-secondary: #8c765c;
+  --accent-color: #ac8415; /* 아이보리 모래사장 배경 위에서 칠흑처럼 선명해진 앤티크 브론즈 골드 */
+  --accent-hover: #8f6d0f;
+  --accent-glow: rgba(172, 132, 21, 0.3);
+  --card-bg: #ffffff;
+  --card-border: rgba(172, 132, 21, 0.25);
+  --neon-glow: 0 6px 20px rgba(172, 132, 21, 0.12);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 18px;
+  --glass-bg: rgba(255, 255, 255, 0.85);
 }
 
 /* ========================================================
@@ -100,14 +167,21 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1 {
   font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 h2 {
   font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 /* 클래식 아카데믹 테마의 모눈종이 질감 적용 */
@@ -173,7 +247,7 @@ h2 {
 
 .logo-text {
   font-size: 1.35rem;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.5px;
   color: var(--text-primary);
   background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%);
@@ -1021,7 +1095,7 @@ html, body {
   }
 
   /* 📱 모바일 드로워 오픈 시 하단 고정 버튼 우아하게 페이드 아웃 및 뷰포트 하단 낙하 */
-  body[data-drawer-open='true'] .mobile-only {
+  body[data-drawer-open='true'] .mo-arena-btn {
     opacity: 0 !important;
     pointer-events: none !important;
     visibility: hidden !important;
@@ -1085,7 +1159,7 @@ html, body {
     justify-content: center !important;
     padding: 4px !important;
     outline: none !important;
-    transition: transform 0.2s ease !important;
+    /* transition: transform 0.2s ease !important; */
   }
 
   .mobile-menu-trigger:active {
@@ -1300,6 +1374,14 @@ html, body {
     border: 1.5px solid var(--card-border) !important; /* 경계선을 확실하고 맑게 복원 */
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05) !important;
   }
+
+	.glass-premium-card .count-title span {
+		display:none !important;
+	}
+
+	.glass-premium-card .count-timer {
+		margin:0 auto;
+	}
 
   .sync-panel-premium {
     flex-direction: column !important;
@@ -1741,17 +1823,18 @@ html, body {
   }
   
   .input-submit-group {
-    flex-direction: column !important;
+    flex-direction: row !important;
     align-items: stretch !important;
     gap: 0.75rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
   }
   
   .input-submit-group input {
     width: 100% !important;
+		flex:5 !important;
   }
   
   .input-submit-group button {
-    width: 100% !important;
+    flex:1 !important;
     padding: 0.875rem 1.25rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
     justify-content: center !important;
   }
@@ -1763,18 +1846,17 @@ html, body {
   }
   
   .play-action-bar-top {
-    flex-direction: column !important;
+    flex-direction: row !important;
     align-items: stretch !important;
     gap: 0.75rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
   }
   
   .play-action-bar-top .play-btn-group {
-    width: 100% !important;
+    width: auto !important;
     justify-content: flex-start !important;
   }
   
   .play-action-bar-top .outline-btn {
-    flex: 1 !important;
     justify-content: center !important;
     text-align: center !important;
     font-size: 0.8rem !important;
@@ -1838,7 +1920,7 @@ html, body {
   .nhk-news-header {
     flex-direction: row !important;
     justify-content: space-between !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     gap: 8px !important;
     padding-bottom: 10px !important;
   }
@@ -1850,6 +1932,10 @@ html, body {
   .nhk-news-header-desc {
     font-size: 0.72rem !important;
   }
+
+	.nhk-status-badge {
+		display:none;
+	}
 
   .nhk-news-item-trigger {
     padding: 12px 14px !important;
@@ -1886,7 +1972,8 @@ html, body {
   }
 
   .nhk-word-chip-wrapper {
-    padding: 6px 10px !important;
+    padding: 10px 14px !important;
+		align-items:flex-start !important;
   }
 
   .nhk-translation-text {
@@ -2399,9 +2486,12 @@ html, body {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sync-hub-header.expanded {
   padding-bottom: 16px;
+	margin-bottom: 24px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sync-hub-icon {
@@ -2640,7 +2730,7 @@ html, body {
   }
   
   .sync-hub-section {
-    padding: 16px;
+    padding: 0;
   }
   
   .code-import-box {
@@ -2764,6 +2854,518 @@ html, body {
 .header-premium-btn.sync-chip:hover {
   background: linear-gradient(135deg, rgba(255, 148, 148, 0.22) 0%, rgba(177, 159, 251, 0.22) 100%) !important;
   border-color: var(--accent-color) !important;
+}
+
+/* ========================================================
+   [N1 PREMIUM MULTI-CONCEPT SYSTEM]
+   5가지 시각적 컨셉 모드 전역 분기 및 텍스처 시스템
+   ======================================================== */
+
+/* --- 1. 레트로 8비트 모드 (retro) --- */
+:root[data-concept='retro'] {
+  --custom-radius: 0px !important;
+  --neon-glow: none !important;
+}
+
+/* 레트로 도트 바둑판 격자 배경 */
+:root[data-concept='retro'] .aurora-bg {
+  background: var(--bg-primary) !important;
+  background-image: radial-gradient(var(--card-border) 2px, transparent 2px) !important;
+  background-size: 16px 16px !important;
+  opacity: 0.65 !important;
+}
+:root[data-concept='retro'] .aurora-blob {
+  display: none !important;
+}
+
+/* 레트로 픽셀 아트 카드 & 단추 리포밍 */
+:root[data-concept='retro'] .glass-premium-card,
+:root[data-concept='retro'] .premium-card,
+:root[data-concept='retro'] .tools-dropdown,
+:root[data-concept='retro'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 4px solid var(--text-primary) !important;
+  box-shadow: 6px 6px 0px var(--text-primary) !important;
+  backdrop-filter: none !important;
+}
+
+:root[data-concept='retro'] button,
+:root[data-concept='retro'] .glow-btn,
+:root[data-concept='retro'] .outline-btn,
+:root[data-concept='retro'] .header-premium-btn,
+:root[data-concept='retro'] .drawer-nav-item,
+:root[data-concept='retro'] input {
+  border: 3px solid var(--text-primary) !important;
+  box-shadow: 3px 3px 0px var(--text-primary) !important;
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0px !important;
+  text-shadow: none !important;
+}
+
+:root[data-concept='retro'] button:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px var(--text-primary) !important;
+}
+
+
+/* --- 2. 교토 전통 헤리티지 모드 (heritage) --- */
+:root[data-concept='heritage'] {
+  --custom-radius: 12px !important;
+  --bg-primary: #fcf9f2 !important; /* 따스한 다도실 벽지색 */
+  --bg-secondary: #f4edd9 !important;
+  --text-primary: #3d2f26 !important; /* 깊은 먹빛 브라운 */
+  --text-secondary: #705f53 !important;
+  --accent-color: #a63f3f !important; /* 일본 단풍나무 적갈색 */
+  --accent-glow: rgba(166, 63, 63, 0.2) !important;
+  --card-bg: #fbfbfa !important;
+  --card-border: #e0d5be !important;
+  --neon-glow: none !important;
+  --glass-bg: rgba(251, 251, 250, 0.9) !important;
+}
+
+/* 교토 다도실의 은은한 미닫이 장지문 격자 배경 */
+:root[data-concept='heritage'] .aurora-bg {
+  background: var(--bg-primary) !important;
+  background-image: 
+    linear-gradient(rgba(112, 95, 83, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(112, 95, 83, 0.05) 1px, transparent 1px) !important;
+  background-size: 40px 40px !important;
+  opacity: 0.95 !important;
+}
+:root[data-concept='heritage'] .aurora-blob {
+  display: none !important;
+}
+
+/* 한지(Washi) 질감의 단아하고 우아한 전통 카드 보더 */
+:root[data-concept='heritage'] .glass-premium-card,
+:root[data-concept='heritage'] .premium-card,
+:root[data-concept='heritage'] .tools-dropdown,
+:root[data-concept='heritage'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 2px solid var(--accent-color) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 15px rgba(61, 47, 38, 0.06) !important;
+}
+
+:root[data-concept='heritage'] button,
+:root[data-concept='heritage'] .glow-btn,
+:root[data-concept='heritage'] .outline-btn,
+:root[data-concept='heritage'] .header-premium-btn,
+:root[data-concept='heritage'] .drawer-nav-item,
+:root[data-concept='heritage'] input {
+  border: 1.5px solid var(--text-secondary) !important;
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+:root[data-concept='heritage'] button:hover {
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+}
+
+
+/* --- 3. 추억의 분필 칠판 모드 (chalkboard) --- */
+:root[data-concept='chalkboard'] {
+  --custom-radius: 6px !important;
+  --bg-primary: #173322 !important; /* 깊은 무광 칠판 청록색 */
+  --bg-secondary: #0d2215 !important;
+  --text-primary: #f8f9fa !important; /* 선명한 백색 분필 텍스트 */
+  --text-secondary: #c2d5c6 !important;
+  --accent-color: #ffd43b !important; /* 강조용 옐로우 분필 텍스트 */
+  --accent-glow: rgba(255, 212, 59, 0.3) !important;
+  --card-bg: #1d3f2b !important;
+  --card-border: #8b5a2b !important; /* 중후한 원목 몰딩색 */
+  --neon-glow: 0 0 10px rgba(255, 255, 255, 0.08) !important;
+  --glass-bg: rgba(29, 63, 43, 0.95) !important;
+}
+
+/* 칠판에 남은 부드러운 분필 가루 질감 효과 */
+:root[data-concept='chalkboard'] .aurora-bg {
+  background: var(--bg-primary) !important;
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0),
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0) !important;
+  background-size: 12px 12px !important;
+  opacity: 0.9 !important;
+}
+:root[data-concept='chalkboard'] .aurora-blob {
+  display: none !important;
+}
+
+/* 원목 프레임으로 튼튼하게 짜인 칠판 액자 카드 */
+:root[data-concept='chalkboard'] .glass-premium-card,
+:root[data-concept='chalkboard'] .premium-card,
+:root[data-concept='chalkboard'] .tools-dropdown,
+:root[data-concept='chalkboard'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 4px solid var(--card-border) !important; /* 오크 원목 몰딩 구현 */
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4), 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 8px !important;
+}
+
+:root[data-concept='chalkboard'] button,
+:root[data-concept='chalkboard'] .glow-btn,
+:root[data-concept='chalkboard'] .outline-btn,
+:root[data-concept='chalkboard'] .header-premium-btn,
+:root[data-concept='chalkboard'] .drawer-nav-item,
+:root[data-concept='chalkboard'] input {
+  border: 1.5px solid var(--text-secondary) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  color: var(--text-primary) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+
+:root[data-concept='chalkboard'] button:hover {
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+}
+
+
+/* --- 4. 오가닉 미니멀리즘 페이퍼 모드 (eco) --- */
+:root[data-concept='eco'] {
+  --custom-radius: 2px !important;
+  --neon-glow: none !important;
+}
+
+/* 따뜻한 양장지 크라프트 텍스처 배경 */
+:root[data-concept='eco'] .aurora-bg {
+  background: var(--bg-primary) !important;
+  background-image: 
+    radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 0),
+    radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 0) !important;
+  background-size: 8px 8px !important;
+  opacity: 0.85 !important;
+}
+:root[data-concept='eco'] .aurora-blob {
+  display: none !important;
+}
+
+/* 킨포크식 실선 미니멀 카드 */
+:root[data-concept='eco'] .glass-premium-card,
+:root[data-concept='eco'] .premium-card,
+:root[data-concept='eco'] .tools-dropdown,
+:root[data-concept='eco'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--text-secondary) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+:root[data-concept='eco'] button,
+:root[data-concept='eco'] .glow-btn,
+:root[data-concept='eco'] .outline-btn,
+:root[data-concept='eco'] .header-premium-btn,
+:root[data-concept='eco'] .drawer-nav-item,
+:root[data-concept='eco'] input {
+  border: 1px solid var(--text-secondary) !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  text-shadow: none !important;
+  border-radius: 2px !important;
+}
+
+/* ========================================================
+   14. 3D GLASSMORPHISM SPEED FLASHCARD SYSTEM
+   ======================================================== */
+.flashcard-container {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 580px;
+  height: 380px;
+  margin: 30px auto;
+  position: relative;
+}
+
+.flashcard {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 24px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* 5대 컨셉 테마에 완벽 연동되는 글래스모피즘 구현 */
+.flashcard-front {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.flashcard-back {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transform: rotateY(180deg);
+}
+
+/* 각 테마별 보완 */
+:root[data-concept='chalkboard'] .flashcard-front,
+:root[data-concept='chalkboard'] .flashcard-back {
+  background: #1e352f !important;
+  border: 2px dashed rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+:root[data-concept='eco'] .flashcard-front,
+:root[data-concept='eco'] .flashcard-back {
+  background: #fdfbf7 !important;
+  border: 1px solid var(--text-secondary) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-radius: 4px !important;
+}
+
+/* 플래시 카드 세부 장식 */
+.flashcard-tag {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent-color);
+  background: rgba(255, 107, 107, 0.1);
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.flashcard-word {
+  font-size: 3.2rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+  text-shadow: 0 0 10px rgba(255,255,255,0.1);
+  text-align: center;
+  word-break: keep-all;
+}
+
+.flashcard-reading {
+  font-size: 1.4rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.flashcard-hint-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: bounceSlow 2s infinite;
+}
+
+.flashcard-meaning {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.flashcard-example-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.flashcard-example-jp {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.flashcard-example-kr {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+/* 진행 스탯 바 디자인 */
+.flashcard-progress-container {
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto 20px auto;
+}
+
+.flashcard-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.flashcard-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-color) 0%, #ffb37e 100%);
+  box-shadow: 0 0 12px var(--accent-color);
+  border-radius: 10px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flashcard-stat-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+/* 3D 플래시 카드 슬라이드 토글 스위치 */
+.flashcard-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flashcard-switch {
+  position: relative;
+  display: inline-block;
+  width: 54px;
+  height: 28px;
+}
+
+.flashcard-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.flashcard-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255,255,255,0.1);
+  transition: .4s;
+  border-radius: 34px;
+  border: 1.5px solid var(--card-border);
+}
+
+.flashcard-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 2.5px;
+  background-color: var(--text-primary);
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.flashcard-switch input:checked + .flashcard-slider {
+  background-color: rgba(255, 107, 107, 0.2);
+  border-color: var(--accent-color);
+}
+
+.flashcard-switch input:checked + .flashcard-slider:before {
+  transform: translateX(25px);
+  background-color: var(--accent-color);
+  box-shadow: 0 0 8px var(--accent-color);
+}
+
+/* 애니메이션 */
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* 모바일 3D 카드 뷰 최적화 */
+@media (max-width: 768px) {
+  .flashcard-container {
+    height: 420px;
+    margin: 20px auto;
+  }
+  
+  .flashcard-face {
+    padding: 24px;
+  }
+  
+  .flashcard-word {
+    font-size: 2.5rem;
+  }
+  
+  .flashcard-reading {
+    font-size: 1.2rem;
+  }
+  
+  .flashcard-meaning {
+    font-size: 1.5rem;
+  }
+}
+
+/* ========================================================
+   15. D-DAY NEON GRADIENT FLOWING BORDER ANIMATION
+   ======================================================== */
+.dday-countdown-card {
+  position: relative !important;
+  border: 2px solid transparent !important;
+  background-image: 
+    linear-gradient(var(--card-bg), var(--card-bg)), 
+    linear-gradient(90deg, #ff9494, #ffb37e, #a6cf98, #90b4fc, #b19ffb, #ff9494) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  background-size: 200% 100% !important;
+  animation: borderMove 6s linear infinite !important;
+  box-shadow: 0 8px 32px rgba(84, 160, 255, 0.15) !important;
+  transition: box-shadow 0.3s ease !important;
+}
+
+.dday-countdown-card:hover {
+  box-shadow: 0 12px 40px rgba(84, 160, 255, 0.25), var(--neon-glow) !important;
+}
+
+@keyframes borderMove {
+  0% {
+    background-position: 0% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 0% 0%, -200% 0%;
+  }
 }
 
 

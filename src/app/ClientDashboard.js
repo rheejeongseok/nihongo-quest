@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 
 export default function ClientDashboard({ initialStages, initialUser }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
@@ -101,6 +103,88 @@ export default function ClientDashboard({ initialStages, initialUser }) {
   const [newsLoading, setNewsLoading] = useState(true);
   const [expandedNews, setExpandedNews] = useState(null);
 
+  // NHK 딕테이션 및 즉시 수확 전용 상태들
+  const { speak } = useJapaneseSpeech();
+  const [dictatingNews, setDictatingNews] = useState(null);
+  const [dictationInputs, setDictationInputs] = useState({});
+  const [dictationChecked, setDictationChecked] = useState(false);
+  const [dictationCorrects, setDictationCorrects] = useState({});
+  const [harvestedWords, setHarvestedWords] = useState({});
+  const [harvestingWord, setHarvestingWord] = useState('');
+
+  // 📅 JLPT D-Day 연산 전용 상태 및 유틸
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [examInfo, setExamInfo] = useState({ type: '', dateStr: '' });
+  const [isRegistrationPeriod, setIsRegistrationPeriod] = useState(false);
+
+  useEffect(() => {
+    // 특정 연도의 특정 월 첫째 주 일요일 반환 유틸
+    const getFirstSundayOfMonth = (year, monthIndex) => {
+      const date = new Date(year, monthIndex, 1);
+      while (date.getDay() !== 0) {
+        date.setDate(date.getDate() + 1);
+      }
+      return date;
+    };
+
+    // 다음 시험일 계산
+    const getNextJlptExamDate = () => {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      
+      const julyExam = getFirstSundayOfMonth(currentYear, 6); // 7월
+      julyExam.setHours(13, 10, 0, 0);
+      
+      const decExam = getFirstSundayOfMonth(currentYear, 11); // 12월
+      decExam.setHours(13, 10, 0, 0);
+      
+      if (now < julyExam) {
+        return { date: julyExam, type: '7월 시험' };
+      }
+      if (now < decExam) {
+        return { date: decExam, type: '12월 시험' };
+      }
+      const nextJulyExam = getFirstSundayOfMonth(currentYear + 1, 6);
+      nextJulyExam.setHours(13, 10, 0, 0);
+      return { date: nextJulyExam, type: '내년 7월 시험' };
+    };
+
+    const exam = getNextJlptExamDate();
+    setExamInfo({
+      type: exam.type,
+      dateStr: exam.date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      })
+    });
+
+    // 원서 접수 달 감지 (7월 시험: 4월 접수, 12월 시험: 9월 접수)
+    const month = new Date().getMonth() + 1;
+    if ((exam.type === '7월 시험' && month === 4) || (exam.type === '12월 시험' && month === 9)) {
+      setIsRegistrationPeriod(true);
+    }
+
+    // 1초 주기의 카운트다운 타이머 기동
+    const timer = setInterval(() => {
+      const difference = exam.date.getTime() - Date.now();
+      
+      if (difference <= 0) {
+        clearInterval(timer);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      } else {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        const seconds = Math.floor((difference / 1000) % 60);
+        setTimeLeft({ days, hours, minutes, seconds });
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   // 실시간 뉴스 로드 (API에서 이미 랜덤 5개 반환)
   useEffect(() => {
     async function fetchNhkNews() {
@@ -120,6 +204,60 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     fetchNhkNews();
   }, []);
 
+  // 🌾 단어 즉시 수확기 처리
+  const handleHarvestWord = async (wordObj) => {
+    if (harvestingWord || harvestedWords[wordObj.word]) return;
+    setHarvestingWord(wordObj.word);
+    try {
+      const res = await fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          word: wordObj.word,
+          meaning: wordObj.meaning,
+          reading: wordObj.reading
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHarvestedWords(prev => ({ ...prev, [wordObj.word]: true }));
+        setBookmarkCount(prev => prev + 1);
+        alert(`🌾 N1 단어 즉시 수확 성공!\n[${wordObj.word}] 단어가 나의 단어장에 완벽히 수집되었습니다!`);
+      } else {
+        alert("수확 실패: " + data.error);
+      }
+    } catch (e) {
+      alert("수확 실패 네트워크 에러: " + e.message);
+    } finally {
+      setHarvestingWord('');
+    }
+  };
+
+  // 🎧 딕테이션 제출 채점 처리
+  const handleDictationSubmit = (newsItem) => {
+    const corrects = {};
+    let allCorrect = true;
+    
+    newsItem.n1Words.forEach((wordObj, idx) => {
+      const val = (dictationInputs[idx] || '').trim();
+      const isCorrect = val === wordObj.word || val === wordObj.reading;
+      corrects[idx] = isCorrect;
+      if (!isCorrect) allCorrect = false;
+    });
+
+    setDictationCorrects(corrects);
+    setDictationChecked(true);
+
+    if (allCorrect) {
+      alert("🎉 퍼펙트! 모든 N1 시사 빈칸을 정확하게 받아적으셨습니다! (+50pts 보너스)");
+      if (user) {
+        setUser(prev => prev ? { ...prev, points: prev.points + 50 } : null);
+      }
+    } else {
+      alert("✍️ 채점 완료! 일부 빈칸을 확인해보세요. 오답 단어는 즉시 수확하여 공부할 수 있습니다!");
+    }
+  };
+
   // 모달 팝업 상태 관리
   const [selectedStage, setSelectedStage] = useState(null);
   const [chosenJlpt, setChosenJlpt] = useState('N1'); // 대분류 기본값: N1
@@ -127,11 +265,13 @@ export default function ClientDashboard({ initialStages, initialUser }) {
 
   // 스테이지별 이모지 및 색상 매핑
   const categoryMeta = {
-    CHARACTERS: { emoji: '🌸', color: '#ff9494', label: '문자 정복' },
-    VOCAB: { emoji: '🍱', color: '#ffb37e', label: '어휘 마스터' },
-    GRAMMAR: { emoji: '⚙️', color: '#a6cf98', label: '문법 조사' },
-    LISTENING: { emoji: '🎧', color: '#90b4fc', label: '청해 배틀' },
-    WORDLE: { emoji: '🧩', color: '#b19ffb', label: '단어 워들' }
+    CHARACTERS: { emoji: '🌸', color: '#ff9494', label: '문자 정복', mobileTitle: '문자어휘' },
+    VOCAB: { emoji: '🍱', color: '#ffb37e', label: '어휘 마스터', mobileTitle: '어휘마스터' },
+    GRAMMAR: { emoji: '⚙️', color: '#a6cf98', label: '문법 조사', mobileTitle: '문법조사' },
+    LISTENING: { emoji: '🎧', color: '#90b4fc', label: '청해 배틀', mobileTitle: '청해배틀' },
+    WORDLE: { emoji: '🧩', color: '#b19ffb', label: '단어 워들', mobileTitle: '단어워들' },
+    ASSEMBLY: { emoji: '⚔️', color: '#ffd32a', label: '문장 조립', mobileTitle: '문장조립' },
+    MOCK_EXAM: { emoji: '📝', color: '#ff5e7e', label: '모의고사', mobileTitle: '모의고사' }
   };
 
   // 상시 동기화 실행
@@ -162,19 +302,53 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     setChosenDifficulty('EASY');
   };
 
-  // 🏟️ 드로워 메뉴에서 아레나 모달 열기 - 커스텀 이벤트 수신
+  // 🏟️ 드로워 메뉴에서 아레나 모달 열기 - 커스텀 이벤트 및 URL 쿼리 파라미터 수신
   useEffect(() => {
+    const allStagesList = [
+      ...initialStages,
+      {
+        id: "virtual-stage-5-uuid",
+        stageNumber: 5,
+        title: "경어랑 조사 문장 조립",
+        category: "ASSEMBLY",
+        difficulty: "HARD"
+      },
+      {
+        id: "virtual-stage-6-uuid",
+        stageNumber: 6,
+        title: "실전 15분 모의고사",
+        category: "MOCK_EXAM",
+        difficulty: "HARD"
+      }
+    ];
+
+    // 1) 드로워 메뉴 클릭 이벤트 수신
     const handleOpenArenaModal = (e) => {
       const stageIndex = e.detail?.stageIndex ?? 0;
-      const stage = initialStages[stageIndex];
+      const stage = allStagesList[stageIndex];
       if (stage) {
         openDifficultyModal(stage);
       }
     };
     window.addEventListener('open-arena-modal', handleOpenArenaModal);
-    return () => window.removeEventListener('open-arena-modal', handleOpenArenaModal);
+
+    // 2) 다른 페이지에서 드로워 메뉴 클릭 후 넘어온 경우 파라미터 감지
+    const openArenaParam = searchParams.get('openArena');
+    if (openArenaParam !== null) {
+      const stageIndex = parseInt(openArenaParam, 10);
+      const stage = allStagesList[stageIndex];
+      if (stage) {
+        openDifficultyModal(stage);
+        // 모달을 띄웠으니 주소창의 쿼리 파라미터를 깔끔하게 초기화하여 메인 URL로 복원
+        router.replace('/');
+      }
+    }
+
+    return () => {
+      window.removeEventListener('open-arena-modal', handleOpenArenaModal);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialStages]);
+  }, [initialStages, searchParams]);
 
   const handleStartPlay = () => {
     if (!selectedStage) return;
@@ -243,6 +417,112 @@ export default function ClientDashboard({ initialStages, initialUser }) {
             <>🌱 5000+ 문항 강제 동기화</>
           )}
         </button>
+      </div>
+
+      {/* 📅 실시간 JLPT N1 D-Day 카운트다운 & 접수 안내 보드 */}
+      <div className="glass-premium-card rainbow-border dday-countdown-card" 
+        onMouseMove={handleMouseMove} 
+        onMouseLeave={handleMouseLeave}
+        style={{
+          marginBottom: '32px',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+          padding: '24px 30px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '20px'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))', animation: 'float 3s infinite' }}>📅</span>
+          <div>
+            <h4 className='count-title' style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              JLPT N1 합격 D-Day 카운트다운
+              <span style={{
+                fontSize: '0.75rem',
+                background: 'rgba(84, 160, 255, 0.1)',
+                color: '#54a0ff',
+                padding: '2px 8px',
+                borderRadius: '100px',
+                border: '1px solid rgba(84, 160, 255, 0.2)',
+                fontWeight: '800'
+              }}>
+                {examInfo.type}
+              </span>
+            </h4>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '600' }}>
+              목표 시험 일시: <strong style={{ color: 'var(--accent-color)' }}>{examInfo.dateStr} 13:10</strong>
+            </p>
+          </div>
+        </div>
+
+        {/* 째깍째깍 초시계 수치 */}
+        <div className='count-timer' style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {[
+            { label: '일', val: timeLeft.days, color: 'var(--accent-color)' },
+            { label: '시', val: timeLeft.hours, color: '#ff9f43' },
+            { label: '분', val: timeLeft.minutes, color: '#1dd1a1' },
+            { label: '초', val: timeLeft.seconds, color: '#ff5e7e' }
+          ].map((t, idx) => (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{
+                minWidth: '54px',
+                height: '54px',
+                background: 'var(--bg-secondary)',
+                border: `2px solid ${t.color}`,
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.4rem',
+                fontWeight: '950',
+                color: t.color,
+                boxShadow: `0 0 10px ${t.color}22`
+              }}>
+                {String(t.val).padStart(2, '0')}
+              </div>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '800', marginTop: '4px' }}>{t.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* 원서 접수 기간 연동 배너 */}
+        {isRegistrationPeriod && (
+          <div className="fade-in" style={{
+            width: '100%',
+            background: 'linear-gradient(95deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 94, 126, 0.15) 100%)',
+            border: '1.5px solid #ff6b6b',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+            boxShadow: '0 0 15px rgba(255, 107, 107, 0.2)',
+            animation: 'pulse 1.5s infinite'
+          }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#ff6b6b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              🚨 긴급 알림: 현재 JLPT N1 공식 원서 접수 기간입니다!
+            </span>
+            <a 
+              href="https://www.jlpt.or.kr" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="glow-btn"
+              style={{
+                padding: '6px 14px',
+                fontSize: '0.75rem',
+                background: '#ff6b6b',
+                boxShadow: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              공식 접수처 바로가기 🔗
+            </a>
+          </div>
+        )}
       </div>
 
       {/* 1. 상단 정보 대시보드 카드 그리드 */}
@@ -408,6 +688,145 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                         <strong>[일본어 원문]</strong><br />
                         {item.description}
                       </p>
+
+                      {/* 딕테이션 버튼 그룹 */}
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => speak(item.description)}
+                          className="outline-btn"
+                          style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                        >
+                          🔊 뉴스 발음 전체 청취 (Dictation)
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            if (dictatingNews === idx) {
+                              setDictatingNews(null);
+                            } else {
+                              setDictatingNews(idx);
+                              setDictationInputs({});
+                              setDictationChecked(false);
+                              setDictationCorrects({});
+                            }
+                          }}
+                          className="outline-btn"
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            borderColor: dictatingNews === idx ? 'var(--accent-color)' : 'var(--card-border)',
+                            color: dictatingNews === idx ? 'var(--accent-color)' : 'var(--text-primary)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          🎧 N1 뉴스 딕테이션 {dictatingNews === idx ? '종료' : '훈련 시작'}
+                        </button>
+                      </div>
+
+                      {/* 딕테이션 훈련 슬롯 활성화 */}
+                      {dictatingNews === idx && (
+                        <div className="fade-in" style={{
+                          background: 'rgba(255,255,255,0.02)',
+                          border: '1.5px dashed var(--card-border)',
+                          padding: '20px',
+                          borderRadius: '12px',
+                          marginBottom: '18px'
+                        }}>
+                          <h5 style={{ fontWeight: '900', fontSize: '0.9rem', marginBottom: '8px', color: 'var(--accent-color)' }}>
+                            ✍️ N1 실시간 뉴스 받아쓰기 (Dictation Arena)
+                          </h5>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.6' }}>
+                            아래 뉴스 원문을 귀로 잘 청취하고, N1 단어가 들어갈 빈칸 [ 빈칸 ]을 맞춰 받아 적으세요!
+                          </p>
+
+                          {/* 빈칸 변환 원문 렌더링 */}
+                          <div style={{
+                            background: 'var(--bg-secondary)',
+                            padding: '14px 18px',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            color: 'var(--text-primary)',
+                            lineHeight: '1.8',
+                            marginBottom: '16px',
+                            borderLeft: '4px solid var(--accent-color)'
+                          }}>
+                            {(() => {
+                              let text = item.description;
+                              item.n1Words.forEach((wordObj, wIdx) => {
+                                text = text.replaceAll(wordObj.word, `[ 빈칸 ${wIdx + 1} ]`);
+                              });
+                              return text;
+                            })()}
+                          </div>
+
+                          {/* 주관식 빈칸 기입 란 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {item.n1Words.map((wordObj, wIdx) => {
+                              const isInputCorrect = dictationCorrects[wIdx];
+                              return (
+                                <div key={wIdx} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                                    [빈칸 {wIdx + 1}] 힌트: {wordObj.meaning} [{wordObj.reading}]
+                                  </span>
+                                  <input
+                                    type="text"
+                                    placeholder="한자 또는 히라가나..."
+                                    disabled={dictationChecked}
+                                    value={dictationInputs[wIdx] || ''}
+                                    onChange={(e) => setDictationInputs(prev => ({ ...prev, [wIdx]: e.target.value }))}
+                                    style={{
+                                      padding: '6px 12px',
+                                      fontSize: '0.85rem',
+                                      border: `2px solid ${dictationChecked ? (isInputCorrect ? 'var(--accent-color)' : '#ff6b6b') : 'var(--card-border)'}`,
+                                      borderRadius: '6px',
+                                      background: 'var(--card-bg)',
+                                      color: 'var(--text-primary)',
+                                      outline: 'none',
+                                      flexGrow: 1,
+                                      maxWidth: '220px'
+                                    }}
+                                  />
+                                  {dictationChecked && (
+                                    <span style={{
+                                      fontSize: '0.8rem',
+                                      fontWeight: '800',
+                                      color: isInputCorrect ? 'var(--accent-color)' : '#ff6b6b'
+                                    }}>
+                                      {isInputCorrect ? '✓ 정답!' : `✗ 오답 (정답: ${wordObj.word})`}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* 채점 및 제출 단추 */}
+                          {!dictationChecked ? (
+                            <button
+                              onClick={() => handleDictationSubmit(item)}
+                              className="glow-btn"
+                              style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
+                            >
+                              🔍 딕테이션 채점 및 제출
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setDictationChecked(false);
+                                setDictationInputs({});
+                                setDictationCorrects({});
+                              }}
+                              className="outline-btn"
+                              style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
+                            >
+                              🔄 다시 훈련하기
+                            </button>
+                          )}
+                        </div>
+                      )}
                       
                       <div className="nhk-news-analysis-box">
                         {/* 1. N1 핵심 어휘집 */}
@@ -416,12 +835,35 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                           <div className="nhk-words-grid">
                             {item.n1Words && item.n1Words.length > 0 ? (
                               item.n1Words.map((wordObj, wIdx) => (
-                                <div key={wIdx} className="nhk-word-chip-wrapper">
-                                  <span className="nhk-word-badge">{wordObj.word}</span>
-                                  <div className="nhk-word-details">
-                                    <span className="nhk-word-reading">[{wordObj.reading}]</span>
-                                    <span className="nhk-word-meaning">{wordObj.meaning}</span>
+                                <div key={wIdx} className="nhk-word-chip-wrapper" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', width: '100%' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span className="nhk-word-badge">{wordObj.word}</span>
+                                    <div className="nhk-word-details">
+                                      <span className="nhk-word-reading">[{wordObj.reading}]</span>
+                                      <span className="nhk-word-meaning">{wordObj.meaning}</span>
+                                    </div>
                                   </div>
+                                  
+                                  {/* 🌾 단어 즉시 수확 뱃지 */}
+                                  <button
+                                    onClick={() => handleHarvestWord(wordObj)}
+                                    disabled={harvestedWords[wordObj.word] || harvestingWord === wordObj.word}
+                                    style={{
+                                      padding: '4px 8px',
+                                      fontSize: '0.75rem',
+                                      borderRadius: '100px',
+                                      border: '1.5px solid var(--card-border)',
+                                      cursor: 'pointer',
+                                      background: harvestedWords[wordObj.word] ? 'rgba(29, 209, 161, 0.1)' : 'rgba(84, 160, 255, 0.05)',
+                                      color: harvestedWords[wordObj.word] ? '#1dd1a1' : 'var(--text-secondary)',
+                                      borderColor: harvestedWords[wordObj.word] ? '#1dd1a1' : 'var(--card-border)',
+                                      fontWeight: '800',
+                                      whiteSpace: 'nowrap',
+                                      transition: 'all 0.2s'
+                                    }}
+                                  >
+                                    {harvestedWords[wordObj.word] ? '수확 완료! ✅' : harvestingWord === wordObj.word ? '🌾...' : '🌾 수확'}
+                                  </button>
                                 </div>
                               ))
                             ) : (
@@ -459,7 +901,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
 
       {/* 🚀 모바일 전용 아레나 팝업 트리거 단축 버튼 (하단 플로팅 고정 고도화 - React Portal로 스태킹 컨텍스트 완벽 이탈) */}
       {mounted && createPortal(
-        <div className="mobile-only animate-scale" style={{ 
+        <div className="mobile-only animate-scale mo-arena-btn" style={{ 
           position: 'fixed', 
           bottom: '1.25rem', 
           left: '50%', 
@@ -500,7 +942,21 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         </h2>
         
         <div className="arena-cards-grid">
-          {initialStages.map((stage) => {
+          {[...initialStages, {
+            id: "virtual-stage-5-uuid",
+            stageNumber: 5,
+            title: "⚔️ 경어랑 조사 문장 조립",
+            category: "ASSEMBLY",
+            difficulty: "HARD",
+            desc: "N1 킬러 경어와 격식 표현 단어 카드를 결합하여 유려한 격식 비즈니스 문장을 직조합니다."
+          }, {
+            id: "virtual-stage-6-uuid",
+            stageNumber: 6,
+            title: "📝 실전 15분 모의고사",
+            category: "MOCK_EXAM",
+            difficulty: "HARD",
+            desc: "문자·어휘·문법 총 15문항을 N1 황금비율로 무작위 셔플 추출하여 15분 실전 모의고사를 극복합니다."
+          }].map((stage) => {
             const meta = categoryMeta[stage.category] || { emoji: '❓', color: 'gray', label: '학습' };
             
             return (
@@ -534,7 +990,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                   </h4>
                   
                   <p className="arena-card-desc">
-                    5,000+개 N1 최고난도 기출 풀에서 무작위 라이브 추출
+                    {stage.desc || "5,000+개 N1 최고난도 기출 풀에서 무작위 라이브 추출"}
                   </p>
                 </div>
 
@@ -589,7 +1045,19 @@ export default function ClientDashboard({ initialStages, initialUser }) {
               🎯 코스 선택
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(6.25rem, 1fr))', gap: '0.375rem', marginBottom: '1.25rem' }}>
-              {initialStages.map((stage) => {
+              {[...initialStages, {
+                id: "virtual-stage-5-uuid",
+                stageNumber: 5,
+                title: "경어랑 조사 문장 조립",
+                category: "ASSEMBLY",
+                difficulty: "HARD"
+              }, {
+                id: "virtual-stage-6-uuid",
+                stageNumber: 6,
+                title: "실전 15분 모의고사",
+                category: "MOCK_EXAM",
+                difficulty: "HARD"
+              }].map((stage) => {
                 const meta = categoryMeta[stage.category] || { emoji: '❓', color: 'gray', label: '학습' };
                 const isSelected = selectedStage.id === stage.id;
                 return (
@@ -614,7 +1082,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                   >
                     <span style={{ fontSize: '1.4rem' }}>{meta.emoji}</span>
                     <span style={{ fontSize: '0.7rem', fontWeight: '900', whiteSpace: 'nowrap' }}>
-                      {stage.title.split(' ')[0]}
+                      {meta.mobileTitle || stage.title}
                     </span>
                   </button>
                 );

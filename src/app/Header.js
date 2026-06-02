@@ -2,26 +2,42 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const THEMES = [
   { id: 'zen', name: '젠 (Zen)', emoji: '🌸', color: '#557c55' },
   { id: 'cyber', name: '사이버 (Cyber)', emoji: '⚡', color: '#00f0ff' },
   { id: 'kawaii', name: '파스텔 (Kawaii)', emoji: '🍑', color: '#ff9494' },
-  { id: 'academic', name: '클래식 (Classic)', emoji: '📜', color: '#1a4d80' }
+  { id: 'academic', name: '클래식 (Classic)', emoji: '📜', color: '#1a4d80' },
+  { id: 'neon-dream', name: '네온드림 (Neon)', emoji: '🛸', color: '#00ffb9' },
+  { id: 'nordic-frost', name: '오로라 (Frost)', emoji: '❄️', color: '#00f2fe' },
+  { id: 'velvet-rose', name: '벨벳로즈 (Rose)', emoji: '🌹', color: '#ff6b8b' },
+  { id: 'golden-sand', name: '샤인사하라 (Gold)', emoji: '🌟', color: '#d4af37' }
+];
+
+const CONCEPTS = [
+  { id: 'glass', name: '오로라 판타지', emoji: '🌌' },
+  { id: 'retro', name: '레트로 도트', emoji: '👾' },
+  { id: 'heritage', name: '교토 헤리티지', emoji: '🏮' },
+  { id: 'chalkboard', name: '추억의 칠판', emoji: '🏫' },
+  { id: 'eco', name: '오가닉 미니멀', emoji: '🍃' }
 ];
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [username, setUsername] = useState('니혼고마스터');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerThemeOpen, setIsDrawerThemeOpen] = useState(false);
+  const [isDrawerConceptOpen, setIsDrawerConceptOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [inputName, setInputName] = useState('');
   const [mounted, setMounted] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('zen');
+  const [currentConcept, setCurrentConcept] = useState('glass');
 
-  // 1. 컴포넌트 마운트 시 로컬스토리지 닉네임 및 테마 로드
+  // 1. 컴포넌트 마운트 시 로컬스토리지 닉네임 및 테마/컨셉 로드
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined') {
@@ -37,6 +53,10 @@ export default function Header() {
       const savedTheme = localStorage.getItem('nihongo-theme') || 'zen';
       setCurrentTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
+
+      const savedConcept = localStorage.getItem('nihongo-concept') || 'glass';
+      setCurrentConcept(savedConcept);
+      document.documentElement.setAttribute('data-concept', savedConcept);
     }
   }, []);
 
@@ -85,6 +105,15 @@ export default function Header() {
     if (typeof window !== 'undefined') {
       document.documentElement.setAttribute('data-theme', themeId);
       localStorage.setItem('nihongo-theme', themeId);
+    }
+  };
+
+  // 4. 비주얼 컨셉 직접 변경 헬퍼
+  const changeConcept = (conceptId) => {
+    setCurrentConcept(conceptId);
+    if (typeof window !== 'undefined') {
+      document.documentElement.setAttribute('data-concept', conceptId);
+      localStorage.setItem('nihongo-concept', conceptId);
     }
   };
 
@@ -185,12 +214,46 @@ export default function Header() {
                           cursor: 'pointer',
                           fontFamily: 'inherit',
                           fontSize: '0.75rem',
-                          fontWeight: currentTheme === t.id ? '900' : '600',
+                          fontWeight: currentTheme === t.id ? '700' : '500',
                           transition: 'all 0.2s ease',
                         }}
                       >
                         <span>{t.emoji}</span>
                         <span>{t.name.split(' ')[0]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 비주얼 컨셉 변경 섹션 */}
+                <div>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <span>🕹️</span> 비주얼 컨셉 모드
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem' }}>
+                    {CONCEPTS.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => changeConcept(c.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.375rem',
+                          padding: '0.4375rem 0.375rem',
+                          border: currentConcept === c.id ? `1.5px solid var(--accent-color)` : '1.5px solid var(--card-border)',
+                          background: currentConcept === c.id ? 'var(--bg-secondary)' : 'transparent',
+                          color: 'var(--text-primary)',
+                          borderRadius: '0.5rem',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          fontSize: '0.75rem',
+                          fontWeight: currentConcept === c.id ? '700' : '500',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <span>{c.emoji}</span>
+                        <span>{c.name.split(' ')[0]}</span>
                       </button>
                     ))}
                   </div>
@@ -348,36 +411,219 @@ export default function Header() {
               </button>
             </div>
 
-            {/* 테마 셀렉터 섹션 */}
+            {/* 테마 셀렉터 섹션 (공간 효율을 극대화한 명품 커스텀 셀렉트박스 대개조) */}
             <div className="drawer-section">
               <span className="drawer-sec-label">🎨 인터페이스 테마</span>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.25rem' }}>
-                {THEMES.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => changeTheme(t.id)}
+              
+              <div style={{ position: 'relative', marginTop: '0.375rem' }}>
+                {/* 1. 커스텀 셀렉트 트리거 바 */}
+                <button
+                  onClick={() => setIsDrawerThemeOpen(!isDrawerThemeOpen)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem 1rem',
+                    background: 'var(--bg-secondary)',
+                    border: `1.5px solid ${THEMES.find(t => t.id === currentTheme)?.color || 'var(--card-border)'}`,
+                    borderRadius: 'var(--custom-radius)',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    boxShadow: `0 2px 10px rgba(0, 0, 0, 0.05), 0 0 8px ${THEMES.find(t => t.id === currentTheme)?.color}15`,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <span style={{ fontSize: '1.1rem' }}>{THEMES.find(t => t.id === currentTheme)?.emoji}</span>
+                    <span>{THEMES.find(t => t.id === currentTheme)?.name}</span>
+                  </div>
+                  <span style={{ 
+                    fontSize: '0.7rem', 
+                    opacity: 0.8,
+                    transform: isDrawerThemeOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.25s ease',
+                    display: 'inline-block'
+                  }}>
+                    ▼
+                  </span>
+                </button>
+
+                {/* 2. 유려하게 슬라이드 드롭되는 테마 셀렉트 보드 */}
+                {isDrawerThemeOpen && (
+                  <div 
+                    className="fade-in"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      padding: '0.6875rem 0.5rem',
-                      border: currentTheme === t.id ? `1.5px solid ${t.color}` : '1.5px solid var(--card-border)',
-                      background: currentTheme === t.id ? 'var(--bg-secondary)' : 'rgba(255,255,255,0.02)',
-                      color: 'var(--text-primary)',
+                      position: 'absolute',
+                      top: 'calc(100% + 0.375rem)',
+                      left: 0,
+                      right: 0,
+                      background: 'var(--card-bg)',
+                      border: '1.5px solid var(--card-border)',
                       borderRadius: 'var(--custom-radius)',
-                      cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      fontFamily: 'inherit',
-                      fontWeight: currentTheme === t.id ? '900' : '600',
-                      transition: 'all 0.2s ease',
-                      boxShadow: currentTheme === t.id ? `0 0 0.625rem ${t.color}20` : 'none'
+                      boxShadow: '0 0.5rem 1.5rem rgba(0, 0, 0, 0.25)',
+                      padding: '0.375rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem',
+                      zIndex: 1100,
+                      maxHeight: '16.5rem',
+                      overflowY: 'auto'
                     }}
                   >
-                    <span>{t.emoji}</span>
-                    <span>{t.name}</span>
-                  </button>
-                ))}
+                    {THEMES.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          changeTheme(t.id);
+                          setIsDrawerThemeOpen(false);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.625rem 0.75rem',
+                          background: currentTheme === t.id ? 'var(--bg-secondary)' : 'transparent',
+                          border: '1px solid transparent',
+                          borderRadius: 'calc(var(--custom-radius) - 4px)',
+                          color: 'var(--text-primary)',
+                          cursor: 'pointer',
+                          fontSize: '0.8rem',
+                          fontFamily: 'inherit',
+                          fontWeight: currentTheme === t.id ? '700' : '500',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '1rem' }}>{t.emoji}</span>
+                          <span>{t.name}</span>
+                        </div>
+                        {currentTheme === t.id && (
+                          <span style={{ 
+                            width: '8px', 
+                            height: '8px', 
+                            background: t.color, 
+                            borderRadius: '50%',
+                            boxShadow: `0 0 6px ${t.color}`
+                          }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 비주얼 컨셉 셀렉터 섹션 (공간 효율을 극대화한 명품 커스텀 셀렉트박스 패밀리룩) */}
+            <div className="drawer-section" style={{ marginTop: '0.75rem' }}>
+              <span className="drawer-sec-label">🕹️ 비주얼 컨셉 모드</span>
+              
+              <div style={{ position: 'relative', marginTop: '0.375rem' }}>
+                {/* 1. 커스텀 셀렉트 트리거 바 */}
+                <button
+                  onClick={() => setIsDrawerConceptOpen(!isDrawerConceptOpen)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem 1rem',
+                    background: 'var(--bg-secondary)',
+                    border: '1.5px solid var(--card-border)',
+                    borderRadius: 'var(--custom-radius)',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <span style={{ fontSize: '1.1rem' }}>{CONCEPTS.find(c => c.id === currentConcept)?.emoji}</span>
+                    <span>{CONCEPTS.find(c => c.id === currentConcept)?.name}</span>
+                  </div>
+                  <span style={{ 
+                    fontSize: '0.7rem', 
+                    opacity: 0.8,
+                    transform: isDrawerConceptOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.25s ease',
+                    display: 'inline-block'
+                  }}>
+                    ▼
+                  </span>
+                </button>
+
+                {/* 2. 유려하게 슬라이드 드롭되는 컨셉 셀렉트 보드 */}
+                {isDrawerConceptOpen && (
+                  <div 
+                    className="fade-in"
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 0.375rem)',
+                      left: 0,
+                      right: 0,
+                      background: 'var(--card-bg)',
+                      border: '1.5px solid var(--card-border)',
+                      borderRadius: 'var(--custom-radius)',
+                      boxShadow: '0 0.5rem 1.5rem rgba(0, 0, 0, 0.25)',
+                      padding: '0.375rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem',
+                      zIndex: 1100,
+                      maxHeight: '16.5rem',
+                      overflowY: 'auto'
+                    }}
+                  >
+                    {CONCEPTS.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          changeConcept(c.id);
+                          setIsDrawerConceptOpen(false);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.625rem 0.75rem',
+                          background: currentConcept === c.id ? 'var(--bg-secondary)' : 'transparent',
+                          border: '1px solid transparent',
+                          borderRadius: 'calc(var(--custom-radius) - 4px)',
+                          color: 'var(--text-primary)',
+                          cursor: 'pointer',
+                          fontSize: '0.8rem',
+                          fontFamily: 'inherit',
+                          fontWeight: currentConcept === c.id ? '700' : '500',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '1rem' }}>{c.emoji}</span>
+                          <span>{c.name}</span>
+                        </div>
+                        {currentConcept === c.id && (
+                          <span style={{ 
+                            width: '8px', 
+                            height: '8px', 
+                            background: 'var(--accent-color)', 
+                            borderRadius: '50%',
+                            boxShadow: '0 0 6px var(--accent-color)'
+                          }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -423,8 +669,10 @@ export default function Header() {
                   { idx: 1, emoji: '🍱', label: '어휘 마스터', bg: 'rgba(255, 179, 126, 0.09)', color: '#ffb37e' },
                   { idx: 2, emoji: '⚙️', label: '문법 조사', bg: 'rgba(166, 207, 152, 0.09)', color: '#a6cf98' },
                   { idx: 3, emoji: '🎧', label: '청해 배틀', bg: 'rgba(144, 180, 252, 0.09)', color: '#90b4fc' },
-                  { idx: 4, emoji: '🧩', label: '단어 워들', bg: 'rgba(177, 159, 251, 0.09)', color: '#b19ffb', full: true },
-                ].map(({ idx, emoji, label, bg, color, full }) => (
+                  { idx: 4, emoji: '🧩', label: '단어 워들', bg: 'rgba(177, 159, 251, 0.09)', color: '#b19ffb'},
+                  { idx: 5, emoji: '⚔️', label: '문장 조립', bg: 'rgba(255, 211, 42, 0.09)', color: '#ffd32a', stageNumber: 5 },
+                  { idx: 6, emoji: '📝', label: '하프 모의', bg: 'rgba(255, 94, 126, 0.09)', color: '#ff5e7e', stageNumber: 6 },
+                ].map(({ idx, emoji, label, bg, color, full, stageNumber }) => (
                   <button
                     key={idx}
                     className="drawer-nav-item"
@@ -440,7 +688,11 @@ export default function Header() {
                     }}
                     onClick={() => {
                       setIsDrawerOpen(false);
-                      window.dispatchEvent(new CustomEvent('open-arena-modal', { detail: { stageIndex: idx } }));
+                      if (pathname === '/') {
+                        window.dispatchEvent(new CustomEvent('open-arena-modal', { detail: { stageIndex: idx } }));
+                      } else {
+                        router.push(`/?openArena=${idx}`);
+                      }
                     }}
                   >
                     {emoji} {label}

@@ -47,6 +47,17 @@ export default function PlayStagePage({ params }) {
   const [timeTaken, setTimeTaken] = useState(0);
   const timerRef = useRef(null);
 
+  // ⏱️ 타임어택 서바이벌 모드 상태
+  const [isTimeAttack, setIsTimeAttack] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(20);
+  const [speedBonusEarned, setSpeedBonusEarned] = useState(0);
+
+  // ⚔️ N1 경어/조사 문장 조립판 상태
+  const [assemblyPads, setAssemblyPads] = useState([]);
+
+  // 📝 N1 15분 하프 모의고사 전용 상태
+  const [mockTimer, setMockTimer] = useState(900); // 15분 = 900초
+
   // 🖌️ [구글 실시간 손글씨 해독 주관식그림판] 핵심 엔진 상태 및 Refs
   const [isDrawingOpen, setIsDrawingOpen] = useState(true);
   const [brushSize, setBrushSize] = useState(2);
@@ -281,10 +292,36 @@ export default function PlayStagePage({ params }) {
     
     timerRef.current = setInterval(() => {
       setTimeTaken(prev => prev + 1);
+      
+      // 📝 6코스 하프 모의고사 역카운트다운 타이머
+      if (stageNumber === 6) {
+        setMockTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            // 15분 만료 시 강제 시험 완수 및 결과 공개
+            setGameCompleted(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
+      
+      // 타임어택 상태일 때 매 초마다 시간 차감
+      if (isTimeAttack) {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            // 0초가 되면 타임오버 강제 오답 제출
+            handleSubmission("");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [loading, gameCompleted, submitted]);
+  }, [loading, gameCompleted, submitted, isTimeAttack, stageNumber]);
 
   // 워들 입력 타일 초기화
   const initWordleTiles = (length) => {
@@ -446,8 +483,8 @@ export default function PlayStagePage({ params }) {
     }
   };
 
-  // 캔버스 지우개 & 데이터 초기화 연동
-  const clearCanvas = () => {
+  // 캔버스 지우개 & 데이터 초기화 연동 (clearInput이 true일 때만 입력칸을 비움)
+  const clearCanvas = (clearInput = false) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -456,13 +493,20 @@ export default function PlayStagePage({ params }) {
     }
     setInk([]);
     setCandidates([]);
-    setTypedAnswer(''); // 주관식 입력 문자열도 깨끗이 비워 연동
+    if (clearInput) {
+      setTypedAnswer(''); // 명시적으로 비우라고 했을 때만 주관식 입력 문자열 비우기
+    }
   };
 
-  // 문제 전환 시 자동 비우기
+  // 문제 전환 시 자동 비우기 및 타임어택/조립판 리셋
   useEffect(() => {
-    clearCanvas();
-  }, [currentIndex]);
+    clearCanvas(true);
+    if (isTimeAttack) {
+      setTimeRemaining(20);
+    }
+    setSpeedBonusEarned(0);
+    setAssemblyPads([]);
+  }, [currentIndex, isTimeAttack]);
 
   // TTS 듣기 퀴즈 진입 시 음성 자동 재생
   useEffect(() => {
@@ -566,11 +610,21 @@ export default function PlayStagePage({ params }) {
         
         // 콤보 포인트 배수 가중치 적용 (콤보당 +10% 보너스 포인트 지급)
         const comboBonus = isCorrectAns ? Math.round(baseEarn * (nextCombo * 0.1)) : 0;
-        finalPoints = baseEarn + comboBonus;
+        
+        // ⏱️ 타임어택 속도 보너스 포인트 계산 (남은시간 * 1.5배, 정답일 때만 적용)
+        const speedBonus = (isTimeAttack && isCorrectAns) ? Math.round(timeRemaining * 1.5) : 0;
+        setSpeedBonusEarned(speedBonus);
+        
+        finalPoints = baseEarn + comboBonus + speedBonus;
 
         setPointsEarned(finalPoints);
         setTotalPointsEarned(prev => prev + finalPoints);
         if (isCorrectAns) setUserScore(prev => prev + 1);
+
+        // 스피드 보너스 획득 시 번개 토스트 파이어!
+        if (speedBonus > 0) {
+          unlockAchievement('speed_runner', '⚡ 번개 속도의 질주', `제한시간 내 정답 제출! 속도 보너스 +${speedBonus}pts 획득!`, '⚡');
+        }
       }
     } catch (e) {
       console.error(e);
@@ -779,7 +833,7 @@ export default function PlayStagePage({ params }) {
     );
   }
 
-  const hasDrawingFeature = stage && stage.category !== 'VOCAB' && stage.category !== 'LISTENING';
+  const hasDrawingFeature = stage && stage.category !== 'VOCAB' && stage.category !== 'LISTENING' && stage.category !== 'ASSEMBLY';
 
   return (
     <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', position: 'relative' }}>
@@ -857,6 +911,88 @@ export default function PlayStagePage({ params }) {
               }}
             />
           </div>
+
+          {/* ⏱️ 타임어택 서바이벌 토글 스위치 (6코스 모의고사일 때는 감춤) */}
+          {stageNumber !== 6 && (
+            <div className="time-attack-control-card" style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginTop: '16px', 
+              padding: '12px 18px', 
+              background: 'rgba(255, 255, 255, 0.02)', 
+              borderRadius: '12px',
+              border: '1px solid var(--card-border)',
+              transition: 'all 0.3s'
+            }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                ⏱️ 타임어택 서바이벌 모드 (제한시간 20초)
+              </span>
+              <label className="switch-custom" style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={isTimeAttack} 
+                  onChange={(e) => setIsTimeAttack(e.target.checked)}
+                  disabled={submitted}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span className="slider-custom" style={{
+                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: isTimeAttack ? 'var(--accent-color)' : 'rgba(139, 146, 182, 0.3)',
+                  borderRadius: '34px', transition: '.4s',
+                  boxShadow: isTimeAttack ? '0 0 10px var(--accent-color)' : 'none'
+                }}>
+                  <span style={{
+                    position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
+                    backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
+                    transform: isTimeAttack ? 'translateX(22px)' : 'translateX(0)'
+                  }} />
+                </span>
+              </label>
+            </div>
+          )}
+
+          {/* ⏱️ 타임어택 프로그레스 바 */}
+          {isTimeAttack && !submitted && (
+            <div style={{ marginTop: '14px', animation: 'fadeIn 0.3s' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: '800', marginBottom: '6px', color: timeRemaining <= 5 ? '#ff6b6b' : 'var(--text-secondary)' }}>
+                <span>⏰ 남은 시간: {timeRemaining}초</span>
+                {timeRemaining <= 5 && <span style={{ animation: 'pulse 0.5s infinite', color: '#ff6b6b' }}>🚨 마감 임박! 서두르세요!</span>}
+              </div>
+              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '100px', overflow: 'hidden' }}>
+                <div style={{
+                  width: `${(timeRemaining / 20) * 100}%`,
+                  height: '100%',
+                  background: timeRemaining <= 5 ? 'linear-gradient(90deg, #ff6b6b, #ff5e7e)' : 'linear-gradient(90deg, var(--accent-color), #00d2d3)',
+                  borderRadius: '100px',
+                  transition: 'width 1s linear',
+                  boxShadow: timeRemaining <= 5 ? '0 0 8px #ff6b6b' : '0 0 8px var(--accent-color)'
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* 📝 15분 하프 모의고사 역카운트다운 타이머 바 */}
+          {stageNumber === 6 && !submitted && (
+            <div style={{ 
+              marginTop: '14px', 
+              padding: '12px 18px', 
+              background: 'rgba(255, 94, 126, 0.05)', 
+              borderRadius: '12px', 
+              border: '1.5px solid #ff5e7e', 
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              animation: 'pulse 2s infinite' 
+            }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#ff5e7e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                ⏱️ N1 하프 모의고사 제한시간
+              </span>
+              <span style={{ fontSize: '1.05rem', fontWeight: '950', color: '#ff5e7e', fontFamily: 'monospace' }}>
+                {String(Math.floor(mockTimer / 60)).padStart(2, '0')}:{String(mockTimer % 60).padStart(2, '0')}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -898,6 +1034,58 @@ export default function PlayStagePage({ params }) {
             </div>
           </div>
 
+          {/* 📝 6코스 N1 하프 모의고사 합격 정밀 진단 3단계 리포트 */}
+          {stageNumber === 6 && (
+            <div style={{
+              marginTop: '24px',
+              padding: '24px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '12px',
+              border: '1.5px solid var(--accent-color)',
+              textAlign: 'left',
+              marginBottom: '30px'
+            }}>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: '950', color: 'var(--accent-color)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📝 N1 실전 언어지식 진단 결과 리포트
+              </h4>
+              
+              {(() => {
+                let gradeTitle = '';
+                let gradeDesc = '';
+                let gradeColor = '';
+                
+                if (userScore >= 13) {
+                  gradeTitle = '🏆 최우수 합격 안정권 (TOP-CLASS)';
+                  gradeDesc = '어휘, 문법, 독해 기초 전 분야에서 극도의 무결점 실력을 입증하셨습니다. 실전 시험장에서 문자·어휘 파트를 10분 내 해결하고 독해 파트 골든타임을 확보할 준비가 끝났습니다!';
+                  gradeColor = '#1dd1a1';
+                } else if (userScore >= 9) {
+                  gradeTitle = '📈 합격 우수권 (SAFE-PASS)';
+                  gradeDesc = '안정적으로 N1 합격을 거머질 수 있는 단단한 기초 체력을 다지셨습니다. 헷갈린 문장 조립이나 NHK 받아쓰기 시사 오답들만 에빙하우스 SRS 복습으로 가볍게 메워주시면 충분합니다!';
+                  gradeColor = 'var(--accent-color)';
+                } else {
+                  gradeTitle = '🚨 과락 경계 요망 (WEAK-POINT DETECTED)';
+                  gradeDesc = 'N1 합격을 위해 어휘력과 조사 조립 훈련의 집중 보완이 시급한 수준입니다. 대시보드의 N1 필수 어휘 수확과 오답노트 5단계 사냥 훈련을 반복하여 맹점을 메워주세요!';
+                  gradeColor = '#ff6b6b';
+                }
+                
+                return (
+                  <div>
+                    <span style={{ fontSize: '1.2rem', fontWeight: '950', color: gradeColor, display: 'block', marginBottom: '8px' }}>
+                      판정 등급: {gradeTitle}
+                    </span>
+                    <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.6', fontWeight: '600' }}>
+                      {gradeDesc}
+                    </p>
+                    
+                    <div style={{ marginTop: '16px', background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
+                      ⏱️ <strong>실전 독해 세이브 가능 예상 시간</strong>: {Math.max(0, Math.floor(mockTimer / 60))}분 {mockTimer % 60}초 남김 (독해 영역에 이 시간을 고스란히 추가 투자할 수 있습니다!)
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           <Link href="/" passHref legacyBehavior>
             <a className="glass-neon-btn" style={{
               padding: '16px 40px',
@@ -932,7 +1120,7 @@ export default function PlayStagePage({ params }) {
                     className="outline-btn"
                     style={{ padding: '6px 12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    🔊 발음 듣기
+                    🔊<span className="pc-only">발음 듣기</span><span className="mobile-only">듣기</span>
                   </button>
                   {hasDrawingFeature && (
                     <button 
@@ -951,7 +1139,7 @@ export default function PlayStagePage({ params }) {
                       🖌️ 손글씨 판별 그림판 {isDrawingOpen ? '접기' : '켜기'}
 											</span>
 											<span className="mobile-only">
-                      🖌️ 손글씨 {isDrawingOpen ? '접기' : '켜기'}
+                      🖌️ 쓰기
 											</span>
                     </button>
                   )}
@@ -960,7 +1148,7 @@ export default function PlayStagePage({ params }) {
                 <button
                   onClick={handleAddBookmark}
                   disabled={bookmarking || bookmarkedList[currentQuiz.japaneseWord]}
-                  className="outline-btn"
+                  className={`outline-btn ${bookmarkedList[currentQuiz.japaneseWord] ? 'bookmarked' : ''}`}
                   style={{
                     padding: '6px 12px',
                     fontSize: '0.85rem',
@@ -971,7 +1159,7 @@ export default function PlayStagePage({ params }) {
                     color: bookmarkedList[currentQuiz.japaneseWord] ? 'var(--accent-color)' : 'var(--text-secondary)'
                   }}
                 >
-                  ⭐ {bookmarkedList[currentQuiz.japaneseWord] ? '단어장 저장됨' : '단어장에 추가'}
+                  ⭐ <span className="pc-only">{bookmarkedList[currentQuiz.japaneseWord] ? '단어장 저장됨' : '단어장에 추가'}</span><span className="mobile-only">단어장 저장</span>
                 </button>
               </div>
 
@@ -988,7 +1176,7 @@ export default function PlayStagePage({ params }) {
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                     
                     {/* 붓글씨 기능이 활성화된 스테이지에서만 획수 가이드 배지 노출 */}
-                    {hasDrawingFeature && (
+                    {/* {hasDrawingFeature && (
                       <span style={{
                         fontSize: '0.75rem',
                         fontWeight: '850',
@@ -1004,7 +1192,7 @@ export default function PlayStagePage({ params }) {
                       }}>
                         📖 한자 획수 가이드: <strong>{getJapaneseWordStrokes(currentQuiz.japaneseWord)}획</strong>
                       </span>
-                    )}
+                    )} */}
 
                     {/* 정답 단어(japaneseWord) 스포일러 격리 차단 로직 */}
                     {submitted ? (
@@ -1061,84 +1249,209 @@ export default function PlayStagePage({ params }) {
                 )}
               </div>
 
-              {/* ==================== [3.5 붓글씨 그림판 기반 주관식 제출 통합지] ==================== */}
-              <div style={{
-                marginTop: '10px',
-                background: 'var(--bg-secondary)',
-                padding: '24px',
-                borderRadius: 'var(--custom-radius)',
-                border: '1.5px dashed var(--card-border)'
-              }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
-                  ✍️ 손글씨 주관식 정답 입력
-                </span>
-
-                <div className="input-submit-group" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <input
-                    type="text"
-                    value={typedAnswer}
-                    onChange={(e) => setTypedAnswer(e.target.value)}
-                    placeholder={hasDrawingFeature ? "그림판에 쓰거나 직접 입력" : "정답 입력"}
-                    disabled={submitted}
-                    style={{
-                      flexGrow: 1,
-                      padding: '14px 20px',
-                      fontSize: '1rem',
-                      fontWeight: '800',
-                      borderRadius: 'var(--custom-radius)',
-                      border: '2px solid var(--card-border)',
-                      background: 'var(--card-bg)',
-                      color: 'var(--text-primary)',
-                      outline: 'none'
-                    }}
-                  />
+              {/* ==================== [⚔️ 문장 조립 퀴즈 전용 드래그앤드롭 슬롯] ==================== */}
+              {currentQuiz.quizType === 'ASSEMBLY' ? (
+                <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   
-                  <button
-                    onClick={() => handleSubmission(typedAnswer)}
-                    disabled={submitted || !typedAnswer}
-                    className="glow-btn"
-                    style={{
-                      padding: '14px 28px',
-                      fontSize: '0.9rem',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    주관식 제출 ➔
-                  </button>
-                </div>
-              </div>
-
-              {/* [기존 사지선다 보기도 하단 보조 힌트로 유지] */}
-              {(currentQuiz.options && currentQuiz.options.length > 0) && (
-                <div style={{ marginTop: '16px' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
-                    💡 참고용 객관식 사지선다형 보기 (객관식으로 즉시 맞추기 가능)
+                  {/* 조립 보드 */}
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                    ⛓️ N1 문장 조립 보드 (조립판의 단어를 클릭하면 취소할 수 있습니다)
                   </span>
-                  <div className="options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    {currentQuiz.options?.map((option, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setTypedAnswer(option);
-                          handleSubmission(option);
-                        }}
+                  <div style={{
+                    minHeight: '74px',
+                    background: 'var(--bg-secondary)',
+                    border: '2.5px dashed var(--accent-color)',
+                    borderRadius: 'var(--custom-radius)',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                  }}>
+                    {assemblyPads.length === 0 ? (
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        아래의 단어 조각 카드를 순서대로 탭하여 경어 문장을 완성하세요.
+                      </span>
+                    ) : (
+                      assemblyPads.map((origIdx, wIdx) => (
+                        <button
+                          key={wIdx}
+                          onClick={() => {
+                            if (submitted) return;
+                            setAssemblyPads(prev => prev.filter((_, idx) => idx !== wIdx));
+                          }}
+                          disabled={submitted}
+                          className="glow-btn animate-scale"
+                          style={{
+                            padding: '8px 16px',
+                            fontSize: '0.95rem',
+                            background: 'linear-gradient(135deg, var(--accent-color) 0%, #9b5de5 100%)',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 10px rgba(155, 93, 229, 0.2)'
+                          }}
+                        >
+                          {currentQuiz.options?.[origIdx]} <span style={{ marginLeft: '4px', opacity: 0.7 }}>✕</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  {/* 단어 조각 풀 */}
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                    🃏 사용 가능한 단어 조각 카드 (클릭 시 조립판에 찰칵 결합!)
+                  </span>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                    justifyContent: 'center',
+                    padding: '12px 0'
+                  }}>
+                    {currentQuiz.options?.map((word, oIdx) => {
+                      const isSelected = assemblyPads.includes(oIdx);
+                      if (isSelected) return null;
+                      
+                      return (
+                        <button
+                          key={oIdx}
+                          onClick={() => {
+                            if (submitted) return;
+                            setAssemblyPads(prev => [...prev, oIdx]);
+                          }}
+                          disabled={submitted}
+                          className="outline-btn hover-glow animate-scale"
+                          style={{
+                            padding: '10px 18px',
+                            fontSize: '0.95rem',
+                            fontWeight: '850',
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            background: 'var(--card-bg)',
+                            border: '2px solid var(--card-border)',
+                            color: 'var(--text-primary)'
+                          }}
+                        >
+                          {word}
+                        </button>
+                      );
+                    })}
+                    {assemblyPads.length === (currentQuiz.options?.length || 0) && (
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        모든 카드가 조립판에 결합되었습니다!
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 제출 액션 버튼 */}
+                  {!submitted && (
+                    <button
+                      onClick={() => {
+                        const assembledSentence = assemblyPads.map(idx => currentQuiz.options?.[idx]).join('');
+                        handleSubmission(assembledSentence);
+                      }}
+                      disabled={assemblyPads.length === 0}
+                      className="glow-btn"
+                      style={{
+                        padding: '14px 28px',
+                        fontSize: '1rem',
+                        alignSelf: 'center',
+                        width: '100%',
+                        maxWidth: '300px'
+                      }}
+                    >
+                      조합 검증 및 채점 제출 ⚔️
+                    </button>
+                  )}
+
+                </div>
+              ) : (
+                /* ==================== [기존 붓글씨 그림판 기반 주관식 제출 통합지] ==================== */
+                <>
+                  <div style={{
+                    marginTop: '10px',
+                    background: 'var(--bg-secondary)',
+                    padding: '16px',
+                    borderRadius: 'var(--custom-radius)',
+                    border: '1.5px dashed var(--card-border)'
+                  }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
+                      ✍️ 손글씨 주관식 정답 입력
+                    </span>
+
+                    <div className="input-submit-group" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={typedAnswer}
+                        onChange={(e) => setTypedAnswer(e.target.value)}
+                        placeholder={hasDrawingFeature ? "그림판에 쓰거나 직접 입력" : "정답 입력"}
                         disabled={submitted}
-                        className="outline-btn"
                         style={{
-                          padding: '10px 14px',
-                          fontSize: '0.8rem',
-                          textAlign: 'left',
-                          whiteSpace: 'normal',
-                          wordBreak: 'break-all',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
+                          flexGrow: 1,
+                          padding: '14px 20px',
+                          fontSize: '1rem',
+                          fontWeight: '800',
+                          borderRadius: 'var(--custom-radius)',
+                          border: '2px solid var(--card-border)',
+                          background: 'var(--card-bg)',
+                          color: 'var(--text-primary)',
+                          outline: 'none'
+                        }}
+                      />
+                      
+                      <button
+                        onClick={() => handleSubmission(typedAnswer)}
+                        disabled={submitted || !typedAnswer}
+                        className="glow-btn"
+                        style={{
+                          padding: '14px 28px',
+                          fontSize: '0.9rem',
+                          whiteSpace: 'nowrap'
                         }}
                       >
-                        {idx + 1}. {option}
+												<span className="pc-only">주관식 제출 ➔</span>
+												<span className="mobile-only">➔</span>
                       </button>
-                    ))}
+                    </div>
                   </div>
-                </div>
+
+                  {/* [기존 사지선다 보기도 하단 보조 힌트로 유지] */}
+                  {(currentQuiz.options && currentQuiz.options.length > 0) && (
+                    <div style={{ marginTop: '16px' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
+                        💡 참고용 객관식 사지선다형 보기 (객관식으로 즉시 맞추기 가능)
+                      </span>
+                      <div className="options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        {currentQuiz.options?.map((option, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setTypedAnswer(option);
+                              handleSubmission(option);
+                            }}
+                            disabled={submitted}
+                            className="outline-btn"
+                            style={{
+                              padding: '10px 14px',
+                              fontSize: '0.8rem',
+                              textAlign: 'left',
+                              whiteSpace: 'normal',
+                              wordBreak: 'break-all',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}
+                          >
+                            {idx + 1}. {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* 워들 퀴즈 입력란 */}
@@ -1241,6 +1554,7 @@ export default function PlayStagePage({ params }) {
                     {isCorrect ? '🎉 정답입니다!' : '😢 아쉬운 오답입니다...'}
                     <span style={{ fontSize: '0.75rem', fontWeight: '700', background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '2px 8px', borderRadius: '100px' }}>
                       {isCorrect ? `+${pointsEarned} pts 획득` : '오답노트에 자동 적재'}
+                      {isCorrect && speedBonusEarned > 0 && ` (⚡ 속도 보너스 +${speedBonusEarned} pts 포함!)`}
                     </span>
                   </span>
                   <p style={{ marginTop: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
@@ -1374,13 +1688,43 @@ export default function PlayStagePage({ params }) {
                   <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>{brushSize}px</span>
                 </div>
 
-                <button 
-                  onClick={clearCanvas}
-                  className="outline-btn"
-                  style={{ padding: '6px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-                >
-                  🧹 그림판 지우기
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {candidates.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const firstChar = candidates[0];
+                        setTypedAnswer(prev => prev + firstChar);
+                        speak(firstChar);
+                        clearCanvas(false);
+                      }}
+                      disabled={submitted}
+                      className="glow-btn"
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: '0.8rem',
+                        whiteSpace: 'nowrap',
+                        background: 'linear-gradient(135deg, var(--accent-color) 0%, #a29bfe 100%)',
+                        boxShadow: '0 0 10px rgba(84, 160, 255, 0.4)',
+                        border: 'none',
+                        borderRadius: '100px',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        fontWeight: '800',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      ✨ 즉시 입력 (1순위)
+                    </button>
+                  )}
+
+                  <button 
+                    onClick={() => clearCanvas(false)}
+                    className="outline-btn"
+                    style={{ padding: '6px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                  >
+                    🧹 그림판 지우기
+                  </button>
+                </div>
               </div>
 
               {/* ==================== [구글 실시간 문자 해독 결과 팝업 보드] ==================== */}
@@ -1392,7 +1736,7 @@ export default function PlayStagePage({ params }) {
                 marginTop: '6px'
               }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
-                  {recognizing ? '⏳ 인공지능이 손글씨 해독 중...' : '🧠 구글 실시간 해독 추천 (클릭 시 입력칸에 조립):'}
+                  {recognizing ? '⏳ 인공지능이 손글씨 해독 중...' : '🧠 구글 실시간 해독 추천 (클릭 시 입력 및 자동 지우기):'}
                 </span>
                 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', minHeight: '34px', alignItems: 'center' }}>
@@ -1407,6 +1751,7 @@ export default function PlayStagePage({ params }) {
                         onClick={() => {
                           setTypedAnswer(prev => prev + char);
                           speak(char); // 입력 시 신나게 소리 발음
+                          clearCanvas(false); // 추천 단어 선택 시 자동으로 캔버스 초기화
                         }}
                         disabled={submitted}
                         style={{

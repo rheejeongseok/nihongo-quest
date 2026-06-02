@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <Header />
         <main style={{ position: "relative", zIndex: 1 }}>{children}</main>
       </body>
