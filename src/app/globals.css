@@ -3872,6 +3872,13 @@ html, body {
 	}
 }
 
+/* 🔄 새로고침 버튼 스피너 애니메이션 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+
 
 
 

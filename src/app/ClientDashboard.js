@@ -501,6 +501,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
   // 🌸 NHK 실시간 뉴스 브리핑 상태
   const [nhkNews, setNhkNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
+  const [newsRefreshing, setNewsRefreshing] = useState(false);
   const [expandedNews, setExpandedNews] = useState(null);
 
   // NHK 딕테이션 및 즉시 수확 전용 상태들
@@ -585,31 +586,38 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     return () => clearInterval(timer);
   }, []);
 
-  // 실시간 뉴스 로드 (API에서 이미 랜덤 5개 반환)
-  useEffect(() => {
-    async function fetchNhkNews() {
-      if (typeof window !== 'undefined') {
-        const savedLevel = localStorage.getItem('nihongo_quest_target_level') || 'N1';
-        if (savedLevel === 'BEGINNER') {
-          setNhkNews(BEGINNER_CONVERSATIONS);
-          setNewsLoading(false);
-          return;
-        }
-      }
-      try {
-        setNewsLoading(true);
-        const res = await fetch('/api/nhk-news');
-        const data = await res.json();
-        if (data.success) {
-          setNhkNews(data.news);
-        }
-      } catch (e) {
-        console.error("NHK 뉴스 로드 에러:", e);
-      } finally {
+  // 실시간 뉴스 로드 함수 (최초 로드 + 새로고침 버튼 공용)
+  const fetchNhkNews = async (isRefresh = false) => {
+    if (typeof window !== 'undefined') {
+      const savedLevel = localStorage.getItem('nihongo_quest_target_level') || 'N1';
+      if (savedLevel === 'BEGINNER') {
+        setNhkNews(BEGINNER_CONVERSATIONS);
         setNewsLoading(false);
+        return;
       }
     }
+    try {
+      if (isRefresh) setNewsRefreshing(true);
+      else setNewsLoading(true);
+      const res = await fetch('/api/nhk-news');
+      const data = await res.json();
+      if (data.success) {
+        setNhkNews(data.news);
+        setExpandedNews(null); // 새로고침 시 열린 아코디언 닫기
+        setDictatingNews(null);
+      }
+    } catch (e) {
+      console.error("NHK 뉴스 로드 에러:", e);
+    } finally {
+      setNewsLoading(false);
+      setNewsRefreshing(false);
+    }
+  };
+
+  // 실시간 뉴스 로드 (API에서 이미 랜덤 5개 반환)
+  useEffect(() => {
     fetchNhkNews();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetLevel]);
 
   // 🌾 단어 즉시 수확기 처리
@@ -1019,9 +1027,38 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                 : '매번 랜덤으로 선별된 5개 뉴스로 N1 기출 한자 및 핵심 사회 어휘를 학습하세요'}
             </p>
           </div>
-          <span className={`nhk-status-badge ${targetLevel === 'BEGINNER' ? 'realtime' : (!newsLoading && nhkNews.length > 0 ? 'realtime' : 'fallback')}`}>
-            {newsLoading ? "⏳ 로딩 중" : (targetLevel === 'BEGINNER' ? '🌱 왕초보 5선' : `🎲 랜덤 ${nhkNews.length}선`)}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className={`nhk-status-badge ${targetLevel === 'BEGINNER' ? 'realtime' : (!newsLoading && nhkNews.length > 0 ? 'realtime' : 'fallback')}`}>
+              {newsLoading ? '⏳ 로딩 중' : (targetLevel === 'BEGINNER' ? '🌱 왕초보 5선' : `🎲 랜덤 ${nhkNews.length}선`)}
+            </span>
+            {/* 🔄 새로고침 버튼 (N1 모드 전용) */}
+            {targetLevel !== 'BEGINNER' && (
+              <button
+                onClick={() => fetchNhkNews(true)}
+                disabled={newsLoading || newsRefreshing}
+                title="뉴스 다시 불러오기"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '2rem',
+                  height: '2rem',
+                  borderRadius: '50%',
+                  border: '1.5px solid var(--card-border)',
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text-secondary)',
+                  cursor: (newsLoading || newsRefreshing) ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                  animation: newsRefreshing ? 'spin 0.8s linear infinite' : 'none',
+                  opacity: (newsLoading || newsRefreshing) ? 0.5 : 1
+                }}
+              >
+                🔄
+              </button>
+            )}
+          </div>
         </div>
 
         {newsLoading ? (
