@@ -829,7 +829,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           <span style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))', animation: 'float 3s infinite' }}>📅</span>
           <div>
             <h4 className='count-title' style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {targetLevel === 'BEGINNER' ? 'JLPT N5~N3 왕초보 D-Day 카운트다운' : 'JLPT N1 합격 D-Day 카운트다운'}
+              {targetLevel === 'BEGINNER' ? 'JLPT N5~N3 D-Day' : 'JLPT N1 D-Day'}
               <span style={{
                 fontSize: '0.75rem',
                 background: 'rgba(84, 160, 255, 0.1)',
