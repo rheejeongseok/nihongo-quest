@@ -369,14 +369,14 @@ const NEWS_POOL = [
   }
 ];
 
-// Fisher-Yates 셔플 후 5개 랜덤 추출
+// Fisher-Yates 셔플 후 3개 랜덤 추출
 function pickRandom5(arr) {
   const pool = [...arr];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, 5);
+  return pool.slice(0, 3);
 }
 
 // 간단한 XML 파서 함수
@@ -733,14 +733,14 @@ export async function GET() {
     const parsedItems = parseNhkRss(xmlText);
     if (!parsedItems) throw new Error("NHK RSS 파싱 실패");
 
-    // 실시간 RSS에서도 랜덤으로 최대 5개 추출 (전체 아이템 셔플 후 슬라이스)
-    const shuffled = pickRandom5(parsedItems.length >= 5 ? parsedItems : [...parsedItems, ...parsedItems]).slice(0, 5);
+    // 실시간 RSS에서 랜덤으로 최대 3개 추출
+    const shuffled = pickRandom5(parsedItems.length >= 3 ? parsedItems : [...parsedItems, ...parsedItems]).slice(0, 3);
     const enrichedNews = await enrichNewsWithN1Learning(shuffled);
     return NextResponse.json({ success: true, source: "realtime-nhk", news: enrichedNews });
 
   } catch (error) {
-    console.warn("[NHK NEWS API] 실시간 로드 실패, 랜덤 Fallback 5선 제공:", error.message);
-    // 풀 25개에서 매번 다른 랜덤 5개 추출
+    console.warn("[NHK NEWS API] 실시간 로드 실패, 랜덤 Fallback 3선 제공:", error.message);
+    // 풀 25개에서 매번 다른 랜덤 3개 추출
     const randomNews = pickRandom5(NEWS_POOL);
     return NextResponse.json({ success: true, source: "premium-fallback", news: randomNews });
   }
