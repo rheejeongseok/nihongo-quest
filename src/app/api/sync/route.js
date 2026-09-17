@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getOrCreateRequestUser } from "@/lib/requestUser";
 
 export const dynamic = "force-dynamic";
+const MAX_IMPORT_ITEMS = 1000;
+const MAX_BACKUP_CODE_LENGTH = 1024 * 1024;
 
 // 📤 [EXPORT] 현재 학습 데이터 타입별 추출 (GET)
 export async function GET(request) {
@@ -16,26 +19,7 @@ export async function GET(request) {
       );
     }
 
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
-    }
-
-    let user = await prisma.user.findFirst({
-      where: { username }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
-      });
-    }
+    const { user } = await getOrCreateRequestUser(request);
 
     let backupData = {};
 
@@ -75,7 +59,7 @@ export async function GET(request) {
   } catch (error) {
     console.error("[SYNC EXPORT ERROR]:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: "학습 데이터 내보내기에 실패했습니다." },
       { status: 500 }
     );
   }
@@ -95,6 +79,12 @@ export async function POST(request) {
     }
 
     const { backupCode, rawJson } = await request.json();
+    if (typeof backupCode === "string" && backupCode.length > MAX_BACKUP_CODE_LENGTH) {
+      return NextResponse.json(
+        { success: false, error: "백업 코드는 1MB 이하만 가져올 수 있습니다." },
+        { status: 413 }
+      );
+    }
     let backupData = null;
 
     // 1. Base64 텍스트 코드 우선 디코딩 및 복원
@@ -119,27 +109,8 @@ export async function POST(request) {
       );
     }
 
-    // 2. 기본 사용자 확보 (없으면 자동 생성)
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
-    }
-
-    let user = await prisma.user.findFirst({
-      where: { username }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
-      });
-    }
+    // 2. 요청 사용자 확보
+    const { user } = await getOrCreateRequestUser(request);
 
     let addedCount = 0;
 
@@ -151,30 +122,30 @@ export async function POST(request) {
           { status: 400 }
         );
       }
-
-      for (const b of backupData.bookmarks) {
-        if (!b.word) continue;
-
-        // 기존에 이미 존재하는 단어인지 체크
-        const existing = await prisma.bookmark.findFirst({
-          where: {
-            userId: user.id,
-            word: b.word,
-          },
-        });
-
-        if (!existing) {
-          await prisma.bookmark.create({
-            data: {
-              userId: user.id,
-              word: b.word,
-              meaning: b.meaning || "",
-              reading: b.reading || "",
-            },
-          });
-          addedCount++;
-        }
+      if (backupData.bookmarks.length > MAX_IMPORT_ITEMS) {
+        return NextResponse.json(
+          { success: false, error: `한 번에 최대 ${MAX_IMPORT_ITEMS}개 단어만 가져올 수 있습니다.` },
+          { status: 413 }
+        );
       }
+
+      const uniqueBookmarks = new Map();
+      for (const item of backupData.bookmarks) {
+        const word = String(item?.word || "").trim().slice(0, 100);
+        if (!word) continue;
+        uniqueBookmarks.set(word, {
+          userId: user.id,
+          word,
+          meaning: String(item?.meaning || "").trim().slice(0, 500),
+          reading: String(item?.reading || "").trim().slice(0, 100)
+        });
+      }
+
+      const result = await prisma.bookmark.createMany({
+        data: [...uniqueBookmarks.values()],
+        skipDuplicates: true
+      });
+      addedCount = result.count;
     }
 
     // 4. 📓 [오답노트 스마트 병합]
@@ -185,47 +156,59 @@ export async function POST(request) {
           { status: 400 }
         );
       }
+      if (backupData.wrongAnswers.length > MAX_IMPORT_ITEMS) {
+        return NextResponse.json(
+          { success: false, error: `한 번에 최대 ${MAX_IMPORT_ITEMS}개 오답만 가져올 수 있습니다.` },
+          { status: 413 }
+        );
+      }
 
-      for (const w of backupData.wrongAnswers) {
-        if (!w.quizId) continue;
-
-        // 기존에 이미 존재하는 오답 노트인지 체크
-        const existing = await prisma.wrongAnswer.findFirst({
-          where: {
-            userId: user.id,
-            quizId: w.quizId,
-          },
+      const incomingByQuiz = new Map();
+      for (const item of backupData.wrongAnswers) {
+        const quizId = typeof item?.quizId === "string" ? item.quizId.trim() : "";
+        if (!quizId) continue;
+        incomingByQuiz.set(quizId, {
+          quizId,
+          reviewCount: Math.min(Math.max(Number(item.reviewCount) || 1, 1), 100),
+          isResolved: item.isResolved === true
         });
+      }
 
+      const quizIds = [...incomingByQuiz.keys()];
+      const [validQuizzes, existingAnswers] = await Promise.all([
+        prisma.quiz.findMany({ where: { id: { in: quizIds } }, select: { id: true } }),
+        prisma.wrongAnswer.findMany({ where: { userId: user.id, quizId: { in: quizIds } } })
+      ]);
+      const validQuizIds = new Set(validQuizzes.map(quiz => quiz.id));
+      const existingByQuiz = new Map(existingAnswers.map(answer => [answer.quizId, answer]));
+      const toCreate = [];
+      const toUpdate = [];
+
+      for (const incoming of incomingByQuiz.values()) {
+        if (!validQuizIds.has(incoming.quizId)) continue;
+        const existing = existingByQuiz.get(incoming.quizId);
         if (!existing) {
-          // 신규 등록
-          await prisma.wrongAnswer.create({
-            data: {
-              userId: user.id,
-              quizId: w.quizId,
-              reviewCount: w.reviewCount || 1,
-              isResolved: w.isResolved !== undefined ? w.isResolved : false,
-            },
-          });
-          addedCount++;
-        } else {
-          // 기존에 존재하나, 들어온 백업 코드가 더 복습 회수가 많거나 아직 안 풀린 경우 스마트 업데이트
-          const shouldUpdate =
-            (w.reviewCount && w.reviewCount > existing.reviewCount) ||
-            (!w.isResolved && existing.isResolved);
+          toCreate.push({ userId: user.id, ...incoming });
+          continue;
+        }
 
-          if (shouldUpdate) {
-            await prisma.wrongAnswer.update({
-              where: { id: existing.id },
-              data: {
-                reviewCount: Math.max(w.reviewCount || 1, existing.reviewCount),
-                isResolved: w.isResolved !== undefined ? w.isResolved : existing.isResolved,
-              },
-            });
-            addedCount++;
-          }
+        const reviewCount = Math.max(incoming.reviewCount, existing.reviewCount);
+        const isResolved = incoming.isResolved && existing.isResolved;
+        if (reviewCount !== existing.reviewCount || isResolved !== existing.isResolved) {
+          toUpdate.push(prisma.wrongAnswer.update({
+            where: { id: existing.id },
+            data: { reviewCount, isResolved }
+          }));
         }
       }
+
+      const createResult = toCreate.length
+        ? await prisma.wrongAnswer.createMany({ data: toCreate })
+        : { count: 0 };
+      for (let index = 0; index < toUpdate.length; index += 50) {
+        await prisma.$transaction(toUpdate.slice(index, index + 50));
+      }
+      addedCount = createResult.count + toUpdate.length;
     }
 
     return NextResponse.json({
@@ -236,7 +219,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("[SYNC IMPORT ERROR]:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: "학습 데이터 가져오기에 실패했습니다." },
       { status: 500 }
     );
   }

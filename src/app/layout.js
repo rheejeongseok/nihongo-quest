@@ -4,6 +4,24 @@ export const metadata = {
   title: "NihongoQuest | 일본어 공부 퀴즈 아레나",
   description:
     "4대 감성 테마와 함께 게임하듯 일본어 기초부터 JLPT까지 정복하는 최고급 학습 플랫폼",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png"
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "니혼고퀘스트"
+  }
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#557c55"
 };
 
 export default function RootLayout({ children }) {
@@ -25,6 +43,8 @@ export default function RootLayout({ children }) {
       <body suppressHydrationWarning>
         <Header />
         <main style={{ position: "relative", zIndex: 1 }}>{children}</main>
+        <AppToast />
+        <PwaInstallPrompt />
       </body>
     </html>
   );
@@ -32,3 +52,5 @@ export default function RootLayout({ children }) {
 
 // 헤더 컴포넌트 가져오기
 import Header from "./Header";
+import AppToast from "./AppToast";
+import PwaInstallPrompt from "./PwaInstallPrompt";

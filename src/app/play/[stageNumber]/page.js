@@ -1,18 +1,25 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { use, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
+import { showToast } from '@/lib/toast';
 
 export default function PlayStagePage({ params }) {
-  const stageNumber = parseInt(params.stageNumber);
+  const { stageNumber: stageNumberParam } = use(params);
+  const stageNumber = parseInt(stageNumberParam, 10);
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // 다차원 쿼리 파라미터 파싱
-  const jlptLevel = searchParams.get('jlptLevel') || 'N2';
+  // 지원 트랙과 아레나 카테고리 파싱
+  const jlptLevel = searchParams.get('jlptLevel') === 'BEGINNER' ? 'BEGINNER' : 'N1';
   const difficulty = searchParams.get('difficulty') || 'EASY';
+  const category = searchParams.get('category') || '';
+  const isBeginner = jlptLevel === 'BEGINNER';
+  const beginnerLevelLabel = { EASY: 'N5', MEDIUM: 'N4', HARD: 'N3' }[difficulty] || 'N5';
+  const difficultyLabel = { EASY: '쉬움', MEDIUM: '보통', HARD: '어려움' }[difficulty] || difficulty;
+  const trackLabel = isBeginner ? `초보 ${beginnerLevelLabel}` : 'N1';
   const { speak } = useJapaneseSpeech();
 
   // 상태 관리
@@ -46,17 +53,18 @@ export default function PlayStagePage({ params }) {
   // 시간 카운터
   const [timeTaken, setTimeTaken] = useState(0);
   const timerRef = useRef(null);
+  const handleSubmissionRef = useRef(null);
 
   // ⏱️ 타임어택 서바이벌 모드 상태
   const [isTimeAttack, setIsTimeAttack] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(20);
   const [speedBonusEarned, setSpeedBonusEarned] = useState(0);
 
-  // ⚔️ N1 경어/조사 문장 조립판 상태
+  // ⚔️ 문장 조립판 상태
   const [assemblyPads, setAssemblyPads] = useState([]);
 
-  // 📝 N1 15분 하프 모의고사 전용 상태
-  const [mockTimer, setMockTimer] = useState(900); // 15분 = 900초
+  // 📝 최종 진단 아레나 전용 상태 (초보 10분 / N1 15분)
+  const [mockTimer, setMockTimer] = useState(() => isBeginner ? 600 : 900);
 
   // 🖌️ [구글 실시간 손글씨 해독 주관식그림판] 핵심 엔진 상태 및 Refs
   const [isDrawingOpen, setIsDrawingOpen] = useState(true);
@@ -258,12 +266,14 @@ export default function PlayStagePage({ params }) {
     }
   };
 
-  // 1. 스테이지 퀴즈 데이터 로드 (jlptLevel과 difficulty 파라미터를 둘 다 전송)
+  // 1. 선택한 트랙·난이도·아레나의 퀴즈 데이터 로드
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/stages/${stageNumber}?jlptLevel=${jlptLevel}&difficulty=${difficulty}`);
+        const query = new URLSearchParams({ jlptLevel, difficulty });
+        if (category) query.set('category', category);
+        const res = await fetch(`/api/stages/${stageNumber}?${query.toString()}`);
         const data = await res.json();
         if (data.success) {
           setStage(data.stage);
@@ -273,18 +283,18 @@ export default function PlayStagePage({ params }) {
             initWordleTiles(data.quizzes[0].japaneseWord.length);
           }
         } else {
-          alert(data.error || '퀴즈 로드 실패');
+          showToast(data.error || '퀴즈 로드 실패', 'error');
           router.push('/');
         }
       } catch (e) {
-        alert('데이터를 가져오는 중 오류가 발생했습니다.');
+        showToast('데이터를 가져오는 중 오류가 발생했습니다.', 'error');
         router.push('/');
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, [stageNumber, jlptLevel, difficulty, router]);
+  }, [stageNumber, jlptLevel, difficulty, category, router]);
 
   // 2. 타이머 작동
   useEffect(() => {
@@ -312,7 +322,7 @@ export default function PlayStagePage({ params }) {
           if (prev <= 1) {
             clearInterval(timerRef.current);
             // 0초가 되면 타임오버 강제 오답 제출
-            handleSubmission("");
+            handleSubmissionRef.current?.("");
             return 0;
           }
           return prev - 1;
@@ -599,7 +609,6 @@ export default function PlayStagePage({ params }) {
         headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           quizId: currentQuiz.id,
-          isCorrect: isCorrectAns,
           timeTaken,
           selectedAnswer: finalAns
         })
@@ -607,21 +616,23 @@ export default function PlayStagePage({ params }) {
       const data = await res.json();
       
       if (data.success) {
+        const verifiedCorrect = data.isCorrect;
+        setIsCorrect(verifiedCorrect);
         let baseEarn = data.pointsEarned;
         if (jlptLevel === 'N1') baseEarn += 10; // N1 보너스 +10pts
         
         // 콤보 포인트 배수 가중치 적용 (콤보당 +10% 보너스 포인트 지급)
-        const comboBonus = isCorrectAns ? Math.round(baseEarn * (nextCombo * 0.1)) : 0;
+        const comboBonus = verifiedCorrect ? Math.round(baseEarn * (nextCombo * 0.1)) : 0;
         
         // ⏱️ 타임어택 속도 보너스 포인트 계산 (남은시간 * 1.5배, 정답일 때만 적용)
-        const speedBonus = (isTimeAttack && isCorrectAns) ? Math.round(timeRemaining * 1.5) : 0;
+        const speedBonus = (isTimeAttack && verifiedCorrect) ? Math.round(timeRemaining * 1.5) : 0;
         setSpeedBonusEarned(speedBonus);
         
         finalPoints = baseEarn + comboBonus + speedBonus;
 
         setPointsEarned(finalPoints);
         setTotalPointsEarned(prev => prev + finalPoints);
-        if (isCorrectAns) setUserScore(prev => prev + 1);
+        if (verifiedCorrect) setUserScore(prev => prev + 1);
 
         // 스피드 보너스 획득 시 번개 토스트 파이어!
         if (speedBonus > 0) {
@@ -652,6 +663,8 @@ export default function PlayStagePage({ params }) {
     setSubmitted(true);
   };
 
+  handleSubmissionRef.current = handleSubmission;
+
   // 워들 한 글자씩 입력 처리
   const handleWordleChange = (val, idx) => {
     if (wordleFinished) return;
@@ -671,7 +684,7 @@ export default function PlayStagePage({ params }) {
     
     const userGuess = wordleInput.join('');
     if (userGuess.length < currentQuiz.japaneseWord.length) {
-      alert("글자 수에 맞춰 칸을 다 채워주세요!");
+      showToast("글자 수에 맞춰 칸을 다 채워주세요!", 'error');
       return;
     }
 
@@ -736,23 +749,24 @@ export default function PlayStagePage({ params }) {
           headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             quizId: currentQuiz.id,
-            isCorrect: isMatch,
             timeTaken,
             selectedAnswer: userGuess
           })
         });
         const data = await res.json();
         if (data.success) {
+          const verifiedCorrect = data.isCorrect;
+          setIsCorrect(verifiedCorrect);
           let baseEarn = data.pointsEarned;
           if (jlptLevel === 'N1') baseEarn += 10;
           
           // 콤보 포인트 배수 가중치 적용 (콤보당 +10% 보너스 포인트 지급)
-          const comboBonus = isMatch ? Math.round(baseEarn * (nextCombo * 0.1)) : 0;
+          const comboBonus = verifiedCorrect ? Math.round(baseEarn * (nextCombo * 0.1)) : 0;
           finalPoints = baseEarn + comboBonus;
 
           setPointsEarned(finalPoints);
           setTotalPointsEarned(prev => prev + finalPoints);
-          if (isMatch) setUserScore(prev => prev + 1);
+          if (verifiedCorrect) setUserScore(prev => prev + 1);
         }
       } catch (e) {
         console.error(e);
@@ -858,14 +872,14 @@ export default function PlayStagePage({ params }) {
               <span style={{
                 fontSize: '0.75rem',
                 fontWeight: '900',
-                background: jlptLevel === 'N2' ? '#ff949422' : '#1a4d8022',
-                color: jlptLevel === 'N2' ? '#ff9494' : '#1a4d80',
+                background: isBeginner ? '#2ecc7122' : '#1a4d8022',
+                color: isBeginner ? '#218c5a' : '#1a4d80',
                 padding: '4px 10px',
                 borderRadius: '100px',
-                border: `1.5px solid ${jlptLevel === 'N2' ? '#ff949488' : '#1a4d8088'}`,
+                border: `1.5px solid ${isBeginner ? '#2ecc7188' : '#1a4d8088'}`,
                 whiteSpace: 'nowrap'
               }}>
-                급수: {jlptLevel}
+                급수: {trackLabel}
               </span>
 
               <span style={{
@@ -877,7 +891,7 @@ export default function PlayStagePage({ params }) {
                 borderRadius: '100px',
                 border: '1.5px solid transparent'
               }}>
-                난이도: {difficulty}
+                난이도: {difficultyLabel}
               </span>
             </span>
             <span style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-color)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
@@ -988,7 +1002,7 @@ export default function PlayStagePage({ params }) {
               animation: 'pulse 2s infinite' 
             }}>
               <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#ff5e7e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ⏱️ N1 하프 모의고사 제한시간
+                ⏱️ {isBeginner ? '초보 실력 진단 제한시간' : 'N1 하프 모의고사 제한시간'}
               </span>
               <span style={{ fontSize: '1.05rem', fontWeight: '950', color: '#ff5e7e', fontFamily: 'monospace' }}>
                 {String(Math.floor(mockTimer / 60)).padStart(2, '0')}:{String(mockTimer % 60).padStart(2, '0')}
@@ -1008,7 +1022,7 @@ export default function PlayStagePage({ params }) {
           <span style={{ fontSize: '5rem', display: 'block', marginBottom: '16px', animation: 'pulse 2.5s infinite' }}>🏆</span>
           <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '8px', color: 'var(--text-primary)' }}>스테이지 완벽 격파!</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '600', marginBottom: '32px' }}>
-            {stage.title} [{jlptLevel} • {difficulty}] 코스를 성공적으로 완수하셨습니다!
+            {stage.title} [{trackLabel} • {difficultyLabel}] 코스를 성공적으로 완수하셨습니다!
           </p>
 
           <div className="report-summary-grid" style={{
@@ -1048,7 +1062,7 @@ export default function PlayStagePage({ params }) {
               marginBottom: '30px'
             }}>
               <h4 style={{ fontSize: '1.1rem', fontWeight: '950', color: 'var(--accent-color)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📝 N1 실전 언어지식 진단 결과 리포트
+                📝 {isBeginner ? '초보 종합 실력 진단 결과 리포트' : 'N1 실전 언어지식 진단 결과 리포트'}
               </h4>
               
               {(() => {
@@ -1056,17 +1070,26 @@ export default function PlayStagePage({ params }) {
                 let gradeDesc = '';
                 let gradeColor = '';
                 
-                if (userScore >= 13) {
-                  gradeTitle = '🏆 최우수 합격 안정권 (TOP-CLASS)';
-                  gradeDesc = '어휘, 문법, 독해 기초 전 분야에서 극도의 무결점 실력을 입증하셨습니다. 실전 시험장에서 문자·어휘 파트를 10분 내 해결하고 독해 파트 골든타임을 확보할 준비가 끝났습니다!';
+                const topThreshold = isBeginner ? 9 : 13;
+                const passThreshold = isBeginner ? 6 : 9;
+
+                if (userScore >= topThreshold) {
+                  gradeTitle = isBeginner ? '🏆 기초 실력 우수 (READY-UP)' : '🏆 최우수 합격 안정권 (TOP-CLASS)';
+                  gradeDesc = isBeginner
+                    ? `${beginnerLevelLabel} 기초 문자·어휘·문법·청해를 고르게 익혔습니다. 다음 난이도에도 충분히 도전할 수 있습니다!`
+                    : '어휘, 문법, 독해 기초 전 분야에서 극도의 무결점 실력을 입증하셨습니다. 실전 시험장에서 문자·어휘 파트를 10분 내 해결하고 독해 파트 골든타임을 확보할 준비가 끝났습니다!';
                   gradeColor = '#1dd1a1';
-                } else if (userScore >= 9) {
-                  gradeTitle = '📈 합격 우수권 (SAFE-PASS)';
-                  gradeDesc = '안정적으로 N1 합격을 거머질 수 있는 단단한 기초 체력을 다지셨습니다. 헷갈린 문장 조립이나 NHK 받아쓰기 시사 오답들만 에빙하우스 SRS 복습으로 가볍게 메워주시면 충분합니다!';
+                } else if (userScore >= passThreshold) {
+                  gradeTitle = isBeginner ? '📈 기초 성장권 (ON-TRACK)' : '📈 합격 우수권 (SAFE-PASS)';
+                  gradeDesc = isBeginner
+                    ? '기본기는 잘 잡혀 있습니다. 틀린 문자와 단어를 오답노트로 한 번 더 복습하면 다음 단계가 훨씬 수월해집니다.'
+                    : '안정적으로 N1 합격을 거머질 수 있는 단단한 기초 체력을 다지셨습니다. 헷갈린 문장 조립이나 NHK 받아쓰기 시사 오답들만 에빙하우스 SRS 복습으로 가볍게 메워주시면 충분합니다!';
                   gradeColor = 'var(--accent-color)';
                 } else {
-                  gradeTitle = '🚨 과락 경계 요망 (WEAK-POINT DETECTED)';
-                  gradeDesc = 'N1 합격을 위해 어휘력과 조사 조립 훈련의 집중 보완이 시급한 수준입니다. 대시보드의 N1 필수 어휘 수확과 오답노트 5단계 사냥 훈련을 반복하여 맹점을 메워주세요!';
+                  gradeTitle = isBeginner ? '🌱 기초 복습 권장 (KEEP-GROWING)' : '🚨 과락 경계 요망 (WEAK-POINT DETECTED)';
+                  gradeDesc = isBeginner
+                    ? '처음부터 잘할 필요는 없습니다. 문자 아레나부터 천천히 반복하고 틀린 문제를 오답노트에서 다시 만나보세요.'
+                    : 'N1 합격을 위해 어휘력과 조사 조립 훈련의 집중 보완이 시급한 수준입니다. 대시보드의 N1 필수 어휘 수확과 오답노트 5단계 사냥 훈련을 반복하여 맹점을 메워주세요!';
                   gradeColor = '#ff6b6b';
                 }
                 
@@ -1080,7 +1103,7 @@ export default function PlayStagePage({ params }) {
                     </p>
                     
                     <div style={{ marginTop: '16px', background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
-                      ⏱️ <strong>실전 독해 세이브 가능 예상 시간</strong>: {Math.max(0, Math.floor(mockTimer / 60))}분 {mockTimer % 60}초 남김 (독해 영역에 이 시간을 고스란히 추가 투자할 수 있습니다!)
+                      ⏱️ <strong>{isBeginner ? '남은 제한시간' : '실전 독해 세이브 가능 예상 시간'}</strong>: {Math.max(0, Math.floor(mockTimer / 60))}분 {mockTimer % 60}초 남김{isBeginner ? '' : ' (독해 영역에 이 시간을 고스란히 추가 투자할 수 있습니다!)'}
                     </div>
                   </div>
                 );
@@ -1257,7 +1280,7 @@ export default function PlayStagePage({ params }) {
                   
                   {/* 조립 보드 */}
                   <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-                    ⛓️ N1 문장 조립 보드 (조립판의 단어를 클릭하면 취소할 수 있습니다)
+                    ⛓️ {isBeginner ? '초보 문장 조립 보드' : 'N1 문장 조립 보드'} (조립판의 단어를 클릭하면 취소할 수 있습니다)
                   </span>
                   <div style={{
                     minHeight: '74px',
@@ -1274,7 +1297,7 @@ export default function PlayStagePage({ params }) {
                   }}>
                     {assemblyPads.length === 0 ? (
                       <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                        아래의 단어 조각 카드를 순서대로 탭하여 경어 문장을 완성하세요.
+                        아래의 단어 조각 카드를 순서대로 탭하여 {isBeginner ? '기초' : '경어'} 문장을 완성하세요.
                       </span>
                     ) : (
                       assemblyPads.map((origIdx, wIdx) => (

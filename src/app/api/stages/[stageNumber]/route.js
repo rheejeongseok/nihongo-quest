@@ -13,12 +13,46 @@ function shuffleArray(array) {
   return arr;
 }
 
+function prepareQuizForClient(quiz) {
+  if (!quiz.wrongAnswers) return quiz;
+
+  try {
+    const values = JSON.parse(quiz.wrongAnswers);
+    if (!Array.isArray(values) || values.length === 0) return quiz;
+
+    if (quiz.quizType === 'ASSEMBLY') {
+      return {
+        ...quiz,
+        options: shuffleArray(values),
+        wrongAnswers: undefined
+      };
+    }
+
+    return {
+      ...quiz,
+      options: shuffleArray([quiz.correctAnswer, ...values]),
+      wrongAnswers: undefined
+    };
+  } catch (error) {
+    console.error('보기 목록 셔플 파싱 에러:', error);
+    return quiz;
+  }
+}
+
 export async function GET(request, { params }) {
   try {
-    const stageNumber = parseInt(params.stageNumber);
+    const { stageNumber: stageNumberParam } = await params;
+    const stageNumber = parseInt(stageNumberParam, 10);
+    const { searchParams } = new URL(request.url);
+    const jlptLevel = searchParams.get('jlptLevel') === 'BEGINNER' ? 'BEGINNER' : 'N1';
+    const requestedDifficulty = searchParams.get('difficulty') || 'EASY';
+    const difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(requestedDifficulty)
+      ? requestedDifficulty
+      : 'EASY';
+    const requestedCategory = searchParams.get('category') || '';
     
     // ⚔️ 5코스 N1 경어/조사 문장 조립 아레나 가상 라우팅 (100문항 대규모 확장 & 10문항 무작위 셔플 추출)
-    if (stageNumber === 5) {
+    if (stageNumber === 5 && jlptLevel === 'N1' && requestedCategory === 'ASSEMBLY') {
       const virtualStage = {
         id: "virtual-stage-5-uuid",
         stageNumber: 5,
@@ -47,7 +81,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 올바른 경어 문장을 만드세요. (상황: 은사의 새로 출판된 책에 대해 감사와 존경을 표할 때)",
           japaneseWord: "先生、新しく出版された著書を拝読いたしました。",
           pronunciation: "せんせい、あたらしいしゅっぱんされたちょしょをはいどくいたしました。",
-          correctAnswer: "先生、 新しく  出版された 著書을 拝読いたしました。",
+          correctAnswer: "先生、 新しく 出版された 著書を 拝読いたしました。",
           hint: "선생님, 새로 출판된 저서를 읽었습니다. (拝読: '읽다'의 겸양어)",
           wrongAnswers: "[]"
         },
@@ -56,10 +90,10 @@ export async function GET(request, { params }) {
           stageId: "virtual-stage-5-uuid",
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 올바른 경어 표현을 만드세요. (상황: 전화를 건 바이어에게 부장 다나카의 상태를 설명할 때)",
-          japaneseWord: "田中様は、ただいま席を外していらっしゃいます。",
-          pronunciation: "たなかさまは、ただいませき을はずしていらっしゃいます。",
-          correctAnswer: "田中様は、  席を 外して いらっしゃいます。",
-          hint: "다나카 님은 지금 자리를 비우고 계십니다. (いらっしゃる: '있다'의 존경어)",
+          japaneseWord: "田中は、ただいま席を外しております。",
+          pronunciation: "たなかは、ただいませきをはずしております。",
+          correctAnswer: "田中は、 ただいま 席を 外しております。",
+          hint: "다나카는 지금 자리를 비우고 있습니다. (외부인에게 자사 직원을 높이지 않는 비즈니스 경어)",
           wrongAnswers: "[]"
         },
         {
@@ -101,7 +135,7 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 비즈니스 정중 체를 완성하세요. (상황: 회의에서 상대방에게 내용을 한번 더 설명해달라고 할 때)",
           japaneseWord: "誠に恐れ入りますが、もう一度ご説明願えますか。",
-          pronunciation: "まことにおそれいりますが、もういちすごせつめいねがえますか。",
+          pronunciation: "まことにおそれいりますが、もういちどごせつめいねがえますか。",
           correctAnswer: "誠に 恐れ入りますが、 もう一度 ご説明 願えますか。",
           hint: "정말로 죄송합니다만, 한 번 더 설명해 주시겠습니까? (願う: 요청하다)",
           wrongAnswers: "[]"
@@ -256,7 +290,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 부드러운 상사 존경어 의문을 완성하세요. (상황: 사장님이 회의 문서를 보셨는지 정중하게 여쭤볼 때)",
           japaneseWord: "社長、本日の会議の資料はご覧になりましたか。",
           pronunciation: "しゃちょう、ほんじつのかいぎのしりょうはごらんになりましたか。",
-          correctAnswer: "社長、 本日の 会議의 자료는 ご覧になりましたか。",
+          correctAnswer: "社長、 本日の 会議の資料は ご覧になりましたか。",
           hint: "사장님, 오늘 회의 자료는 읽어 보셨습니까? (ご覧になる: '보다'의 존경어)",
           wrongAnswers: "[]"
         },
@@ -311,7 +345,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 N1 핵심 기간 표현 문장을 만드세요. (상황: 수년에 걸친 프로젝트가 결실을 보았음을 대내적으로 성과 공유할 때)",
           japaneseWord: "長年にわたる努力の実を結び、ついに契約が成立した。",
           pronunciation: "ながねんにわたるどりょくのみをむすび、ついにけいやくがせいりつした。",
-          correctAnswer: "長年に わたる 努力の 실을을결실로 맺어, ついに 契約が 成立した。",
+          correctAnswer: "長年にわたる 努力の実を結び、 ついに 契約が成立した。",
           hint: "수년간에 걸친 노력의 결실을 맺어 드디어 계약이 체결되었다. (〜にわたる: ~에 걸친, 실을을결실로 맺다)",
           wrongAnswers: "[]"
         },
@@ -344,7 +378,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 정중한 이메일 업무 발송 문장을 완성하세요. (상황: 과장님 지시를 받아 바이어에게 원본 우편 서류를 보냈음을 고할 때)",
           japaneseWord: "ご指示いただいた通りに、先方に書類を郵送いたしました。",
           pronunciation: "ごしじいただいたとおりに、せんぽうにしょるいをゆうそういたしました。",
-          correctAnswer: "ご指示 いただいた 통리에、 先方に 書類を 郵送いたしました。",
+          correctAnswer: "ご指示いただいた通りに、 先方に 書類を 郵送いたしました。",
           hint: "지시해주신 대로 상대편(거래처)에 서류를 무사 우편 발송했습니다. (先方: 상대방/상대처, 郵送: 우편 발송)",
           wrongAnswers: "[]"
         },
@@ -364,10 +398,10 @@ export async function GET(request, { params }) {
           stageId: "virtual-stage-5-uuid",
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 상사 존경어 의문문을 조립하세요. (상황: 외근 나가신 팀장님이 사무실에 오시는 시간을 정중히 캐물을 때)",
-          japaneseWord: "先生、明日オフィスにお戻りになられる時間はいつ頃でしょうか。",
-          pronunciation: "せんせい、あしたオフィスにおもどりになられるじかんはいつごろでしょうか。",
-          correctAnswer: "先生、 明日 オフィスに お戻りになられる  시간은 いつ頃でしょうか。",
-          hint: "선생님, 내일 사무실로 복귀하시는 시간은 대략 언제쯤인가요? (お戻りになる: 돌아오시다의 이중존경 겸 친근체)",
+          japaneseWord: "部長、明日オフィスにお戻りになる時間はいつ頃でしょうか。",
+          pronunciation: "ぶちょう、あしたオフィスにおもどりになるじかんはいつごろでしょうか。",
+          correctAnswer: "部長、 明日 オフィスに お戻りになる 時間は いつ頃でしょうか。",
+          hint: "부장님, 내일 사무실로 돌아오시는 시간은 대략 언제쯤인가요? (お戻りになる: 돌아오시다의 존경 표현)",
           wrongAnswers: "[]"
         },
         {
@@ -377,7 +411,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 격식 있는 주의사항 문장을 조립하세요. (상황: 신임 가입자에게 대형 보험 계약 서명 시 위험 조항을 알려줄 때)",
           japaneseWord: "この契約書にサインするにあたって、注意すべき点は何ですか。",
           pronunciation: "このけいやくしょにサインするにあたって、ちゅういすべきてんはなんですか。",
-          correctAnswer: "この 契約書に 사인스루니 あたって、 注意すべき点は 何ですか。",
+          correctAnswer: "この契約書に サインするにあたって、 注意すべき点は 何ですか。",
           hint: "이 계약서에 서명함에 있어서 특별히 주의해야 할 점은 무엇입니까? (〜にあたって: ~할 때/~함에 있어서)",
           wrongAnswers: "[]"
         },
@@ -399,7 +433,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 공식 수락 겸양 문장을 조립하세요. (상황: 저명한 학술회 초청을 흔쾌히 수락하고 참석하겠다고 회신할 때)",
           japaneseWord: "先日ご案内いただいたセミナーに、喜んで参加させていただきます。",
           pronunciation: "せんじつごあんないいただいたセミナーに、よろこんでさんかさせていただきます。",
-          correctAnswer: "先日 ご案内 いただいた 세미나니、 喜んで 参加させていただきます。",
+          correctAnswer: "先日 ご案内いただいた セミナーに、 喜んで 参加させていただきます。",
           hint: "요전에 초청해주신 세미나 자리에 기꺼이 기쁜 마음으로 참석하겠습니다. (喜んで: 기꺼이)",
           wrongAnswers: "[]"
         },
@@ -410,7 +444,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 N1 고난도 부정적 예측 문장을 조립하세요. (상황: 연구원의 데이터 임의 수정 행위가 기업 도덕에 큰 타격이 될 것임을 주장할 때)",
           japaneseWord: "今回の不祥事は、会社の信頼を揺るがしかねない重大な問題だ。",
           pronunciation: "こんかいのふしょうじは、かいしゃのしんらいをゆるがしかねないじゅうだいなもんだいだ。",
-          correctAnswer: "今回の 不祥事は、 会社の 信頼を 揺る가しかねない 重大な 問題だ。",
+          correctAnswer: "今回の不祥事は、 会社の信頼を 揺るがしかねない 重大な問題だ。",
           hint: "이번 비리 스캔들은 회사의 두터운 신뢰를 송두리째 뒤흔들 위험이 있는 큰 문제입니다. (揺るがす: 흔들다, 〜かねない: ~할 위험이 있다)",
           wrongAnswers: "[]"
         },
@@ -431,8 +465,8 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 회사 차원의 대외 최고 사과 문장을 조립하세요. (상황: 자사 서버 임시 마비로 고객의 큰 결제 장애가 난 것을 정중히 사죄할 때)",
           japaneseWord: "弊社の落ち度により多大なご迷惑をおかけし、深くお詫び申し上げます。",
-          pronunciation: "へいしゃのおち도によりただいなごめいわくをおかけし、ふかくおわびもうしあげます。",
-          correctAnswer: "弊社の 落ち度に より 多大な ご迷惑을 おかけし、 深く お詫び申し上げます。",
+          pronunciation: "へいしゃのおちどによりただいなごめいわくをおかけし、ふかくおわびもうしあげます。",
+          correctAnswer: "弊社の 落ち度により 多大なご迷惑を おかけし、 深く お詫び申し上げます。",
           hint: "저희 측의 미숙한 불찰로 지대한 폐를 끼쳐 드려 마음 속 깊이 정중히 사과드립니다. (落ち度: 과실/잘못, お詫び申し上げる: 사죄하다)",
           wrongAnswers: "[]"
         },
@@ -443,7 +477,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 핵심 N1 기능어 인과 문장을 만드세요. (상황: 외주 협력사 변경이 사장 최종 재가 결과에 전적으로 달렸음을 공유할 때)",
           japaneseWord: "社長の決断いかんによっては、プロジェクトが中止になる可能性もある。",
           pronunciation: "しゃちょうのけつだんいかんによっては、プロジェクトがちゅうしになるかのうせいもある。",
-          correctAnswer: "社長の 決断 이칸니욧테와、 프로젝트가 中止になる 可能性もある。",
+          correctAnswer: "社長の 決断いかんによっては、 プロジェクトが 中止になる 可能性もある。",
           hint: "사장님의 결정 처분 여하에 따라는 본 프로젝트가 멈출 우려도 다분합니다. (〜いかんによって: ~에 따라서/~여하에 의해)",
           wrongAnswers: "[]"
         },
@@ -509,7 +543,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 격식 있는 감정 서술 문장을 만드세요. (상황: 평생 꿈꾸던 도쿄 대학교 박사 국비 유학 길이 열려 벅찰 때)",
           japaneseWord: "長年の夢であった留学が実現するとなって、胸が高鳴っている。",
           pronunciation: "ながねんのゆめであったりゅうがくがじつげんするとなって、むねがたかなっている。",
-          correctAnswer: "長年の 夢であった 留学が  실현된다고 하니, 胸が 高鳴っている。",
+          correctAnswer: "長年の夢であった 留学が 実現するとなって、 胸が 高鳴っている。",
           hint: "오랜 염원이자 꿈이었던 해외 유학이 기어이 현실로 성사되자 가슴이 설레어 요동친다. (〜となる: ~로 되다, 胸が高鳴る: 가슴이 설레어 두근대다)",
           wrongAnswers: "[]"
         },
@@ -542,7 +576,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 철저한 각오 표명 서술을 조립하세요. (상황: 어떠한 난관이 찾아오더라도 끝끝내 완벽 통과하겠다고 굳게 약속할 때)",
           japaneseWord: "いかなる困難があろうとも、最後までやり遂げる覚悟です。",
           pronunciation: "いかなるこんなんがあろうとも、さいごまでやりとげるかくごです。",
-          correctAnswer: "いかなる 困難が あろうとも、 最後まで  완수할 覚悟です。",
+          correctAnswer: "いかなる困難が あろうとも、 最後まで やり遂げる 覚悟です。",
           hint: "설령 그 어떤 막심한 역경 and 고통이 도사릴지라도, 최후까지 이룩해 낼 비장한 각오입니다. (いかなる: 어떠한, 〜とも: ~할지라도, やり遂げる: 완수하다)",
           wrongAnswers: "[]"
         },
@@ -584,7 +618,7 @@ export async function GET(request, { params }) {
           stageId: "virtual-stage-5-uuid",
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 올바른 비즈니스 전화 응대 표현을 조립하세요. (상황: 바이어 전화를 접수하고 잠시 대기를 부탁할 때)",
-          japaneseWord: "恐れ入ります가、少々お待ちいただけますでしょうか。",
+          japaneseWord: "恐れ入りますが、少々お待ちいただけますでしょうか。",
           pronunciation: "おそれいりますが、しょうしょうおまちいただけますでしょうか。",
           correctAnswer: "恐れ入りますが、 少々 お待ちいただけますでしょうか。",
           hint: "죄송합니다만, 잠시만 기다려 주시겠습니까? (恐れ入る: 죄송해하다/황송해하다)",
@@ -652,8 +686,8 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 품격 있는 회신 유도 청탁 조립을 완성하세요. (상황: 다소 작성하기 번거로운 세무 신조서를 파트너사에게 부탁하며 기다릴 때)",
           japaneseWord: "お手数をおかけいたしますが、ご返信をお待ちしております。",
-          pronunciation: "おてすうをおかけいたします가、ごへんしんをおまちしております。",
-          correctAnswer: "お手수를 おかけいたしますが、 ご返信を お待ちしております。",
+          pronunciation: "おてすうをおかけいたしますが、ごへんしんをおまちしております。",
+          correctAnswer: "お手数を おかけいたしますが、 ご返信を お待ちしております。",
           hint: "손이 많이 가고 성가신 폐를 끼쳐 죄송하오나 부디 메일 회신을 애타게 기다리겠습니다. (お手数をおかけする: 성가시게 해 드리다)",
           wrongAnswers: "[]"
         },
@@ -674,7 +708,7 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 완벽한 비즈니스 자리 부재 대응을 조립하세요. (상황: 전화가 온 파트너사 담당자에게 전화를 대신 받아 회신을 약속할 때)",
           japaneseWord: "ただいま席を外しておりますので、折り返しお電話いたします。",
-          pronunciation: "ただいまぜきをはずしておりますので、おりかえしおでんわいたします。",
+          pronunciation: "ただいませきをはずしておりますので、おりかえしおでんわいたします。",
           correctAnswer: "ただいま 席を 外しておりますので、 折り返し お電話いたします。",
           hint: "지목하신 사원은 지금 잠깐 자리를 떠나 계신 상황이므로 곧장 즉시 회신 전화를 올리겠습니다. (席を外す: 자리를 비우다)",
           wrongAnswers: "[]"
@@ -695,10 +729,10 @@ export async function GET(request, { params }) {
           stageId: "virtual-stage-5-uuid",
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 식음료 존경어 최상급 질문을 조립하세요. (상황: 비즈니스 디너 코스 중 VIP 고객이 어떤 메인을 드실지 물을 때)",
-          japaneseWord: "お客様、何をお召し上がりになられますか。",
-          pronunciation: "おきゃくさま、なにをおめしあがりになられますか。",
-          correctAnswer: "お客様、 何を お召し上がりになられますか。",
-          hint: "고객님, 실례지만 오늘 메인 요리는 과연 무엇으로 식사하시겠습니까? (お召し上がりになる: '드시옵시다'의 극존경)",
+          japaneseWord: "お客様、何を召し上がりますか。",
+          pronunciation: "おきゃくさま、なにをめしあがりますか。",
+          correctAnswer: "お客様、 何を 召し上がりますか。",
+          hint: "고객님, 무엇을 드시겠습니까? (召し上がる: '먹다·마시다'의 존경어)",
           wrongAnswers: "[]"
         },
         {
@@ -773,7 +807,7 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 은사 칭송 존경 표현을 조립하세요. (상황: 저명한 교수님이 강력 권장해 주신 동경대 고전 명작을 읽고 소감을 고할 때)",
           japaneseWord: "先生がご紹介くださった本は、とても興味深かったです。",
-          pronunciation: "せんせいがごしょうかいくださったほんは、てともきょうみぶかかったです。",
+          pronunciation: "せんせいがごしょうかいくださったほんは、とてもきょうみぶかかったです。",
           correctAnswer: "先生が ご紹介 くださった本は、 とても 興味深かったです。",
           hint: "선생님께서 친히 귀중하게 책을 추천해 주신 덕에 아주 심오하고 큰 영감을 받아 흥미로웠습니다. (ご紹介くださる: 소개하여 주시다)",
           wrongAnswers: "[]"
@@ -818,7 +852,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 상사 명령 수행 겸양을 조립하세요. (상황: 부장님이 지시하신 서버 보안 패치 프로세스 적용을 완수했음을 보고할 때)",
           japaneseWord: "ご指示いただいた手順に沿って、作業を完了させました。",
           pronunciation: "ごしじいただいたてじゅんにそって、さぎょうをかんりょうさせました。",
-          correctAnswer: "ご指示 いただいた 手順に沿って、 作業を  완료시켰습니다.",
+          correctAnswer: "ご指示いただいた 手順に沿って、 作業を 完了させました。",
           hint: "팀장님이 몸소 가르쳐 주신 복잡한 매뉴얼 순서에 성실히 응하여 해당 수리 프로세스를 잘 끝마쳤습니다. (手順: 순서/절차, 沿う: 따르다/응하다)",
           wrongAnswers: "[]"
         },
@@ -828,7 +862,7 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 결과 초월 N1 문법을 조립하세요. (상황: 등락 여부와 무관하게 청년들의 피나는 사법고시 분투를 극진히 격려할 때)",
           japaneseWord: "試験の結果いかんに関わらず、努力したことに価値がある。",
-          pronunciation: "しけんのけっかいかんんにかわらず、どりょくしたことにかちがある。",
+          pronunciation: "しけんのけっかいかんにかかわらず、どりょくしたことにかちがある。",
           correctAnswer: "試験の 結果いかんに 関わらず、 努力したことに 価値がある。",
           hint: "시험 합격/불합격의 처참한 성적 결과 여부와 상관없이 뜨겁게 쏟아부은 청춘의 피땀에 진짜 의미가 있습니다. (〜いかんに関わらず: ~여하에 상관없이)",
           wrongAnswers: "[]"
@@ -850,7 +884,7 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 완벽한 약속 지각 겸양/사죄 문장을 조립하세요. (상황: 갑작스러운 수도 도쿄 전철 연착으로 파트너 미팅에 10분 지각해 사과할 때)",
           japaneseWord: "お約束の時間に少し遅れてしまい、誠に申し訳ございません。",
-          pronunciation: "おやくそくのじかんにすこしおくれてしまい、まことにおもうしわけございません。",
+          pronunciation: "おやくそくのじかんにすこしおくれてしまい、まことにもうしわけございません。",
           correctAnswer: "お約束の 時間に 少し 遅れてしまい、 誠に 申し訳ございません。",
           hint: "미리 정해둔 약속 시각보다 아주 소량 늦어 버리는 불찰을 지어 대단히 사죄의 말씀 올립니다. (〜てしまう: ~해 버리다)",
           wrongAnswers: "[]"
@@ -872,7 +906,7 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 성공적 비즈니스 마무리 공지 문장을 조립하세요. (상황: 10년간의 국가 우주 탐사 프로젝트가 큰 흠집 없이 대성황리에 종료되었음을 알릴 때)",
           japaneseWord: "この度のプロジェクトは、大成功のうちに終了いたしました。",
-          pronunciation: "thisたびのぷろじぇくとは、だいせいこうのうちにしゅうりょういたしました。",
+          pronunciation: "このたびのぷろじぇくとは、だいせいこうのうちにしゅうりょういたしました。",
           correctAnswer: "この度の プロジェクトは、 大成功の うちに 終了いたしました。",
           hint: "금번 진행된 막중한 국가 우주 항공 개발 프로젝트는 역대급 성공 속에 영광스럽게 퇴장 마쳤습니다. (〜のうちに: ~의 가운데에/~하는 동안에)",
           wrongAnswers: "[]"
@@ -895,7 +929,7 @@ export async function GET(request, { params }) {
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 물건 인수 후 정밀 검증 약속 경어를 조립하세요. (상황: 테스트용 가죽 가공 기계를 납품받고 한 달간 정교하게 시동해 보겠다고 다짐할 때)",
           japaneseWord: "お預かりしたサンプルを、社内にて十分に検証いたします。",
           pronunciation: "おあずかりしたさんぷるを、しゃないにてじゅうぶんにけんしょういたします。",
-          correctAnswer: "お預かりした  サンプルを、 社내にて 十分に 検証いたします。",
+          correctAnswer: "お預かりした サンプルを、 社内にて 十分に 検証いたします。",
           hint: "방금 넘겨받은 신제품 원재료 샘플 꾸러미를 당사 품질분석 연구실에서 충분히 면밀 조사해 올리겠습니다. (十分に: 충분히)",
           wrongAnswers: "[]"
         },
@@ -983,7 +1017,7 @@ export async function GET(request, { params }) {
           quizType: "ASSEMBLY",
           questionText: "[N1-ASSEMBLY] 주어진 단어 카드를 조합하여 격조 높은 상황 대처 요구 서술을 조립하세요. (상황: 실시간 엔화 환율 폭등 추세 속에 마케팅팀의 초단기 반등 대응이 긴급할 때)",
           japaneseWord: "状況が刻々と変化するなかで、迅速な対応が求められている。",
-          pronunciation: "じょうきょうがこくこくとへんかするなかで、じんそくなたいおう가もとめられている。",
+          pronunciation: "じょうきょうがこくこくとへんかするなかで、じんそくなたいおうがもとめられている。",
           correctAnswer: "状況が 刻々と 変化するなかで、 迅速な 対応が 求められている。",
           hint: "원자재 환경 시장이 정말 눈 깜짝할 사이에 급변하는 국면이므로, 번개 같은 대응이 절실히 강제됩니다. (刻々と: 시시각각으로, 迅速な: 신속한)",
           wrongAnswers: "[]"
@@ -1139,15 +1173,43 @@ export async function GET(request, { params }) {
       const randomlyShuffledPool = shuffleArray(assemblyQuizzes);
       const selectedTenQuizzes = randomlyShuffledPool.slice(0, 10);
 
-      const fullyFeaturedQuizzes = selectedTenQuizzes.map(quiz => {
+      const stageFive = await prisma.stage.findUnique({ where: { stageNumber: 5 } });
+      if (!stageFive) {
+        return NextResponse.json(
+          { success: false, error: '문장 조립 아레나 정보를 찾을 수 없습니다.' },
+          { status: 404 }
+        );
+      }
+
+      // 가상 문제도 실제 Stage 5에 저장해 제출 API가 DB 정답으로 검증할 수 있게 한다.
+      const persistedQuizzes = selectedTenQuizzes.map(quiz => {
         const words = quiz.correctAnswer.split(' ').map(w => w.trim()).filter(Boolean);
-        const shuffledOptions = shuffleArray(words);
         return {
           ...quiz,
-          options: shuffledOptions,
-          correctAnswer: quiz.japaneseWord
+          stageId: stageFive.id,
+          correctAnswer: quiz.japaneseWord,
+          wrongAnswers: JSON.stringify(words)
         };
       });
+      await prisma.$transaction(
+        persistedQuizzes.map(quiz => prisma.quiz.upsert({
+          where: { id: quiz.id },
+          update: {
+            stageId: quiz.stageId,
+            quizType: quiz.quizType,
+            questionText: quiz.questionText,
+            japaneseWord: quiz.japaneseWord,
+            pronunciation: quiz.pronunciation,
+            correctAnswer: quiz.correctAnswer,
+            wrongAnswers: quiz.wrongAnswers,
+            hint: quiz.hint
+          },
+          create: quiz
+        }))
+      );
+
+      virtualStage.id = stageFive.id;
+      const fullyFeaturedQuizzes = persistedQuizzes.map(prepareQuizForClient);
 
       return NextResponse.json({
         success: true,
@@ -1157,7 +1219,7 @@ export async function GET(request, { params }) {
     }
 
     // 📝 6코스 N1 언어지식 하프 모의고사 가상 라우팅
-    if (stageNumber === 6) {
+    if (stageNumber === 6 && jlptLevel === 'N1') {
       const virtualStage = {
         id: "virtual-stage-6-uuid",
         stageNumber: 6,
@@ -1167,50 +1229,37 @@ export async function GET(request, { params }) {
         difficulty: "HARD"
       };
 
-      // N1 전체 퀴즈 풀 로드
-      const allN1Quizzes = await prisma.quiz.findMany({
-        where: {
-          questionText: {
-            contains: '[N1-'
-          }
-        },
-        include: { stage: true }
-      });
+      // 전체 N1 문제를 적재하지 않고 카테고리별로 필요한 수만 조회
+      const sampleByCategory = async (category) => {
+        const where = {
+          questionText: { contains: '[N1-' },
+          stage: { category }
+        };
+        const count = await prisma.quiz.count({ where });
+        if (count === 0) return [];
 
-      if (allN1Quizzes.length === 0) {
+        const skip = Math.floor(Math.random() * Math.max(1, count - 4));
+        return prisma.quiz.findMany({ where, skip, take: 5 });
+      };
+
+      const [charPool, vocabPool, gramPool] = await Promise.all([
+        sampleByCategory('CHARACTERS'),
+        sampleByCategory('VOCAB'),
+        sampleByCategory('GRAMMAR')
+      ]);
+
+      if (charPool.length + vocabPool.length + gramPool.length === 0) {
         return NextResponse.json({ 
           success: false, 
           error: "N1 모의고사용 퀴즈 데이터를 찾을 수 없습니다. 대시보드에서 5000+ 문항 동기화를 먼저 진행해 주세요." 
         }, { status: 404 });
       }
 
-      // 카테고리별 분할 셔플 추출 (문자 5, 어휘 5, 문법 5)
-      const charPool = shuffleArray(allN1Quizzes.filter(q => q.stage.category === 'CHARACTERS')).slice(0, 5);
-      const vocabPool = shuffleArray(allN1Quizzes.filter(q => q.stage.category === 'VOCAB')).slice(0, 5);
-      const gramPool = shuffleArray(allN1Quizzes.filter(q => q.stage.category === 'GRAMMAR')).slice(0, 5);
-
+      // 카테고리별 표본 병합
       // 15문항 하프 모의고사 풀 병합 및 최종 셔플
       const mergedQuizzes = shuffleArray([...charPool, ...vocabPool, ...gramPool]);
 
-      // 보기 목록 셔플 가공
-      let selectedQuizzes = mergedQuizzes.map(quiz => {
-        if (quiz.wrongAnswers) {
-          try {
-            const wrongList = JSON.parse(quiz.wrongAnswers);
-            if (Array.isArray(wrongList) && wrongList.length > 0) {
-              const allOptions = shuffleArray([quiz.correctAnswer, ...wrongList]);
-              return {
-                ...quiz,
-                options: allOptions,
-                wrongAnswers: undefined
-              };
-            }
-          } catch (e) {
-            console.error("모의고사 보기 셔플 에러:", e);
-          }
-        }
-        return quiz;
-      });
+      const selectedQuizzes = mergedQuizzes.map(prepareQuizForClient);
 
       return NextResponse.json({
         success: true,
@@ -1219,10 +1268,56 @@ export async function GET(request, { params }) {
       });
     }
 
-    // 쿼리 파라미터 파싱
-    const { searchParams } = new URL(request.url);
-    const jlptLevel = searchParams.get('jlptLevel') || 'N1'; // 대분류: N1 (N2 무시)
-    const difficulty = searchParams.get('difficulty') || 'EASY'; // 소분류: EASY, MEDIUM, HARD
+    if (stageNumber === 6 && jlptLevel === 'BEGINNER') {
+      const tag = `[BEGINNER-${difficulty}]`;
+      const sample = async (where, take) => {
+        const fullWhere = {
+          ...where,
+          questionText: { contains: tag }
+        };
+        const count = await prisma.quiz.count({ where: fullWhere });
+        if (!count) return [];
+        const skip = Math.floor(Math.random() * Math.max(1, count - take + 1));
+        return prisma.quiz.findMany({ where: fullWhere, skip, take });
+      };
+
+      const [characters, vocabulary, grammar, listening, wordle, assembly] = await Promise.all([
+        sample({ stage: { category: 'CHARACTERS' } }, 2),
+        sample({ stage: { category: 'VOCAB' } }, 2),
+        sample({ stage: { category: 'GRAMMAR' } }, 2),
+        sample({ stage: { category: 'LISTENING' } }, 2),
+        sample({ quizType: 'WORDLE' }, 1),
+        sample({ quizType: 'ASSEMBLY' }, 1)
+      ]);
+      const selectedQuizzes = shuffleArray([
+        ...characters,
+        ...vocabulary,
+        ...grammar,
+        ...listening,
+        ...wordle,
+        ...assembly
+      ]).map(prepareQuizForClient);
+
+      if (selectedQuizzes.length < 10) {
+        return NextResponse.json({
+          success: false,
+          error: '초보 실력 진단 문제 풀이 준비되지 않았습니다. 초보 문제 데이터를 먼저 추가해 주세요.'
+        }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        stage: {
+          id: 'virtual-beginner-stage-6',
+          stageNumber: 6,
+          title: '🌱 초보 실력 진단',
+          category: 'MOCK_EXAM',
+          jlptLevel: 'BEGINNER',
+          difficulty
+        },
+        quizzes: selectedQuizzes
+      });
+    }
 
     // 1. 스테이지 카테고리 정보 조회
     const stage = await prisma.stage.findUnique({
@@ -1237,56 +1332,53 @@ export async function GET(request, { params }) {
     // [N2-EASY], [N1-HARD] 등 본문 접두사 매핑
     const metaSearchTag = `[${jlptLevel}-${difficulty}]`;
 
-    const allQuizzesInPool = await prisma.quiz.findMany({
-      where: {
-        stageId: stage.id,
-        questionText: {
-          contains: metaSearchTag
-        }
+    const quizWhere = {
+      stageId: stage.id,
+      questionText: {
+        contains: metaSearchTag
       }
-    });
+    };
+    if (stageNumber === 5) {
+      quizWhere.quizType = requestedCategory === 'ASSEMBLY' ? 'ASSEMBLY' : 'WORDLE';
+    }
+    const quizCount = await prisma.quiz.count({ where: quizWhere });
 
-    if (allQuizzesInPool.length === 0) {
+    if (quizCount === 0) {
       return NextResponse.json({ 
         success: false, 
         error: `해당 카테고리의 ${jlptLevel} [${difficulty}] 퀴즈 데이터를 찾을 수 없습니다. 상단에서 240+ 문항 강제 동기화 버튼을 먼저 눌러주세요.` 
       }, { status: 404 });
     }
 
-    // 3. 240문항 풀에서 실시간 완전 무작위 셔플링
-    const fullyShuffledPool = shuffleArray(allQuizzesInPool);
+    // 3. 무작위 시작점에서 최대 10문항만 조회
+    const randomOffset = Math.floor(Math.random() * Math.max(1, quizCount - 9));
+    const randomlySelectedPool = await prisma.quiz.findMany({
+      where: quizWhere,
+      skip: randomOffset,
+      take: 10
+    });
 
-    // 4. 무작위 10문항 동적 추출
-    let selectedQuizzes = fullyShuffledPool.slice(0, 10);
+    // 4. 조회한 표본의 순서를 한 번 더 섞음
+    let selectedQuizzes = shuffleArray(randomlySelectedPool);
 
     // 5. 보기 셔플하여 정답 위치 무작위화 (wrongAnswers가 존재하는 모든 퀴즈 확장)
-    selectedQuizzes = selectedQuizzes.map(quiz => {
-      if (quiz.wrongAnswers) {
-        try {
-          const wrongList = JSON.parse(quiz.wrongAnswers);
-          if (Array.isArray(wrongList) && wrongList.length > 0) {
-            const allOptions = shuffleArray([quiz.correctAnswer, ...wrongList]);
-            
-            return {
-              ...quiz,
-              options: allOptions,
-              wrongAnswers: undefined // 정답 은폐
-            };
-          }
-        } catch (e) {
-          console.error("보기 목록 셔플 파싱 에러:", e);
-        }
-      }
-      return quiz;
-    });
+    selectedQuizzes = selectedQuizzes.map(prepareQuizForClient);
+
+    const beginnerTitles = {
+      1: '🌸 기초 문자 정복 아레나',
+      2: '🍱 기초 필수 어휘 아레나',
+      3: '⚙️ 기초 조사와 문법 아레나',
+      4: '🎧 일상 회화 청해 아레나',
+      5: requestedCategory === 'ASSEMBLY' ? '⚔️ 기초 문장 조립 아레나' : '🧩 기초 단어 워들 아레나'
+    };
 
     return NextResponse.json({
       success: true,
       stage: {
         id: stage.id,
         stageNumber: stage.stageNumber,
-        title: stage.title,
-        category: stage.category,
+        title: jlptLevel === 'BEGINNER' ? beginnerTitles[stageNumber] : stage.title,
+        category: stageNumber === 5 && requestedCategory === 'ASSEMBLY' ? 'ASSEMBLY' : stage.category,
         jlptLevel: jlptLevel,
         difficulty: difficulty
       },
@@ -1294,6 +1386,6 @@ export async function GET(request, { params }) {
     });
   } catch (error) {
     console.error('다차원 퀴즈 추출 엔진 에러:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: '퀴즈를 불러오지 못했습니다.' }, { status: 500 });
   }
 }

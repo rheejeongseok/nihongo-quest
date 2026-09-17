@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -371,12 +372,16 @@ const NEWS_POOL = [
 
 // Fisher-Yates 셔플 후 3개 랜덤 추출
 function pickRandom5(arr) {
+  return pickRandom(arr, 3);
+}
+
+function pickRandom(arr, count) {
   const pool = [...arr];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, 3);
+  return pool.slice(0, count);
 }
 
 // 간단한 XML 파서 함수
@@ -399,7 +404,7 @@ function parseNhkRss(xmlText) {
   return items.length > 0 ? items : null;
 }
 
-// 실시간 RSS 뉴스에 N1 어휘 바인딩
+// 실시간 일본 뉴스에 N1 어휘 바인딩
 async function enrichNewsWithN1Learning(newsList) {
   // =========================================================================
   // 🌸 N1 종합 어휘 풀 (160개+) — NHK 뉴스 주제별 필수 어휘
@@ -660,7 +665,7 @@ async function enrichNewsWithN1Learning(newsList) {
     const koTranslation = translations[idx];
     const translation = koTranslation
       ? `📡 DeepL 실시간 번역\n\n${koTranslation}`
-      : `📡 실시간 NHK 뉴스 원문입니다. 위 N1 어휘를 힌트 삼아 직접 읽어보세요!\n\n[원문 지문]\n${item.description}`;
+      : `📡 실시간 일본 뉴스 원문입니다. 위 N1 어휘를 힌트 삼아 직접 읽어보세요!\n\n[원문 지문]\n${item.description}`;
 
     return {
       ...item,
@@ -715,10 +720,267 @@ async function translateWithDeepL(texts) {
   }
 }
 
-export async function GET() {
+const NEWS_CACHE_TTL_MS = 15 * 60 * 1000;
+const NEWS_POOL_SIZE = 100;
+const NEWS_DISPLAY_COUNT = 10;
+const NEWS_MAX_PAGES = 40;
+const NEWS_PAGE_BATCH_SIZE = 5;
+const NEWS_REFRESH_LEASE_MS = 10 * 60 * 1000;
+const NEWS_REFRESH_STATE_ID = "japan-daily";
+let cachedNewsPayload = null;
+let newsCacheExpiresAt = 0;
+let inFlightNewsRequest = null;
+
+function getKoreanDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function toNewsRecord(item, batchDate) {
+  if (!item?.uuid || typeof item.title !== "string" || typeof item.url !== "string") return null;
+
+  const parsedDate = item.published_at ? new Date(item.published_at) : null;
+  return {
+    id: item.uuid,
+    title: item.title.trim(),
+    description: (item.description || item.snippet || item.title).trim(),
+    link: item.url,
+    imageUrl: item.image_url || null,
+    pubDate: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null,
+    sourceName: item.source || "일본 뉴스",
+    batchDate
+  };
+}
+
+async function fetchTheNewsApiPage(page, batchDate) {
+  const apiToken = process.env.THE_NEWS_API_TOKEN;
+  if (!apiToken) {
+    throw new Error("THE_NEWS_API_TOKEN이 설정되지 않았습니다");
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const params = new URLSearchParams({
+      api_token: apiToken,
+      locale: "jp",
+      language: "ja",
+      limit: "3",
+      page: String(page)
+    });
+    const response = await fetch(`https://api.thenewsapi.com/v1/news/top?${params}`, {
+      signal: controller.signal,
+      headers: { "Accept": "application/json" },
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`The News API 응답 불량: ${response.status} ${errorBody.slice(0, 200)}`);
+    }
+
+    const payload = await response.json();
+    return Array.isArray(payload.data)
+      ? payload.data.map(item => toNewsRecord(item, batchDate)).filter(Boolean)
+      : [];
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function fetchDailyNewsPool(batchDate) {
+  const uniqueArticles = new Map();
+  const seenLinks = new Set();
+
+  for (let firstPage = 1; firstPage <= NEWS_MAX_PAGES && uniqueArticles.size < NEWS_POOL_SIZE; firstPage += NEWS_PAGE_BATCH_SIZE) {
+    const pages = Array.from(
+      { length: Math.min(NEWS_PAGE_BATCH_SIZE, NEWS_MAX_PAGES - firstPage + 1) },
+      (_, index) => firstPage + index
+    );
+    const results = await Promise.allSettled(
+      pages.map(page => fetchTheNewsApiPage(page, batchDate))
+    );
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        console.warn("[The News API] 페이지 수집 실패:", result.reason?.message || result.reason);
+        continue;
+      }
+      for (const article of result.value) {
+        if (!article.title || !article.link || uniqueArticles.has(article.id) || seenLinks.has(article.link)) continue;
+        uniqueArticles.set(article.id, article);
+        seenLinks.add(article.link);
+      }
+    }
+  }
+
+  if (uniqueArticles.size < NEWS_POOL_SIZE) {
+    throw new Error(`일일 뉴스가 ${uniqueArticles.size}건만 수집되어 기존 데이터를 유지합니다`);
+  }
+
+  return [...uniqueArticles.values()]
+    .sort((a, b) => (b.pubDate?.getTime() || 0) - (a.pubDate?.getTime() || 0))
+    .slice(0, NEWS_POOL_SIZE);
+}
+
+async function acquireDailyRefresh(dateKey) {
+  await prisma.newsRefreshState.upsert({
+    where: { id: NEWS_REFRESH_STATE_ID },
+    create: { id: NEWS_REFRESH_STATE_ID },
+    update: {}
+  });
+
+  const staleLease = new Date(Date.now() - NEWS_REFRESH_LEASE_MS);
+  const result = await prisma.newsRefreshState.updateMany({
+    where: {
+      id: NEWS_REFRESH_STATE_ID,
+      AND: [
+        {
+          OR: [
+            { dateKey: { not: dateKey } },
+            { articleCount: { lt: NEWS_POOL_SIZE } }
+          ]
+        },
+        {
+          OR: [
+            { refreshStartedAt: null },
+            { refreshStartedAt: { lt: staleLease } }
+          ]
+        }
+      ]
+    },
+    data: {
+      refreshStartedAt: new Date(),
+      lastError: null
+    }
+  });
+  return result.count === 1;
+}
+
+async function saveDailyNewsPool(articles, dateKey) {
+  const refreshedAt = new Date();
+  await prisma.$transaction([
+    prisma.japaneseNews.deleteMany(),
+    prisma.japaneseNews.createMany({ data: articles }),
+    prisma.newsRefreshState.update({
+      where: { id: NEWS_REFRESH_STATE_ID },
+      data: {
+        dateKey,
+        refreshedAt,
+        refreshStartedAt: null,
+        articleCount: articles.length,
+        lastError: null
+      }
+    })
+  ]);
+}
+
+async function waitForDailyNewsPool(dateKey) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const [state, articles] = await Promise.all([
+      prisma.newsRefreshState.findUnique({ where: { id: NEWS_REFRESH_STATE_ID } }),
+      prisma.japaneseNews.findMany({ orderBy: { pubDate: "desc" } })
+    ]);
+    if (state?.dateKey === dateKey && articles.length >= NEWS_POOL_SIZE) return articles;
+  }
+  return [];
+}
+
+async function ensureDailyNewsPool() {
+  const dateKey = getKoreanDateKey();
+  const [state, storedArticles] = await Promise.all([
+    prisma.newsRefreshState.findUnique({ where: { id: NEWS_REFRESH_STATE_ID } }),
+    prisma.japaneseNews.findMany({ orderBy: { pubDate: "desc" } })
+  ]);
+
+  if (state?.dateKey === dateKey && storedArticles.length >= NEWS_POOL_SIZE) {
+    return { articles: storedArticles, dateKey, stale: false };
+  }
+
+  const acquired = await acquireDailyRefresh(dateKey);
+  if (!acquired) {
+    if (storedArticles.length >= NEWS_DISPLAY_COUNT) {
+      return { articles: storedArticles, dateKey: state?.dateKey || dateKey, stale: true };
+    }
+    const refreshedArticles = await waitForDailyNewsPool(dateKey);
+    if (refreshedArticles.length >= NEWS_DISPLAY_COUNT) {
+      return { articles: refreshedArticles, dateKey, stale: false };
+    }
+    throw new Error("다른 서버에서 일일 뉴스를 갱신 중입니다");
+  }
+
+  try {
+    const freshArticles = await fetchDailyNewsPool(dateKey);
+    await saveDailyNewsPool(freshArticles, dateKey);
+    return { articles: freshArticles, dateKey, stale: false };
+  } catch (error) {
+    await prisma.newsRefreshState.update({
+      where: { id: NEWS_REFRESH_STATE_ID },
+      data: {
+        refreshStartedAt: null,
+        lastError: String(error.message || error).slice(0, 500)
+      }
+    }).catch(() => {});
+
+    if (storedArticles.length >= NEWS_DISPLAY_COUNT) {
+      return { articles: storedArticles, dateKey: state?.dateKey || dateKey, stale: true };
+    }
+    throw error;
+  }
+}
+
+function normalizeStoredArticle(article) {
+  return {
+    dbId: article.id,
+    title: article.title,
+    link: article.link,
+    description: article.description,
+    imageUrl: article.imageUrl,
+    pubDate: article.pubDate?.toISOString?.() || article.pubDate || "",
+    sourceName: article.sourceName,
+    translation: article.translation,
+    n1Words: Array.isArray(article.n1Words) ? article.n1Words : null
+  };
+}
+
+async function selectAndEnrichNews(articles) {
+  const selected = pickRandom(articles, NEWS_DISPLAY_COUNT).map(normalizeStoredArticle);
+  const missing = selected.filter(article => !article.translation || !article.n1Words);
+
+  if (missing.length) {
+    const enriched = await enrichNewsWithN1Learning(missing);
+    const enrichedById = new Map(enriched.map(article => [article.dbId, article]));
+
+    await Promise.allSettled(enriched.map(article => prisma.japaneseNews.update({
+      where: { id: article.dbId },
+      data: {
+        translation: article.translation,
+        n1Words: article.n1Words
+      }
+    })));
+
+    for (let index = 0; index < selected.length; index++) {
+      const enrichedArticle = enrichedById.get(selected[index].dbId);
+      if (enrichedArticle) selected[index] = enrichedArticle;
+    }
+  }
+
+  return selected.map(({ dbId, ...article }) => article);
+}
+
+async function loadNhkRssNews() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+  try {
     const response = await fetch("https://www3.nhk.or.jp/rss/news/cat0.xml", {
       signal: controller.signal,
       headers: {
@@ -727,21 +989,81 @@ export async function GET() {
       },
       cache: "no-store"
     });
-    clearTimeout(timeoutId);
     if (!response.ok) throw new Error(`NHK RSS 응답 불량: ${response.status}`);
     const xmlText = await response.text();
     const parsedItems = parseNhkRss(xmlText);
     if (!parsedItems) throw new Error("NHK RSS 파싱 실패");
 
-    // 실시간 RSS에서 랜덤으로 최대 3개 추출
-    const shuffled = pickRandom5(parsedItems.length >= 3 ? parsedItems : [...parsedItems, ...parsedItems]).slice(0, 3);
-    const enrichedNews = await enrichNewsWithN1Learning(shuffled);
-    return NextResponse.json({ success: true, source: "realtime-nhk", news: enrichedNews });
+    // RSS에서 랜덤으로 최대 10개 추출
+    const shuffled = pickRandom(parsedItems, NEWS_DISPLAY_COUNT);
+    return shuffled.map(item => ({ ...item, sourceName: "NHK" }));
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
+async function loadFreshNewsPayload() {
+  try {
+    const pool = await ensureDailyNewsPool();
+    const enrichedNews = await selectAndEnrichNews(pool.articles);
+    return {
+      success: true,
+      source: pool.stale ? "the-news-api-stale" : "the-news-api",
+      poolDate: pool.dateKey,
+      poolSize: pool.articles.length,
+      news: enrichedNews
+    };
   } catch (error) {
-    console.warn("[NHK NEWS API] 실시간 로드 실패, 랜덤 Fallback 3선 제공:", error.message);
-    // 풀 25개에서 매번 다른 랜덤 3개 추출
-    const randomNews = pickRandom5(NEWS_POOL);
-    return NextResponse.json({ success: true, source: "premium-fallback", news: randomNews });
+    console.warn("[The News API] 일일 뉴스 풀 로드 실패, NHK RSS로 전환:", error.message);
+  }
+
+  try {
+    const news = await loadNhkRssNews();
+    const enrichedNews = await enrichNewsWithN1Learning(news);
+    return { success: true, source: "nhk-rss-fallback", news: enrichedNews };
+  } catch (error) {
+    console.warn("[일본 뉴스 API] 외부 뉴스 로드 실패, 내장 뉴스 10선 제공:", error.message);
+    return { success: true, source: "premium-fallback", news: pickRandom(NEWS_POOL, NEWS_DISPLAY_COUNT) };
+  }
+}
+
+function createNewsResponse(payload, cached, forceRefresh = false) {
+  return NextResponse.json(
+    { ...payload, cached },
+    {
+      headers: {
+        "Cache-Control": forceRefresh
+          ? "no-store"
+          : "public, max-age=0, s-maxage=900, stale-while-revalidate=3600"
+      }
+    }
+  );
+}
+
+export async function GET(request) {
+  const forceRefresh = new URL(request.url).searchParams.get("refresh") === "true";
+  const now = Date.now();
+
+  if (!forceRefresh && cachedNewsPayload && now < newsCacheExpiresAt) {
+    return createNewsResponse(cachedNewsPayload, true, forceRefresh);
+  }
+
+  const requestPromise = inFlightNewsRequest
+    ? inFlightNewsRequest
+    : loadFreshNewsPayload();
+
+  if (!inFlightNewsRequest) {
+    inFlightNewsRequest = requestPromise;
+  }
+
+  try {
+    const payload = await requestPromise;
+    cachedNewsPayload = payload;
+    newsCacheExpiresAt = Date.now() + NEWS_CACHE_TTL_MS;
+    return createNewsResponse(payload, false, forceRefresh);
+  } finally {
+    if (inFlightNewsRequest === requestPromise) {
+      inFlightNewsRequest = null;
+    }
   }
 }

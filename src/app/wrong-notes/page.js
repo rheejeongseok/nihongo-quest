@@ -117,7 +117,7 @@ export default function WrongNotesPage() {
 
   useEffect(() => {
     loadWrongs();
-  }, [isEbbinghausFilter]);
+  }, [isEbbinghausFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 2. 오답 복습 해결 (오답노트에서 제외 혹은 단계 전이)
   const handleResolve = async (id) => {
@@ -131,7 +131,7 @@ export default function WrongNotesPage() {
       if (data.success) {
         if (data.isGraduated) {
           triggerConfetti();
-          alert("🎉 [에빙하우스 최종 졸업]\n5단계 복습을 무사 통과하여 이 단어를 완벽히 정복하셨습니다!");
+          showToast("🎉 에빙하우스 복습을 완료해 이 단어를 정복했습니다!");
           setWrongAnswers(prev => prev.filter(item => item.id !== id));
         } else {
           showToast(`💪 복습 완료! 단계 상승 (LEVEL ${data.nextCount - 1} ➔ ${data.nextCount})`);
@@ -168,10 +168,10 @@ export default function WrongNotesPage() {
           showToast("오답노트 백업 코드가 복사되었습니다! 📋");
         }
       } else {
-        alert("백업 코드 생성 실패: " + (data.error || "데이터가 없습니다."));
+        showToast("백업 코드 생성 실패: " + (data.error || "데이터가 없습니다."));
       }
     } catch (e) {
-      alert("백업 네트워크 에러: " + e.message);
+      showToast("백업 네트워크 에러: " + e.message);
     } finally {
       setExporting(false);
     }
@@ -180,7 +180,7 @@ export default function WrongNotesPage() {
   // 📤 [IMPORT] 붙여넣은 백업 코드로 오답노트 스마트 병합
   const handleImportCode = async () => {
     if (!inputCode.trim()) {
-      alert("주입할 오답노트 백업 코드를 입력해 주세요!");
+      showToast("주입할 오답노트 백업 코드를 입력해 주세요!");
       return;
     }
     setImporting(true);
@@ -193,13 +193,13 @@ export default function WrongNotesPage() {
       const data = await res.json();
       if (data.success) {
         setInputCode('');
-        alert(`🎉 오답노트 병합 완료!\n신규 오답 ${data.addedCount}개가 정상 통합 및 동기화되었습니다!`);
+        showToast(`🎉 오답노트 병합 완료! 신규 오답 ${data.addedCount}개가 통합되었습니다!`);
         window.location.reload();
       } else {
-        alert("주입 실패: " + data.error);
+        showToast("주입 실패: " + data.error);
       }
     } catch (e) {
-      alert("주입 네트워크 에러: " + e.message);
+      showToast("주입 네트워크 에러: " + e.message);
     } finally {
       setImporting(false);
     }
@@ -225,10 +225,10 @@ export default function WrongNotesPage() {
         URL.revokeObjectURL(url);
         showToast("오답노트 JSON 파일이 다운로드되었습니다! 💾");
       } else {
-        alert("백업 파일 추출 실패");
+        showToast("백업 파일 추출 실패");
       }
     } catch (e) {
-      alert("파일 백업 에러: " + e.message);
+      showToast("파일 백업 에러: " + e.message);
     }
   };
 
@@ -249,13 +249,13 @@ export default function WrongNotesPage() {
         });
         const data = await res.json();
         if (data.success) {
-          alert(`🎉 파일 병합 성공!\n신규 오답 ${data.addedCount}개가 오답노트에 복구 및 통합되었습니다!`);
+          showToast(`🎉 파일 병합 성공! 신규 오답 ${data.addedCount}개가 통합되었습니다!`);
           window.location.reload();
         } else {
-          alert("파일 주입 실패: " + data.error);
+          showToast("파일 주입 실패: " + data.error);
         }
       } catch (parseErr) {
-        alert("올바르지 않은 오답노트 JSON 파일 형식입니다.");
+        showToast("올바르지 않은 오답노트 JSON 파일 형식입니다.");
       } finally {
         setImporting(false);
       }
@@ -481,8 +481,8 @@ export default function WrongNotesPage() {
                 {/* 오답 상세 정보 */}
                 <div className="wrong-info-container" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexGrow: 1, marginRight: '24px' }}>
                   {/* 에빙하우스 주기 레벨 배지 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
-                    <div style={{
+                  <div className="wrong-review-meta" style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                    <div className="wrong-review-level" style={{
                       width: '64px',
                       height: '64px',
                       borderRadius: '50%',
@@ -531,7 +531,7 @@ export default function WrongNotesPage() {
                     })()}
                   </div>
 
-                  <div>
+                  <div className="wrong-question-content">
                     {/* 원래 출제 문제 설명 */}
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
                       원래 질문: {quiz.questionText
@@ -541,7 +541,7 @@ export default function WrongNotesPage() {
                     </span>
                     
                     {/* 단어 및 요미가나 */}
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginTop: '6px' }}>
+                    <div className="wrong-word-row" style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginTop: '6px' }}>
                       <h4 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)' }}>
                         {quiz.japaneseWord}
                       </h4>

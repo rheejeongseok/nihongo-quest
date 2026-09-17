@@ -1,93 +1,93 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getOrCreateRequestUser } from '@/lib/requestUser';
+import { evaluateQuizAnswer, normalizeTimeTaken } from '@/lib/quizScoring.mjs';
 
 export const dynamic = 'force-dynamic';
 
+function koreanDateKey(date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function calculateStreak(user, now) {
+  if (!user.lastActiveDate) return 1;
+
+  const todayKey = koreanDateKey(now);
+  const lastActiveKey = koreanDateKey(new Date(user.lastActiveDate));
+  if (todayKey === lastActiveKey) return Math.max(user.currentStreak, 1);
+
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return lastActiveKey === koreanDateKey(yesterday)
+    ? Math.max(user.currentStreak, 0) + 1
+    : 1;
+}
+
 export async function POST(request) {
   try {
-    const { quizId, isCorrect, timeTaken, selectedAnswer } = await request.json();
+    const body = await request.json();
+    const quizId = typeof body.quizId === 'string' ? body.quizId.trim() : '';
+    const selectedAnswer = typeof body.selectedAnswer === 'string'
+      ? body.selectedAnswer.slice(0, 500)
+      : '';
 
-    // 1. 유저 조회
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
-    }
-    let user = await prisma.user.findFirst({
-      where: { username }
-    });
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
-      });
+    if (!quizId || !selectedAnswer.trim()) {
+      return NextResponse.json(
+        { success: false, error: '퀴즈 ID와 제출 답안이 필요합니다.' },
+        { status: 400 }
+      );
     }
 
-    // 2. 퀴즈 정보 조회
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: quizId },
-      include: { stage: true }
-    });
+    const [{ user }, quiz] = await Promise.all([
+      getOrCreateRequestUser(request),
+      prisma.quiz.findUnique({
+        where: { id: quizId },
+        include: { stage: true }
+      })
+    ]);
 
     if (!quiz) {
       return NextResponse.json({ success: false, error: '존재하지 않는 퀴즈입니다.' }, { status: 404 });
     }
 
-    // 3. 풀이 시도 이력(QuizAttempt) 저장
-    await prisma.quizAttempt.create({
-      data: {
-        userId: user.id,
-        quizId: quiz.id,
-        isCorrect,
-        timeTaken: timeTaken || 0
-      }
-    });
+    // 클라이언트가 보낸 isCorrect 값은 신뢰하지 않고 DB 정답으로 직접 판정한다.
+    const isCorrect = evaluateQuizAnswer(selectedAnswer, quiz);
+    const timeTaken = normalizeTimeTaken(body.timeTaken);
+    const diffPoints = { EASY: 10, MEDIUM: 15, HARD: 20 };
+    const pointsEarned = isCorrect ? (diffPoints[quiz.stage.difficulty] || 10) : 0;
+    const now = new Date();
 
-    let pointsEarned = 0;
-    
-    if (isCorrect) {
-      // 정답인 경우: 포인트 지급 (EASY: 10, MEDIUM: 15, HARD: 20)
-      const diffPoints = { EASY: 10, MEDIUM: 15, HARD: 20 };
-      pointsEarned = diffPoints[quiz.stage.difficulty] || 10;
-
-      // 일일 스트릭 갱신 로직 (간소화)
-      const today = new Date();
-      let newStreak = user.currentStreak;
-      
-      if (!user.lastActiveDate) {
-        newStreak = 1;
-      } else {
-        const lastActive = new Date(user.lastActiveDate);
-        const diffTime = Math.abs(today - lastActive);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) {
-          // 어제 공부하고 오늘 또 공부함 -> 스트릭 증가!
-          newStreak += 1;
-        } else if (diffDays > 1) {
-          // 스트릭이 끊김 -> 다시 1일차 시작
-          newStreak = 1;
-        }
-      }
-
-      const maxStreak = Math.max(newStreak, user.maxStreak);
-
-      await prisma.user.update({
-        where: { id: user.id },
+    await prisma.$transaction(async tx => {
+      await tx.quizAttempt.create({
         data: {
-          points: user.points + pointsEarned,
-          currentStreak: newStreak,
-          maxStreak,
-          lastActiveDate: today
+          userId: user.id,
+          quizId: quiz.id,
+          isCorrect,
+          timeTaken
         }
       });
-    } else {
-      // 오답인 경우: 스마트 오답노트(WrongAnswer) 적재
-      const existingWrong = await prisma.wrongAnswer.findFirst({
+
+      if (isCorrect) {
+        const currentStreak = calculateStreak(user, now);
+        await tx.user.update({
+          where: { id: user.id },
+          data: {
+            points: { increment: pointsEarned },
+            currentStreak,
+            maxStreak: Math.max(currentStreak, user.maxStreak),
+            lastActiveDate: now
+          }
+        });
+        return;
+      }
+
+      const existingWrong = await tx.wrongAnswer.findFirst({
         where: {
           userId: user.id,
           quizId: quiz.id,
@@ -96,26 +96,25 @@ export async function POST(request) {
       });
 
       if (existingWrong) {
-        // 이미 오답노트에 존재하면 틀린 횟수(가중치) 증가
-        await prisma.wrongAnswer.update({
+        await tx.wrongAnswer.update({
           where: { id: existingWrong.id },
           data: {
-            reviewCount: existingWrong.reviewCount + 1,
-            lastFailed: new Date()
+            reviewCount: { increment: 1 },
+            lastFailed: now
           }
         });
       } else {
-        // 오답노트에 신규 등록
-        await prisma.wrongAnswer.create({
+        await tx.wrongAnswer.create({
           data: {
             userId: user.id,
             quizId: quiz.id,
             reviewCount: 1,
-            isResolved: false
+            isResolved: false,
+            lastFailed: now
           }
         });
       }
-    }
+    });
 
     return NextResponse.json({
       success: true,
@@ -126,6 +125,9 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('풀이 제출 처리 중 에러:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: '풀이 결과를 저장하지 못했습니다.' },
+      { status: 500 }
+    );
   }
 }

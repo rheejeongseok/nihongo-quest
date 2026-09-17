@@ -22,6 +22,7 @@ export default function BookmarksPage() {
   // 🍿 상세 예문 모달 상태
   const [selectedWord, setSelectedWord] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [targetLevel, setTargetLevel] = useState('N1');
 
   // --- 🗂️ 3D 플래시 카드 상태 관리 ---
   const [isFlashCardMode, setIsFlashCardMode] = useState(false);
@@ -34,13 +35,14 @@ export default function BookmarksPage() {
 
   useEffect(() => {
     setMounted(true);
+    setTargetLevel(localStorage.getItem('nihongo_quest_target_level') === 'BEGINNER' ? 'BEGINNER' : 'N1');
   }, []);
 
   // 플래시 카드 모드 온오프 처리
   const handleToggleFlashcardMode = (enable) => {
     if (enable) {
       if (bookmarks.length === 0) {
-        alert("암기할 단어가 없습니다! 먼저 단어를 추가해 주세요.");
+        showToast("암기할 단어가 없습니다! 먼저 단어를 추가해 주세요.");
         return;
       }
       // 단어장 단어 셔플하여 큐 생성
@@ -214,10 +216,10 @@ export default function BookmarksPage() {
           showToast("단어장 백업 코드가 복사되었습니다! 📋");
         }
       } else {
-        alert("백업 코드 생성 실패: " + (data.error || "데이터가 없습니다."));
+        showToast("백업 코드 생성 실패: " + (data.error || "데이터가 없습니다."));
       }
     } catch (e) {
-      alert("백업 네트워크 에러: " + e.message);
+      showToast("백업 네트워크 에러: " + e.message);
     } finally {
       setExporting(false);
     }
@@ -226,7 +228,7 @@ export default function BookmarksPage() {
   // 📤 [IMPORT] 붙여넣은 백업 코드로 단어장 스마트 병합
   const handleImportCode = async () => {
     if (!inputCode.trim()) {
-      alert("주입할 단어장 백업 코드를 입력해 주세요!");
+      showToast("주입할 단어장 백업 코드를 입력해 주세요!");
       return;
     }
     setImporting(true);
@@ -239,13 +241,13 @@ export default function BookmarksPage() {
       const data = await res.json();
       if (data.success) {
         setInputCode('');
-        alert(`🎉 단어장 병합 완료!\n신규 단어 ${data.addedCount}개가 정상적으로 추가 통합되었습니다!`);
+        showToast(`🎉 단어장 병합 완료! 신규 단어 ${data.addedCount}개가 추가되었습니다!`);
         window.location.reload();
       } else {
-        alert("주입 실패: " + data.error);
+        showToast("주입 실패: " + data.error);
       }
     } catch (e) {
-      alert("주입 네트워크 에러: " + e.message);
+      showToast("주입 네트워크 에러: " + e.message);
     } finally {
       setImporting(false);
     }
@@ -271,10 +273,10 @@ export default function BookmarksPage() {
         URL.revokeObjectURL(url);
         showToast("단어장 JSON 파일이 다운로드되었습니다! 💾");
       } else {
-        alert("백업 파일 추출 실패");
+        showToast("백업 파일 추출 실패");
       }
     } catch (e) {
-      alert("파일 백업 에러: " + e.message);
+      showToast("파일 백업 에러: " + e.message);
     }
   };
 
@@ -295,13 +297,13 @@ export default function BookmarksPage() {
         });
         const data = await res.json();
         if (data.success) {
-          alert(`🎉 파일 병합 성공!\n신규 단어 ${data.addedCount}개가 단어장에 통합되었습니다!`);
+          showToast(`🎉 파일 병합 성공! 신규 단어 ${data.addedCount}개가 통합되었습니다!`);
           window.location.reload();
         } else {
-          alert("파일 주입 실패: " + data.error);
+          showToast("파일 주입 실패: " + data.error);
         }
       } catch (parseErr) {
-        alert("올바르지 않은 단어장 JSON 파일 형식입니다.");
+        showToast("올바르지 않은 단어장 JSON 파일 형식입니다.");
       } finally {
         setImporting(false);
       }
@@ -380,7 +382,7 @@ export default function BookmarksPage() {
           {/* 1. 진행 스탯 바 */}
           <div className="flashcard-progress-container glass-premium-card" style={{ padding: '20px 24px', borderRadius: '16px', marginBottom: '24px' }}>
             <div className="flashcard-stat-text">
-              <span>🚀 JLPT N1 단어 완벽 소탕 진행중</span>
+              <span>🚀 {targetLevel === 'BEGINNER' ? '기초 단어' : 'JLPT N1 단어'} 완벽 소탕 진행중</span>
               <span style={{ color: 'var(--accent-color)' }}>
                 {memorizedIds.length} / {sessionTotalCount} 개 암기 완료 ({sessionTotalCount > 0 ? Math.round((memorizedIds.length / sessionTotalCount) * 100) : 0}%)
               </span>
@@ -407,7 +409,7 @@ export default function BookmarksPage() {
                 >
                   {/* 앞면: 단어명 & 읽기 */}
                   <div className="flashcard-face flashcard-front">
-                    <span className="flashcard-tag">JLPT N1 VOCAB</span>
+                    <span className="flashcard-tag">{targetLevel === 'BEGINNER' ? 'BEGINNER VOCAB' : 'JLPT N1 VOCAB'}</span>
                     
                     <div style={{ textAlign: 'center' }}>
                       <h2 className="flashcard-word">{cardQueue[currentCardIndex].word}</h2>

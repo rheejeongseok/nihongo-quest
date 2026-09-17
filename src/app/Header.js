@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { showToast } from '@/lib/toast';
 
 const THEMES = [
   { id: 'zen', name: '젠 (Zen)', emoji: '🌸', color: '#557c55' },
@@ -74,7 +76,6 @@ export default function Header() {
 
   // 🏟️ 글로벌 아레나 모달 상태
   const [selectedStage, setSelectedStage] = useState(null);
-  const [chosenJlpt, setChosenJlpt] = useState('N1');
   const [chosenDifficulty, setChosenDifficulty] = useState('EASY');
 
   // ⚡ 글로벌 등급 차원 전환 상태
@@ -109,11 +110,16 @@ export default function Header() {
 
   const handleToggleTargetLevel = (level) => {
     if (typeof window !== 'undefined') {
+      if (level === targetLevel) {
+        setIsDrawerOpen(false);
+        return;
+      }
+
       localStorage.setItem('nihongo_quest_target_level', level);
       setTargetLevel(level);
-      
       setIsDrawerOpen(false);
-      window.location.reload(); // 즉각적인 0ms 전면 리프레시!
+      setSelectedStage(null);
+      window.location.assign('/');
     }
   };
 
@@ -151,7 +157,6 @@ export default function Header() {
           return;
         }
         setSelectedStage(stage);
-        setChosenJlpt('N1');
         setChosenDifficulty('EASY');
       }
     };
@@ -170,7 +175,6 @@ export default function Header() {
           window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
         } else {
           setSelectedStage(stage);
-          setChosenJlpt('N1');
           setChosenDifficulty('EASY');
         }
         // 주소창 파라미터 초기화
@@ -218,7 +222,7 @@ export default function Header() {
   const handleSaveUsername = () => {
     const trimmed = inputName.trim();
     if (!trimmed) {
-      alert("사용할 닉네임을 입력해 주세요!");
+      showToast("사용할 닉네임을 입력해 주세요!", 'error');
       return;
     }
     if (typeof window !== 'undefined') {
@@ -252,21 +256,21 @@ export default function Header() {
     <header className="header-glass">
       <div className="container header-container">
         {/* 그라데이션 프리미엄 로고 */}
-        <a href="/" className="header-logo">
+        <Link href="/" className="header-logo">
           <span className="logo-emoji">🌸</span>
           <span className="logo-text">
             Nihongo<span className="logo-highlight">Quest</span>
           </span>
-        </a>
+        </Link>
 
         {/* 네비게이션 칩 캡슐 (PC 전용) */}
         <nav className="header-nav pc-only">
-          <a 
+          <Link
             href="/" 
             className={`nav-item ${pathname === '/' ? 'active' : ''}`}
           >
             메인
-          </a>
+          </Link>
           <a 
             href="/wrong-notes" 
             className={`nav-item ${pathname === '/wrong-notes' ? 'active' : ''}`}
@@ -939,7 +943,6 @@ export default function Header() {
                       } else {
                         const stages = getStagesList(targetLevel);
                         setSelectedStage(stages[stageIndex]);
-                        setChosenJlpt('N1');
                         setChosenDifficulty('EASY');
                       }
                     }}
@@ -954,9 +957,9 @@ export default function Header() {
             <div className="drawer-section" style={{ marginTop: '16px' }}>
               <span className="drawer-sec-label">🧭 빠른 탐색 이동</span>
               <nav className="drawer-nav">
-                <a href="/" className={`drawer-nav-item ${pathname === '/' ? 'active' : ''}`} onClick={() => setIsDrawerOpen(false)}>
+                <Link href="/" className={`drawer-nav-item ${pathname === '/' ? 'active' : ''}`} onClick={() => setIsDrawerOpen(false)}>
                   🏠 메인 대시보드
-                </a>
+                </Link>
                 <a href="/wrong-notes" className={`drawer-nav-item ${pathname === '/wrong-notes' ? 'active' : ''}`} onClick={() => setIsDrawerOpen(false)}>
                   📓 스마트 오답노트
                 </a>
@@ -1109,7 +1112,8 @@ export default function Header() {
                     window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
                     return;
                   }
-                  router.push(`/play/${selectedStage.stageNumber}?jlptLevel=${chosenJlpt}&difficulty=${chosenDifficulty}`);
+                  const learningTrack = targetLevel === 'BEGINNER' ? 'BEGINNER' : 'N1';
+                  router.push(`/play/${selectedStage.stageNumber}?jlptLevel=${learningTrack}&difficulty=${chosenDifficulty}&category=${selectedStage.category}`);
                   setSelectedStage(null);
                 }}
                 className="glow-btn"

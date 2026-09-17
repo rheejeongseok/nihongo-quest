@@ -1,35 +1,25 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getOrCreateRequestUser } from '@/lib/requestUser';
 
 export const dynamic = 'force-dynamic';
 
 // 오답노트 조회 (GET) - 에빙하우스 필터링 파라미터 지원
 export async function GET(request) {
   try {
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
-    }
-
-    let user = await prisma.user.findFirst({
-      where: { username }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
-      });
-    }
-
-    // 에빙하우스 필터 여부 파싱
     const { searchParams } = new URL(request.url);
     const isEbbinghaus = searchParams.get('ebbinghaus') === 'true';
+    const countOnly = searchParams.get('countOnly') === 'true';
+    const { user } = await getOrCreateRequestUser(request);
+
+    // 에빙하우스 필터 여부 파싱
+    if (countOnly && !isEbbinghaus) {
+      const count = await prisma.wrongAnswer.count({
+        where: { userId: user.id, isResolved: false }
+      });
+
+      return NextResponse.json({ success: true, count });
+    }
 
     let wrongAnswers = await prisma.wrongAnswer.findMany({
       where: { userId: user.id, isResolved: false },
@@ -57,7 +47,8 @@ export async function GET(request) {
 
     return NextResponse.json({ success: true, wrongAnswers });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[WRONG NOTES LIST ERROR]:', error);
+    return NextResponse.json({ success: false, error: '오답노트를 불러오지 못했습니다.' }, { status: 500 });
   }
 }
 
@@ -70,8 +61,9 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: '해결할 오답 ID가 없습니다.' }, { status: 400 });
     }
 
-    const wrongAnswer = await prisma.wrongAnswer.findUnique({
-      where: { id }
+    const { user } = await getOrCreateRequestUser(request);
+    const wrongAnswer = await prisma.wrongAnswer.findFirst({
+      where: { id, userId: user.id }
     });
 
     if (!wrongAnswer) {
@@ -102,6 +94,7 @@ export async function POST(request) {
       nextCount: nextCount
     });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[WRONG NOTES UPDATE ERROR]:', error);
+    return NextResponse.json({ success: false, error: '오답 기록을 갱신하지 못했습니다.' }, { status: 500 });
   }
 }

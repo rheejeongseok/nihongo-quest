@@ -1,30 +1,22 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getOrCreateRequestUser } from '@/lib/requestUser';
 
 export const dynamic = 'force-dynamic';
 
 // 북마크 조회 (GET)
 export async function GET(request) {
   try {
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
-    }
+    const { searchParams } = new URL(request.url);
+    const countOnly = searchParams.get('countOnly') === 'true';
+    const { user } = await getOrCreateRequestUser(request);
 
-    let user = await prisma.user.findFirst({
-      where: { username }
-    });
-    
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
+    if (countOnly) {
+      const count = await prisma.bookmark.count({
+        where: { userId: user.id }
       });
+
+      return NextResponse.json({ success: true, count });
     }
 
     const bookmarks = await prisma.bookmark.findMany({
@@ -34,41 +26,26 @@ export async function GET(request) {
 
     return NextResponse.json({ success: true, bookmarks });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[BOOKMARK LIST ERROR]:', error);
+    return NextResponse.json({ success: false, error: '단어장을 불러오지 못했습니다.' }, { status: 500 });
   }
 }
 
 // 북마크 등록 (POST)
 export async function POST(request) {
   try {
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
-    }
-    const { word, meaning, reading } = await request.json();
-    
-    let user = await prisma.user.findFirst({
-      where: { username }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
-      });
+    const { user } = await getOrCreateRequestUser(request);
+    const body = await request.json();
+    const word = String(body.word || '').trim().slice(0, 100);
+    const meaning = String(body.meaning || '').trim().slice(0, 500);
+    const reading = String(body.reading || '').trim().slice(0, 100);
+    if (!word) {
+      return NextResponse.json({ success: false, error: '저장할 단어가 없습니다.' }, { status: 400 });
     }
 
     // 이미 등록된 단어인지 중복 체크
-    const existing = await prisma.bookmark.findFirst({
-      where: {
-        userId: user.id,
-        word
-      }
+    const existing = await prisma.bookmark.findUnique({
+      where: { userId_word: { userId: user.id, word } }
     });
 
     if (existing) {
@@ -86,7 +63,8 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true, message: '단어장에 성공적으로 추가되었습니다!', bookmark });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[BOOKMARK CREATE ERROR]:', error);
+    return NextResponse.json({ success: false, error: '단어를 저장하지 못했습니다.' }, { status: 500 });
   }
 }
 
@@ -100,12 +78,18 @@ export async function DELETE(request) {
       return NextResponse.json({ success: false, error: '삭제할 단어 ID가 없습니다.' }, { status: 400 });
     }
 
-    await prisma.bookmark.delete({
-      where: { id }
+    const { user } = await getOrCreateRequestUser(request);
+    const result = await prisma.bookmark.deleteMany({
+      where: { id, userId: user.id }
     });
+
+    if (!result.count) {
+      return NextResponse.json({ success: false, error: '삭제할 단어를 찾을 수 없습니다.' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true, message: '단어장에서 제거되었습니다.' });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[BOOKMARK DELETE ERROR]:', error);
+    return NextResponse.json({ success: false, error: '단어를 삭제하지 못했습니다.' }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { showToast } from '@/lib/toast';
 
 export default function ClientSeedButton() {
   const [loading, setLoading] = useState(false);
@@ -17,10 +18,10 @@ export default function ClientSeedButton() {
           window.location.href = '/'; // 홈으로 리다이렉션하여 강제 갱신
         }, 1200);
       } else {
-        alert("시딩 실패: " + data.error);
+        showToast("시딩 실패: " + data.error, 'error');
       }
     } catch (e) {
-      alert("네트워크 에러 발생: " + e.message);
+      showToast("네트워크 에러 발생: " + e.message, 'error');
     } finally {
       setLoading(false);
     }

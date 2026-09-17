@@ -2,12 +2,42 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import fs from 'fs';
 import path from 'path';
+import { createHash, timingSafeEqual } from 'crypto';
+import { buildBeginnerQuizzes } from '@/data/beginnerQuizzes.mjs';
 
 // https://news.web.nhk/newsweb 참조 할 사이트
 
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+function isSeedAuthorized(request) {
+  if (process.env.NODE_ENV !== 'production') return true;
+
+  const configuredToken = process.env.SEED_ADMIN_TOKEN || '';
+  const suppliedToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || '';
+  if (!configuredToken || configuredToken.length !== suppliedToken.length) return false;
+
+  return timingSafeEqual(Buffer.from(configuredToken), Buffer.from(suppliedToken));
+}
+
+function getQuizSeedKey(quiz) {
+  return [
+    quiz.stageId,
+    quiz.quizType,
+    quiz.questionText,
+    quiz.japaneseWord
+  ].join('\u001f');
+}
+
+function getStableQuizId(quiz) {
+  const hash = createHash('sha256').update(getQuizSeedKey(quiz)).digest('hex').slice(0, 32);
+  return `seed-${hash}`;
+}
+
+export async function POST(request) {
+  if (!isSeedAuthorized(request)) {
+    return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+  }
+
   try {
     // 0. Vercel 런타임 (/tmp/dev.db) 테이블 미존재 혹은 데이터 유실 시 자가 복구 (빌드된 SQLite 파일 복제)
     const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
@@ -60,17 +90,11 @@ export async function POST() {
       }
     }
 
-    // 1. 기존 데이터 전체 초기화 (동기화 재시딩용)
-    await prisma.quizAttempt.deleteMany({});
-    await prisma.wrongAnswer.deleteMany({});
-    await prisma.bookmark.deleteMany({});
-    await prisma.quiz.deleteMany({});
-    await prisma.stage.deleteMany({});
-    await prisma.user.deleteMany({});
-
-    // 2. 기본 유저 생성
-    const defaultUser = await prisma.user.create({
-      data: {
+    // 1. 기본 유저는 없을 때만 만들고 기존 포인트·연속 학습 기록은 보존한다.
+    const defaultUser = await prisma.user.upsert({
+      where: { username: "니혼고마스터" },
+      update: {},
+      create: {
         email: "nihongo@learning.com",
         username: "니혼고마스터",
         points: 0,
@@ -82,49 +106,79 @@ export async function POST() {
           "N2 도전자",
           "오천문항 격파왕",
         ]),
-      },
+      }
     });
 
-    // 3. 5대 카테고리 스테이지 생성
-    const stage1 = await prisma.stage.create({
-      data: {
-        stageNumber: 1,
+    // 2. 스테이지는 동일한 번호의 ID를 유지한 채 표시 정보만 갱신한다.
+    const stage1 = await prisma.stage.upsert({
+      where: { stageNumber: 1 },
+      update: {
         title: "문자 정복 아레나 🌸",
         category: "CHARACTERS",
         difficulty: "ALL",
       },
+      create: {
+        stageNumber: 1,
+        title: "문자 정복 아레나 🌸",
+        category: "CHARACTERS",
+        difficulty: "ALL",
+      }
     });
-    const stage2 = await prisma.stage.create({
-      data: {
-        stageNumber: 2,
+    const stage2 = await prisma.stage.upsert({
+      where: { stageNumber: 2 },
+      update: {
         title: "어휘 마스터 오디세이 🍱",
         category: "VOCAB",
         difficulty: "ALL",
       },
+      create: {
+        stageNumber: 2,
+        title: "어휘 마스터 오디세이 🍱",
+        category: "VOCAB",
+        difficulty: "ALL",
+      }
     });
-    const stage3 = await prisma.stage.create({
-      data: {
-        stageNumber: 3,
+    const stage3 = await prisma.stage.upsert({
+      where: { stageNumber: 3 },
+      update: {
         title: "문법 및 조사 아카데미 ⚙️",
         category: "GRAMMAR",
         difficulty: "ALL",
       },
+      create: {
+        stageNumber: 3,
+        title: "문법 및 조사 아카데미 ⚙️",
+        category: "GRAMMAR",
+        difficulty: "ALL",
+      }
     });
-    const stage4 = await prisma.stage.create({
-      data: {
-        stageNumber: 4,
+    const stage4 = await prisma.stage.upsert({
+      where: { stageNumber: 4 },
+      update: {
         title: "원어민 청해 콜로세움 🎧",
         category: "LISTENING",
         difficulty: "ALL",
       },
+      create: {
+        stageNumber: 4,
+        title: "원어민 청해 콜로세움 🎧",
+        category: "LISTENING",
+        difficulty: "ALL",
+      }
     });
-    const stage5 = await prisma.stage.create({
-      data: {
-        stageNumber: 5,
+    const stage5 = await prisma.stage.upsert({
+      where: { stageNumber: 5 },
+      update: {
         title: "두뇌 회전 일어 워들 🧩",
         category: "WORDLE",
         difficulty: "ALL",
       },
+      create: {
+        stageNumber: 5,
+        title: "두뇌 회전 일어 워들 🧩",
+        category: "WORDLE",
+        difficulty: "ALL",
+      }
     });
 
     // -------------------------------------------------------------------------
@@ -3509,30 +3563,102 @@ export async function POST() {
       });
     });
 
-    // 🏆 대망의 벌크 데이터 최종 꽂기 (SQLite 제한을 피하기 위해 300개씩 청크 분할 삽입)
-    console.log(`[SEED ENGINE] 총 생성 퀴즈 개수: ${quizzesToInsert.length}개`);
+    quizzesToInsert.push(...buildBeginnerQuizzes({
+      1: stage1.id,
+      2: stage2.id,
+      3: stage3.id,
+      4: stage4.id,
+      5: stage5.id
+    }));
 
-    const chunkSize = 300;
-    for (let i = 0; i < quizzesToInsert.length; i += chunkSize) {
-      const chunk = quizzesToInsert.slice(i, i + chunkSize);
-      await prisma.quiz.createMany({ data: chunk });
-      console.log(`[SEED ENGINE] ${i + chunk.length}/${quizzesToInsert.length}개 퀴즈 삽입 완료`);
+    // 기존 문제 ID를 유지하여 풀이 기록·오답노트의 외래키를 보존한다.
+    // 같은 문제는 내용만 갱신하고, 새 문제만 안정적인 ID로 추가한다.
+    const stageIds = [stage1.id, stage2.id, stage3.id, stage4.id, stage5.id];
+    const existingQuizzes = await prisma.quiz.findMany({
+      where: { stageId: { in: stageIds } }
+    });
+    const existingById = new Map(existingQuizzes.map(quiz => [quiz.id, quiz]));
+    const existingByKey = new Map(existingQuizzes.map(quiz => [getQuizSeedKey(quiz), quiz]));
+    const uniqueSeedQuizzes = new Map();
+
+    for (const quiz of quizzesToInsert) {
+      const key = getQuizSeedKey(quiz);
+      if (!uniqueSeedQuizzes.has(key)) uniqueSeedQuizzes.set(key, quiz);
     }
+
+    const fields = [
+      'stageId',
+      'quizType',
+      'questionText',
+      'japaneseWord',
+      'pronunciation',
+      'correctAnswer',
+      'wrongAnswers',
+      'hint'
+    ];
+    const toCreate = [];
+    const toUpdate = [];
+    let unchangedCount = 0;
+
+    for (const quiz of uniqueSeedQuizzes.values()) {
+      const existing = (quiz.id && existingById.get(quiz.id))
+        || existingByKey.get(getQuizSeedKey(quiz));
+      if (!existing) {
+        toCreate.push({ ...quiz, id: quiz.id || getStableQuizId(quiz) });
+        continue;
+      }
+
+      const data = Object.fromEntries(fields.map(field => [field, quiz[field] ?? null]));
+      const changed = fields.some(field => (existing[field] ?? null) !== data[field]);
+      if (changed) {
+        toUpdate.push({ id: existing.id, data });
+      } else {
+        unchangedCount += 1;
+      }
+    }
+
+    const createChunkSize = 300;
+    for (let i = 0; i < toCreate.length; i += createChunkSize) {
+      const chunk = toCreate.slice(i, i + createChunkSize);
+      await prisma.quiz.createMany({ data: chunk });
+    }
+
+    const updateChunkSize = 100;
+    for (let i = 0; i < toUpdate.length; i += updateChunkSize) {
+      const chunk = toUpdate.slice(i, i + updateChunkSize);
+      await prisma.$transaction(
+        chunk.map(item => prisma.quiz.update({
+          where: { id: item.id },
+          data: item.data
+        }))
+      );
+    }
+
+    console.log(
+      `[SEED ENGINE] 문제 병합 완료: 신규 ${toCreate.length}, 갱신 ${toUpdate.length}, 유지 ${unchangedCount}`
+    );
 
     return NextResponse.json({
       success: true,
-      totalQuizzesSeeded: quizzesToInsert.length,
+      totalQuizzesSeeded: uniqueSeedQuizzes.size,
+      created: toCreate.length,
+      updated: toUpdate.length,
+      unchanged: unchangedCount,
+      preservedLearningData: true,
       defaultUser,
     });
   } catch (error) {
     console.error("초대형 5100+ 시드 엔진 가동 실패:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: '초기 데이터 생성에 실패했습니다.' },
       { status: 500 },
     );
   }
 }
 
 export async function GET() {
-  return await POST();
+  return NextResponse.json(
+    { success: false, error: 'POST 요청만 허용됩니다.' },
+    { status: 405, headers: { Allow: 'POST' } }
+  );
 }

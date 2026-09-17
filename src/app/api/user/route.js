@@ -1,70 +1,55 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getOrCreateRequestUser } from '@/lib/requestUser';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
-    }
+    const { user } = await getOrCreateRequestUser(request);
 
-    let user = await prisma.user.findFirst({
-      where: { username }
+    const [wrongCount, bookmarkCount] = await Promise.all([
+      prisma.wrongAnswer.count({
+        where: { userId: user.id, isResolved: false }
+      }),
+      prisma.bookmark.count({
+        where: { userId: user.id }
+      })
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      user,
+      wrongCount,
+      bookmarkCount
     });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
-      });
-    }
-
-    return NextResponse.json({ success: true, user });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[USER LOAD ERROR]:', error);
+    return NextResponse.json({ success: false, error: '사용자 정보를 불러오지 못했습니다.' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const { pointsToAdd } = await request.json();
-    const rawUsername = request.headers.get("x-nihongo-username");
-    const targetLevel = request.headers.get("x-nihongo-target-level") || "N1";
-    let username = rawUsername ? decodeURIComponent(rawUsername) : "니혼고마스터";
-    if (targetLevel === "BEGINNER") {
-      username = `${username}-beginner`;
+    const { action } = await request.json();
+    const fixedRewards = { calligraphy_complete: 10 };
+    const points = fixedRewards[action];
+    if (!points) {
+      return NextResponse.json({ success: false, error: '허용되지 않은 포인트 작업입니다.' }, { status: 400 });
     }
 
-    let user = await prisma.user.findFirst({
-      where: { username }
-    });
+    const { user } = await getOrCreateRequestUser(request);
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: `${username}@learning.com`,
-          username,
-          points: 0,
-        }
-      });
-    }
-
-    user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
-        points: user.points + (pointsToAdd || 0)
+        points: { increment: points }
       }
     });
 
-    return NextResponse.json({ success: true, user });
+    return NextResponse.json({ success: true, user: updatedUser, pointsEarned: points });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[USER REWARD ERROR]:', error);
+    return NextResponse.json({ success: false, error: '포인트를 반영하지 못했습니다.' }, { status: 500 });
   }
 }

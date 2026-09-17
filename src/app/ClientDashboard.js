@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
+import JlptTimer from './JlptTimer';
+import { showToast } from '@/lib/toast';
 
 const BEGINNER_CONVERSATIONS = [
   {
@@ -92,7 +94,7 @@ const HIRAGANA_GRID = [
   [ { h: 'ん', k: 'ン', r: 'n' }, null, null, null, null ]
 ];
 
-export default function ClientDashboard({ initialStages, initialUser }) {
+export default function ClientDashboard({ showSeedControls = false }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -249,7 +251,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       const res = await fetch('/api/user', {
         method: 'POST',
         headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ pointsToAdd: 10 })
+        body: JSON.stringify({ action: 'calligraphy_complete' })
       });
       const data = await res.json();
       if (data.success) {
@@ -435,6 +437,8 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         const data = await res.json();
         if (data.success) {
           setUser(data.user);
+          setWrongCount(data.wrongCount || 0);
+          setBookmarkCount(data.bookmarkCount || 0);
         } else {
           setUser({
             username: typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터',
@@ -467,27 +471,6 @@ export default function ClientDashboard({ initialStages, initialUser }) {
   const [bookmarkCount, setBookmarkCount] = useState(0);
 
   useEffect(() => {
-    async function fetchCounts() {
-      try {
-        const r1 = await fetch('/api/wrong-notes', {
-          headers: getSyncHeaders()
-        });
-        const d1 = await r1.json();
-        if (d1.success) setWrongCount(d1.wrongAnswers.length);
-        
-        const r2 = await fetch('/api/bookmarks', {
-          headers: getSyncHeaders()
-        });
-        const d2 = await r2.json();
-        if (d2.success) setBookmarkCount(d2.bookmarks.length);
-      } catch (e) {
-        console.error("복습 데이터 집계 에러:", e);
-      }
-    }
-    fetchCounts();
-  }, []);
-
-  useEffect(() => {
     try {
       const saved = localStorage.getItem('nihongo_quest_achievements');
       if (saved) {
@@ -498,13 +481,18 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     }
   }, []);
 
-  // 🌸 NHK 실시간 뉴스 브리핑 상태
+  // 🌸 실시간 일본 뉴스 브리핑 상태
   const [nhkNews, setNhkNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsRefreshing, setNewsRefreshing] = useState(false);
+  const [newsSource, setNewsSource] = useState('');
   const [expandedNews, setExpandedNews] = useState(null);
+  const [shouldLoadNews, setShouldLoadNews] = useState(false);
+  const newsSectionRef = useRef(null);
+  const newsModalRef = useRef(null);
+  const newsModalCloseRef = useRef(null);
 
-  // NHK 딕테이션 및 즉시 수확 전용 상태들
+  // 뉴스 딕테이션 및 즉시 수확 전용 상태들
   const { speak } = useJapaneseSpeech();
   const [dictatingNews, setDictatingNews] = useState(null);
   const [dictationInputs, setDictationInputs] = useState({});
@@ -513,8 +501,69 @@ export default function ClientDashboard({ initialStages, initialUser }) {
   const [harvestedWords, setHarvestedWords] = useState({});
   const [harvestingWord, setHarvestingWord] = useState('');
 
+  const closeNewsModal = () => {
+    setExpandedNews(null);
+    setDictatingNews(null);
+    setDictationInputs({});
+    setDictationChecked(false);
+    setDictationCorrects({});
+  };
+
+  const openNewsModal = (index) => {
+    setExpandedNews(index);
+    setDictatingNews(null);
+    setDictationInputs({});
+    setDictationChecked(false);
+    setDictationCorrects({});
+  };
+
+  const moveNewsModal = (direction) => {
+    if (nhkNews.length < 2 || expandedNews === null) return;
+    openNewsModal((expandedNews + direction + nhkNews.length) % nhkNews.length);
+  };
+
+  useEffect(() => {
+    if (!mounted || expandedNews === null) return;
+
+    const previousActiveElement = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeNewsModal();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusableElements = newsModalRef.current?.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusableElements?.length) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+    requestAnimationFrame(() => newsModalCloseRef.current?.focus());
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+      window.speechSynthesis?.cancel();
+      previousActiveElement?.focus?.();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, expandedNews]);
+
   // 📅 JLPT D-Day 연산 전용 상태 및 유틸
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [examInfo, setExamInfo] = useState({ type: '', dateStr: '' });
   const [isRegistrationPeriod, setIsRegistrationPeriod] = useState(false);
 
@@ -567,23 +616,6 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       setIsRegistrationPeriod(true);
     }
 
-    // 1초 주기의 카운트다운 타이머 기동
-    const timer = setInterval(() => {
-      const difference = exam.date.getTime() - Date.now();
-      
-      if (difference <= 0) {
-        clearInterval(timer);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      } else {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((difference / 1000 / 60) % 60);
-        const seconds = Math.floor((difference / 1000) % 60);
-        setTimeLeft({ days, hours, minutes, seconds });
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
   }, []);
 
   // 실시간 뉴스 로드 함수 (최초 로드 + 새로고침 버튼 공용)
@@ -592,6 +624,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       const savedLevel = localStorage.getItem('nihongo_quest_target_level') || 'N1';
       if (savedLevel === 'BEGINNER') {
         setNhkNews(BEGINNER_CONVERSATIONS);
+        setNewsSource('beginner');
         setNewsLoading(false);
         return;
       }
@@ -599,26 +632,53 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     try {
       if (isRefresh) setNewsRefreshing(true);
       else setNewsLoading(true);
-      const res = await fetch('/api/nhk-news');
+      const newsUrl = isRefresh ? '/api/nhk-news?refresh=true' : '/api/nhk-news';
+      const res = await fetch(newsUrl);
       const data = await res.json();
       if (data.success) {
         setNhkNews(data.news);
+        setNewsSource(data.source || 'premium-fallback');
         setExpandedNews(null); // 새로고침 시 열린 아코디언 닫기
         setDictatingNews(null);
       }
     } catch (e) {
-      console.error("NHK 뉴스 로드 에러:", e);
+      console.error("일본 뉴스 로드 에러:", e);
     } finally {
       setNewsLoading(false);
       setNewsRefreshing(false);
     }
   };
 
-  // 실시간 뉴스 로드 (API에서 이미 랜덤 5개 반환)
+  // 뉴스 카드가 화면에 가까워졌을 때만 데이터 로드를 시작한다.
   useEffect(() => {
+    if (shouldLoadNews) return;
+
+    const newsSection = newsSectionRef.current;
+    if (!newsSection || typeof IntersectionObserver === 'undefined') {
+      setShouldLoadNews(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadNews(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px 0px' }
+    );
+
+    observer.observe(newsSection);
+    return () => observer.disconnect();
+  }, [shouldLoadNews]);
+
+  // 관찰 지점에 도달한 뒤에만 뉴스 또는 초보 회화 데이터를 준비한다.
+  useEffect(() => {
+    if (!shouldLoadNews) return;
     fetchNhkNews();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetLevel]);
+  }, [targetLevel, shouldLoadNews]);
 
   // 🌾 단어 즉시 수확기 처리
   const handleHarvestWord = async (wordObj) => {
@@ -638,12 +698,12 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       if (data.success) {
         setHarvestedWords(prev => ({ ...prev, [wordObj.word]: true }));
         setBookmarkCount(prev => prev + 1);
-        alert(`🌾 N1 단어 즉시 수확 성공!\n[${wordObj.word}] 단어가 나의 단어장에 완벽히 수집되었습니다!`);
+        showToast(`🌾 ${targetLevel === 'BEGINNER' ? '기초' : 'N1'} 단어 즉시 수확 성공!\n[${wordObj.word}] 단어가 나의 단어장에 수집되었습니다.`);
       } else {
-        alert("수확 실패: " + data.error);
+        showToast("수확 실패: " + data.error, 'error');
       }
     } catch (e) {
-      alert("수확 실패 네트워크 에러: " + e.message);
+      showToast("수확 실패 네트워크 에러: " + e.message, 'error');
     } finally {
       setHarvestingWord('');
     }
@@ -665,18 +725,17 @@ export default function ClientDashboard({ initialStages, initialUser }) {
     setDictationChecked(true);
 
     if (allCorrect) {
-      alert("🎉 퍼펙트! 모든 N1 시사 빈칸을 정확하게 받아적으셨습니다! (+50pts 보너스)");
+      showToast(`🎉 퍼펙트! 모든 ${targetLevel === 'BEGINNER' ? '기초 회화' : 'N1 시사'} 빈칸을 정확하게 받아적으셨습니다! (+50pts 보너스)`);
       if (user) {
         setUser(prev => prev ? { ...prev, points: prev.points + 50 } : null);
       }
     } else {
-      alert("✍️ 채점 완료! 일부 빈칸을 확인해보세요. 오답 단어는 즉시 수확하여 공부할 수 있습니다!");
+      showToast("✍️ 채점 완료! 일부 빈칸을 확인해보세요. 오답 단어는 즉시 수확하여 공부할 수 있습니다!");
     }
   };
 
   // 모달 팝업 상태 관리
   const [selectedStage, setSelectedStage] = useState(null);
-  const [chosenJlpt, setChosenJlpt] = useState('N1'); // 대분류 기본값: N1
   const [chosenDifficulty, setChosenDifficulty] = useState('EASY'); // 소분류 기본값: EASY
 
   // 스테이지별 이모지 및 색상 매핑
@@ -699,15 +758,16 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       const data = await res.json();
       if (data.success) {
         setSyncDone(true);
+        showToast(`문제 동기화 완료! 신규 ${data.created || 0}개 · 갱신 ${data.updated || 0}개 (학습 기록 보존)`);
         setTimeout(() => {
           setSyncDone(false);
           window.location.reload();
         }, 1200);
       } else {
-        alert("동기화 실패: " + data.error);
+        showToast("동기화 실패: " + data.error, 'error');
       }
     } catch (e) {
-      alert("네트워크 에러: " + e.message);
+      showToast("네트워크 에러: " + e.message, 'error');
     } finally {
       setSyncing(false);
     }
@@ -741,8 +801,8 @@ export default function ClientDashboard({ initialStages, initialUser }) {
 
   const handleStartPlay = () => {
     if (!selectedStage) return;
-    // 선택한 급수(N2/N1)와 세부 난이도(EASY/MEDIUM/HARD)를 동시에 쿼리 파라미터로 실어 라우팅 실행
-    router.push(`/play/${selectedStage.stageNumber}?jlptLevel=${chosenJlpt}&difficulty=${chosenDifficulty}`);
+    const learningTrack = targetLevel === 'BEGINNER' ? 'BEGINNER' : 'N1';
+    router.push(`/play/${selectedStage.stageNumber}?jlptLevel=${learningTrack}&difficulty=${chosenDifficulty}&category=${selectedStage.category}`);
     setSelectedStage(null); // 모달 닫기
   };
 
@@ -779,7 +839,8 @@ export default function ClientDashboard({ initialStages, initialUser }) {
   };
 
   return (
-    <div>      {/* 0. 상시 데이터 동기화 패널 (최상단 노출) */}
+    <div>      {/* 0. 개발 환경 전용 데이터 동기화 패널 */}
+      {showSeedControls && (
       <div className="glass-premium-card rainbow-border sync-panel-premium" 
         onMouseMove={handleMouseMove} 
         onMouseLeave={handleMouseLeave}
@@ -790,7 +851,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           </span>
           <span className="sync-panel-desc">
             {targetLevel === 'BEGINNER' 
-              ? '기초 문자/어휘/문법 마스터를 위한 2000+개 초보 퀴즈 풀로 초기화 및 갱신합니다.' 
+              ? 'N5~N3 기초 문자·어휘·문법·청해·워들·문장조립 278문제를 초기화 및 갱신합니다.'
               : '실전 최고난도 JLPT N1 완벽 대비용 초대형 5000+개 퀴즈 풀로 초기화 및 갱신합니다.'}
           </span>
         </div>
@@ -805,10 +866,11 @@ export default function ClientDashboard({ initialStages, initialUser }) {
           ) : syncDone ? (
             <>🎉 성공! 새로고침 중...</>
           ) : (
-            <>{targetLevel === 'BEGINNER' ? '🌱 2000+ 문항 강제 동기화' : '🌱 5000+ 문항 강제 동기화'}</>
+            <>{targetLevel === 'BEGINNER' ? '🌱 초보 278문항 동기화' : '🌱 5000+ 문항 강제 동기화'}</>
           )}
         </button>
       </div>
+      )}
 
       {/* 📅 실시간 JLPT D-Day 카운트다운 & 접수 안내 보드 */}
       <div className="glass-premium-card rainbow-border dday-countdown-card" 
@@ -849,34 +911,7 @@ export default function ClientDashboard({ initialStages, initialUser }) {
         </div>
 
         {/* 째깍째깍 초시계 수치 */}
-        <div className='count-timer' style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {[
-            { label: '일', val: timeLeft.days, color: 'var(--accent-color)' },
-            { label: '시', val: timeLeft.hours, color: '#ff9f43' },
-            { label: '분', val: timeLeft.minutes, color: '#1dd1a1' },
-            { label: '초', val: timeLeft.seconds, color: '#ff5e7e' }
-          ].map((t, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{
-                minWidth: '54px',
-                height: '54px',
-                background: 'var(--bg-secondary)',
-                border: `2px solid ${t.color}`,
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.4rem',
-                fontWeight: '950',
-                color: t.color,
-                boxShadow: `0 0 10px ${t.color}22`
-              }}>
-                {String(t.val).padStart(2, '0')}
-              </div>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '800', marginTop: '4px' }}>{t.label}</span>
-            </div>
-          ))}
-        </div>
+        <JlptTimer />
 
         {/* 원서 접수 기간 연동 배너 */}
         {isRegistrationPeriod && (
@@ -1015,28 +1050,38 @@ export default function ClientDashboard({ initialStages, initialUser }) {
       </div>
 
       {/* 1.5. [N1 PREMIUM / BEGINNER DAILY] 랜덤 뉴스 및 회화 브리핑 */}
-      <div className="glass-premium-card rainbow-border nhk-news-briefing-card">
+      <div ref={newsSectionRef} className="glass-premium-card rainbow-border nhk-news-briefing-card">
         <div className="nhk-news-header">
           <div className="nhk-news-header-title-box">
             <h2 className="nhk-news-header-title">
-              {targetLevel === 'BEGINNER' ? '🌸 왕초보 일상 회화 & 애니 딕테이션 브리핑' : '📰 NHK 실시간 시사 & 사회 뉴스 브리핑'}
+              {targetLevel === 'BEGINNER' ? '🌸 왕초보 일상 회화 & 애니 딕테이션 브리핑' : '📰 일본 최신 시사 & 사회 뉴스 브리핑'}
             </h2>
             <p className="nhk-news-header-desc">
               {targetLevel === 'BEGINNER' 
                 ? '친근한 애니메이션 명대사와 실생활 상황극 대화로 기초 표현 및 청해력을 기르세요' 
-                : '매번 랜덤으로 선별된 5개 뉴스로 N1 기출 한자 및 핵심 사회 어휘를 학습하세요'}
+                : '매일 수집한 최신 일본 뉴스 100건 중 무작위 10건으로 N1 핵심 어휘를 학습하세요'}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className={`nhk-status-badge ${targetLevel === 'BEGINNER' ? 'realtime' : (!newsLoading && nhkNews.length > 0 ? 'realtime' : 'fallback')}`}>
-              {newsLoading ? '⏳ 로딩 중' : (targetLevel === 'BEGINNER' ? '🌱 왕초보 5선' : `🎲 랜덤 ${nhkNews.length}선`)}
+            <span className={`nhk-status-badge ${targetLevel === 'BEGINNER' || newsSource === 'the-news-api' ? 'realtime' : 'fallback'}`}>
+              {newsLoading
+                ? '⏳ 로딩 중'
+                : targetLevel === 'BEGINNER'
+                  ? '🌱 왕초보 5선'
+                  : newsSource === 'the-news-api'
+                    ? `🎲 오늘의 랜덤 ${nhkNews.length}선`
+                    : newsSource === 'the-news-api-stale'
+                      ? `🗃️ 이전 뉴스 ${nhkNews.length}선`
+                    : newsSource === 'nhk-rss-fallback'
+                      ? `📡 NHK 대체 ${nhkNews.length}선`
+                      : `📚 내장 뉴스 ${nhkNews.length}선`}
             </span>
             {/* 🔄 새로고침 버튼 (N1 모드 전용) */}
             {targetLevel !== 'BEGINNER' && (
               <button
                 onClick={() => fetchNhkNews(true)}
                 disabled={newsLoading || newsRefreshing}
-                title="뉴스 다시 불러오기"
+                title="저장된 뉴스에서 다시 뽑기"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1081,15 +1126,18 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                   className={`nhk-news-item ${isExpanded ? 'active' : ''}`}
                 >
                   {/* 뉴스 제목 및 간략 보기 영역 */}
-                  <div 
+                  <button
+                    type="button"
                      className="nhk-news-item-trigger"
-                     onClick={() => setExpandedNews(isExpanded ? null : idx)}
+                     onClick={() => openNewsModal(idx)}
+                     aria-haspopup="dialog"
+                     aria-expanded={isExpanded}
                   >
                     <div className="nhk-news-item-title-row">
                       <span className="nhk-news-emoji">{targetLevel === 'BEGINNER' ? '🌸' : '📰'}</span>
                       <h4 className="nhk-news-item-title">{item.title}</h4>
                       
-                      <span className="nhk-toggle-arrow">{isExpanded ? '▲' : '▼'}</span>
+                      <span className="nhk-toggle-arrow" aria-hidden="true">상세 보기 ↗</span>
                     </div>
                     <div className="nhk-news-meta-row">
                       <span className="nhk-meta-date">
@@ -1099,13 +1147,62 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                           day: 'numeric'
                         }) : '최신 시사'}
                       </span>
-                      <span className="nhk-meta-category">{targetLevel === 'BEGINNER' ? '초보 일상회화' : 'N1 사회시사'}</span>
+                      <span className="nhk-meta-category">
+                        {targetLevel === 'BEGINNER' ? '초보 일상회화' : `${item.sourceName || '일본 뉴스'} · N1 사회시사`}
+                      </span>
                     </div>
-                  </div>
+                  </button>
 
-                  {/* 아코디언 콘텐츠 영역 (단어 정리 및 번역 제공) */}
-                  {isExpanded && (
-                    <div className="nhk-accordion-content fade-in">
+                  {/* 선택한 뉴스는 Portal 모달에서 학습 기능과 함께 표시 */}
+                  {isExpanded && mounted && createPortal(
+                    <div
+                      className="news-detail-modal-overlay"
+                      onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) closeNewsModal();
+                      }}
+                    >
+                      <section
+                        ref={newsModalRef}
+                        className="news-detail-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={`news-modal-title-${idx}`}
+                        onMouseDown={(event) => event.stopPropagation()}
+                      >
+                        <header className="news-detail-modal-header">
+                          <div className="news-detail-modal-heading">
+                            <span className="news-detail-modal-eyebrow">
+                              {targetLevel === 'BEGINNER' ? '🌸 일상 회화 학습' : `📰 ${item.sourceName || '일본 뉴스'}`}
+                            </span>
+                            <h2 id={`news-modal-title-${idx}`}>{item.title}</h2>
+                            <div className="news-detail-modal-meta">
+                              <span>
+                                {item.pubDate ? new Date(item.pubDate).toLocaleDateString('ko-KR', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                }) : '최신 시사'}
+                              </span>
+                              <span>{targetLevel === 'BEGINNER' ? '초보 일상회화' : 'N1 사회시사'}</span>
+                            </div>
+                          </div>
+                          <button
+                            ref={newsModalCloseRef}
+                            type="button"
+                            className="news-detail-modal-close"
+                            onClick={closeNewsModal}
+                            aria-label="뉴스 상세 닫기"
+                          >
+                            ✕
+                          </button>
+                        </header>
+
+                        <div className="news-detail-modal-body nhk-accordion-content fade-in">
+                          {targetLevel !== 'BEGINNER' && (
+                            <p className="news-detail-modal-notice">
+                              API가 제공하는 일본어 기사 지문입니다. 전체 내용은 아래 원문 링크에서 확인할 수 있어요.
+                            </p>
+                          )}
                       <p className="nhk-news-raw-desc">
                         <strong>{targetLevel === 'BEGINNER' ? '[회화 지문]' : '[일본어 원문]'}</strong><br />
                         {item.description}
@@ -1303,16 +1400,30 @@ export default function ClientDashboard({ initialStages, initialUser }) {
 
                       {/* 하단 단독 원문 앵커 링크 */}
                       <div className="nhk-item-footer">
+                        {nhkNews.length > 1 && (
+                          <div className="news-detail-modal-navigation" aria-label="다른 뉴스 보기">
+                            <button type="button" className="outline-btn" onClick={() => moveNewsModal(-1)}>
+                              ← 이전 뉴스
+                            </button>
+                            <span>{idx + 1} / {nhkNews.length}</span>
+                            <button type="button" className="outline-btn" onClick={() => moveNewsModal(1)}>
+                              다음 뉴스 →
+                            </button>
+                          </div>
+                        )}
                         <a 
                           href={targetLevel === 'BEGINNER' ? 'https://ja.dict.naver.com/#/main' : item.link} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="nhk-raw-link-btn"
                         >
-                          {targetLevel === 'BEGINNER' ? '네이버 일본어 사전 바로가기 🔗' : 'NHK 공식 기사 원문 보기 🔗'}
+                          {targetLevel === 'BEGINNER' ? '네이버 일본어 사전 바로가기 🔗' : '기사 원문 보기 🔗'}
                         </a>
                       </div>
-                    </div>
+                        </div>
+                      </section>
+                    </div>,
+                    document.body
                   )}
                 </div>
               );
@@ -1410,7 +1521,9 @@ export default function ClientDashboard({ initialStages, initialUser }) {
                   </h4>
                   
                   <p className="arena-card-desc">
-                    {stage.desc || "5,000+개 N1 최고난도 기출 풀에서 무작위 라이브 추출"}
+                    {stage.desc || (targetLevel === 'BEGINNER'
+                      ? 'N5~N3 기초 문제 풀에서 무작위 라이브 추출'
+                      : '5,000+개 N1 최고난도 기출 풀에서 무작위 라이브 추출')}
                   </p>
                 </div>
 
