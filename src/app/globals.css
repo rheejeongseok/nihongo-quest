@@ -4284,6 +4284,25 @@ html, body {
   border-radius: 12px;
   font-size: 1rem;
 }
+.exam-page { padding-top: 24px; padding-bottom: 80px; max-width: 1000px; }
+.exam-page h1, .exam-page h2 { margin: 20px 0; }
+.exam-intro, .exam-question { padding: clamp(16px, 4vw, 32px); margin: 20px 0; }
+.exam-intro p, .exam-review p { margin: 14px 0; }
+.exam-toolbar, .exam-controls, .exam-audio { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
+.exam-toolbar time { margin-left: auto; font-weight: 900; font-variant-numeric: tabular-nums; }
+.exam-question-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.exam-question-nav button { min-width: 40px; padding: 8px; border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); background: var(--card-bg); }
+.exam-question-nav .answered { border-color: var(--accent-color); }
+.exam-question-nav [aria-current] { outline: 2px solid var(--accent-color); }
+.exam-prompt { white-space: pre-wrap; margin-bottom: 20px; }
+.exam-options { display: grid; gap: 12px; }
+.exam-options button { justify-content: flex-start; text-align: left; gap: 12px; padding: 14px; line-height: 1.8; }
+.exam-options [aria-pressed='true'] { border: 2px solid var(--accent-color); background: var(--bg-secondary); }
+.exam-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.exam-summary > div { display: grid; gap: 12px; padding: 16px; }
+.exam-review { padding: 16px; margin: 14px 0; }
+.exam-review summary { cursor: pointer; font-weight: 800; }
+.exam-audio span, .exam-controls > span { font-size: 0.8rem; color: var(--text-secondary); }
 .arena-practice-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0 24px; }
 .arena-practice-actions button { padding: 10px 14px; font-size: 0.8rem; }
 .arena-practice-actions > span { font-size: 0.75rem; color: var(--text-secondary); }

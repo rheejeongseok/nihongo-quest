@@ -1,4 +1,4 @@
-import { n1Lexicon } from './n1Quizzes.mjs';
+import { n1Lexicon } from './n1Lexicon.mjs';
 
 // Each reading distractor was specified for this word; no unrelated-word rotation.
 const readingErrors = `
@@ -64,7 +64,7 @@ const readingErrors = `
 委縮|いじゅく,いしゅう,いしゅつ
 補填|ほでん,ほうてん,ほてつ
 賠償|ばいじょう,はいしょう,ばいしょ
-融通|ゆうずうう,ゆうつう,ゆずう
+融通|ゆうじゅう,ゆうそう,ゆうとう
 斡旋|あつせん,あっぜん,かんせん
 憤慨|ふんかい,ふんこう,ふんがん
 困惑|こんわつ,こんがく,こんばく
@@ -86,7 +86,7 @@ const readingErrors = `
 余地|よじ,ようち,よちい
 趣旨|しゅじ,しゅうし,しゅしい
 経緯|けいぎ,けんい,けいいん
-端緒|たんちょ,だんしょ,たんしゅ
+端緒|たんしょう,だんしょ,たんしゅ
 兆候|ちょうごう,ちょこう,しょうこう
 裁量|さいりゅう,ざいりょう,さいろう
 所管|しょがん,しょかつ,しょうかん
@@ -179,12 +179,16 @@ const usageRows = [
 
 export function addQualityVocabulary(add) {
   const errors = new Map(readingErrors.map(([word, values]) => [word, values.split(',')]));
+  const readingNotes = new Map([
+    ['端緒', '「たんちょ」も認められている慣用読みです。誤読として扱いません。'],
+    ['融通', '辞書には「ゆずう」という異読もあります。この文では一般的な「ゆうずう」を示しています。']
+  ]);
   const indexFor = word => n1Lexicon.findIndex(row => row[0] === word);
   n1Lexicon.forEach(([word, reading, meaning, sentence], index) => {
     const wrong = errors.get(word);
     if (!wrong) throw new Error(`Missing authored reading alternatives: ${word}`);
     if (/\p{Script=Han}/u.test(word)) add(`lex${index}`, 'reading', 1, 'MULTIPLE_CHOICE', `【漢字読み】「${word}」の読み方を選びなさい。\n${sentence}`, word, reading, reading, wrong,
-      `「${word}」は「${reading}」。${meaning}。語全体の読みを確認してください。`);
+      `「${word}」は「${reading}」。${meaning}。語全体の読みを確認してください。${readingNotes.get(word) || ''}`);
     add(`lex${index}`, 'wordle', 5, 'WORDLE', `【語彙復習】説明に合う${word.length}文字の語を完成させなさい。\n${meaning}`, word, reading, word, [], meaning);
   });
   const used = new Set();

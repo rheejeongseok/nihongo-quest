@@ -7,7 +7,7 @@ import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import JlptTimer from './JlptTimer';
 import { showToast } from '@/lib/toast';
 import ReadableText from './ReadableText';
-import { N1_COURSES } from '@/data/n1Courses.mjs';
+import { N1_COURSES, N1_EXAM } from '@/data/n1Courses.mjs';
 
 const BEGINNER_CONVERSATIONS = [
   {
@@ -367,7 +367,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
       ];
     }
 
-    return N1_COURSES;
+    return [...N1_COURSES, N1_EXAM];
   };
 
   // 실시간 유저 정보 로드
@@ -712,6 +712,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
   };
 
   const openDifficultyModal = (stage, selectCourse = false) => {
+    if (stage.href) { router.push(stage.href); return; }
     if (stage.category === 'CALLIGRAPHY') {
       setIsCalligraphyModalOpen(true);
       return;
@@ -983,10 +984,6 @@ export default function ClientDashboard({ showSeedControls = false }) {
         </div>
       </div>
 
-      {targetLevel === 'N1' && <div className="arena-practice-actions pc-only">
-        <button className="glass-neon-btn" onClick={() => router.push('/play/6?jlptLevel=N1&category=MOCK_EXAM')}>📝 15분 종합 연습</button>
-        <span>문자·어휘 · 문법·문장 구성 · 청해 · 독해를 섞어 연습합니다.</span>
-      </div>}
       {/* 뉴스 및 회화 브리핑 */}
       <div ref={newsSectionRef} className="glass-premium-card rainbow-border nhk-news-briefing-card">
         <div className="nhk-news-header">

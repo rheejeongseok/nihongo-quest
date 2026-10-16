@@ -45,3 +45,9 @@ test('새 N1 객관식·청해·독해는 제시문을 답으로 인정하지 �
   }
   assert.equal(evaluateQuizAnswer('日本', { id: 'beginner-1', quizType: 'MULTIPLE_CHOICE', japaneseWord: '日本', correctAnswer: 'にほん' }), true);
 });
+
+test('DB에서 직접 추가한 ID도 N1이면 DB의 정답만 인정한다', () => {
+  const quiz = { id: 'custom-db-quiz', jlptLevel: 'N1', quizType: 'MULTIPLE_CHOICE', japaneseWord: '本文', correctAnswer: '選択肢' };
+  assert.equal(evaluateQuizAnswer('本文', quiz), false);
+  assert.equal(evaluateQuizAnswer('選択肢', quiz), true);
+});

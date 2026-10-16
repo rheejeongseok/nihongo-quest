@@ -8,6 +8,7 @@
     "db:push": "prisma db push",
     "db:deploy": "prisma migrate deploy",
     "db:seed:beginner": "node scripts/seed-beginner.mjs",
+    "db:seed": "node scripts/seed-learning.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test": "node --test tests/*.test.mjs"

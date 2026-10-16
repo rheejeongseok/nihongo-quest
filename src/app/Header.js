@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { showToast } from '@/lib/toast';
-import { N1_COURSES } from '@/data/n1Courses.mjs';
+import { N1_COURSES, N1_EXAM } from '@/data/n1Courses.mjs';
 
 const THEMES = [
   { id: 'zen', name: '젠 (Zen)', emoji: '🌸', color: '#557c55' },
@@ -51,7 +51,7 @@ const getStagesList = (level) => {
       { id: 'virtual-stage-6-uuid', stageNumber: 6, title: '초보 실력 진단', category: 'MOCK_EXAM' }
     ];
   }
-  return N1_COURSES;
+  return [...N1_COURSES, N1_EXAM];
 };
 
 export default function Header() {
@@ -154,7 +154,7 @@ export default function Header() {
         }
         if (targetLevel === 'N1' && e.detail?.selectCourse === false) {
           setSelectedStage(null);
-          router.push(`/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
+          router.push(stage.href || `/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
           return;
         }
         setSelectedStage(stage);
@@ -175,7 +175,7 @@ export default function Header() {
           setSelectedStage(null);
           window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
         } else if (targetLevel === 'N1') {
-          router.push(`/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
+          router.push(stage.href || `/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
         } else {
           setSelectedStage(stage);
           setChosenDifficulty('EASY');
@@ -916,7 +916,7 @@ export default function Header() {
                       { stageIndex: 6, emoji: '⚔️', label: '기초 조립', bg: 'rgba(255, 211, 42, 0.09)', color: '#ffd32a' },
                       { stageIndex: 7, emoji: '📝', label: '실력 진단', bg: 'rgba(255, 94, 126, 0.09)', color: '#ff5e7e' }
                     ]
-                  : N1_COURSES.map((course, stageIndex) => ({
+                  : [...N1_COURSES, N1_EXAM].map((course, stageIndex) => ({
                       stageIndex, emoji: course.emoji, label: course.title,
                       bg: 'var(--bg-secondary)', color: course.color
                     }))
@@ -954,7 +954,6 @@ export default function Header() {
             {/* 네비게이션 메뉴 섹션 */}
             {targetLevel === 'N1' && <div className="arena-practice-actions">
               <button className="outline-btn" onClick={() => { setIsDrawerOpen(false); router.push('/play/5?jlptLevel=N1&category=WORDLE'); }}>🧩 어휘 워들 복습</button>
-              <button className="glass-neon-btn" onClick={() => { setIsDrawerOpen(false); router.push('/play/6?jlptLevel=N1&category=MOCK_EXAM'); }}>📝 15분 종합 연습</button>
             </div>}
             <div className="drawer-section" style={{ marginTop: '16px' }}>
               <span className="drawer-sec-label">🧭 빠른 탐색 이동</span>
@@ -1034,7 +1033,7 @@ export default function Header() {
                       }
                       if (targetLevel === 'N1') {
                         setSelectedStage(null);
-                        router.push(`/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
+                        router.push(stage.href || `/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
                         return;
                       }
                       setSelectedStage(stage);
@@ -1068,7 +1067,6 @@ export default function Header() {
             {/* 2. 세부 난이도 선택 (쉬움 🌱, 보통 🍱, 어려움 ⚡) */}
             {targetLevel === 'N1' && <div className="arena-practice-actions">
               <button className="outline-btn" onClick={() => { setSelectedStage(null); router.push('/play/5?jlptLevel=N1&category=WORDLE'); }}>🧩 어휘 워들 복습</button>
-              <button className="glass-neon-btn" onClick={() => { setSelectedStage(null); router.push('/play/6?jlptLevel=N1&category=MOCK_EXAM'); }}>📝 15분 종합 연습</button>
             </div>}
             {targetLevel === 'BEGINNER' && <>
             <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>

@@ -1,4 +1,3 @@
-import { buildN1Quizzes } from '../data/n1QualityQuizzes.mjs';
 import { n1CourseForRoute } from '../data/n1Courses.mjs';
 
 export function shuffleN1(array, random = Math.random) {
@@ -18,7 +17,7 @@ export function deduplicateN1(quizzes) {
   }
   return [...unique.values()];
 }
-export const stimulusKey = quiz => quiz.id.replace(/-[^-]+$/, '');
+export const stimulusKey = quiz => quiz.stimulusId || quiz.id;
 function sample(pool, count, seen, random) {
   const selected = [];
   for (const quiz of shuffleN1(pool, random)) {
@@ -36,31 +35,25 @@ export async function getN1Arena(prisma, stageNumber, requestedCategory, random 
   const stages = await prisma.stage.findMany({ where: { stageNumber: { in: [1, 2, 3, 4, 5] } } });
   const ids = Object.fromEntries(stages.map(stage => [stage.stageNumber, stage.id]));
   if ([1, 2, 3, 4, 5].some(number => !ids[number])) return null;
-  // Only reviewed originals can be drawn. Older DB rows remain in history.
-  const pool = deduplicateN1(buildN1Quizzes(ids));
+  // The DB is the runtime question source. Unreviewed historical rows are excluded.
+  const pool = deduplicateN1(await prisma.quiz.findMany({
+    where: { jlptLevel: 'N1', arenaCategory: course.category, status: 'ACTIVE' }
+  }));
   const filter = category => pool.filter(quiz => {
     if (category === 'WORDLE') return quiz.quizType === 'WORDLE';
     if (category === 'READING') return quiz.quizType === 'READING';
-    if (category === 'VOCAB') return [ids[1], ids[2]].includes(quiz.stageId);
-    if (category === 'GRAMMAR') return quiz.quizType === 'ASSEMBLY' || (quiz.stageId === ids[3] && quiz.quizType !== 'READING');
+    if (category === 'VOCAB') return quiz.quizType === 'MULTIPLE_CHOICE';
+    if (category === 'GRAMMAR') return ['ASSEMBLY', 'MULTIPLE_CHOICE'].includes(quiz.quizType);
     return quiz.quizType === 'LISTENING';
   });
   const seen = new Set();
   let selected;
-  if (course.category === 'MOCK_EXAM') {
+  if (course.category === 'VOCAB') {
     selected = shuffleN1([
-      ...sample(filter('VOCAB'), 4, seen, random),
-      ...sample(filter('GRAMMAR'), 4, seen, random),
-      ...sample(filter('LISTENING'), 4, seen, random),
-      ...sample(filter('READING'), 3, seen, random)
-    ], random);
-    if (selected.length !== 15) return null;
-  } else if (course.category === 'VOCAB') {
-    selected = shuffleN1([
-      ...sample(filter('VOCAB').filter(quiz => quiz.stageId === ids[1]), 3, seen, random),
-      ...sample(filter('VOCAB').filter(quiz => quiz.id.endsWith('-context')), 3, seen, random),
-      ...sample(filter('VOCAB').filter(quiz => quiz.id.endsWith('-paraphrase')), 2, seen, random),
-      ...sample(filter('VOCAB').filter(quiz => quiz.id.endsWith('-usage')), 2, seen, random)
+      ...sample(filter('VOCAB').filter(quiz => quiz.itemType === 'reading'), 3, seen, random),
+      ...sample(filter('VOCAB').filter(quiz => quiz.itemType === 'context'), 3, seen, random),
+      ...sample(filter('VOCAB').filter(quiz => quiz.itemType === 'paraphrase'), 2, seen, random),
+      ...sample(filter('VOCAB').filter(quiz => quiz.itemType === 'usage'), 2, seen, random)
     ], random);
   } else if (course.category === 'GRAMMAR') {
     selected = shuffleN1([
@@ -69,10 +62,6 @@ export async function getN1Arena(prisma, stageNumber, requestedCategory, random 
     ], random);
   } else selected = sample(filter(course.category), 10, seen, random);
   if (selected.length < 10) return null;
-  await prisma.$transaction(selected.map(quiz => {
-    const { id, ...data } = quiz;
-    return prisma.quiz.upsert({ where: { id }, update: data, create: quiz });
-  }));
   return { stage: { id: ids[course.stageNumber] || ids[3], stageNumber: course.stageNumber,
     title: `N1 ${course.title}`, category: course.category, jlptLevel: 'N1', difficulty: 'N1' }, quizzes: selected };
 }

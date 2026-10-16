@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { buildN1Quizzes } from '../src/data/n1QualityQuizzes.mjs';
+import { buildN1Exam } from '../src/data/n1Exam.mjs';
 
 const baseUrl = process.env.ARENA_CHECK_URL || 'http://localhost:3102';
 const chromePath = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -53,12 +54,24 @@ try {
     return result.result.value;
   };
   const bank = buildN1Quizzes({ 1: 's1', 2: 's2', 3: 's3', 4: 's4', 5: 's5' });
+  const examItems = buildN1Exam({ 1: 's1', 2: 's2', 3: 's3', 4: 's4', 5: 's5' });
   await send('Page.enable');
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `
     const bank = ${JSON.stringify(bank)};
+    const examItems = ${JSON.stringify(examItems)};
+    let firstAnswers = {};
     const originalFetch = window.fetch.bind(window);
     window.fetch = async (input, options) => {
       const url = new URL(typeof input === 'string' ? input : input.url, location.href);
+      if (url.pathname === '/api/mock-exam') {
+        const body = JSON.parse(options.body);
+        const questions = examItems.map(q => ({ id:q.id, domain:q.domain, questionText:q.questionText, quizType:q.quizType,
+          passage:q.quizType === 'READING' ? q.japaneseWord : '', audioText:q.quizType === 'LISTENING' ? q.japaneseWord : '',
+          options:[q.correctAnswer,...JSON.parse(q.wrongAnswers)] }));
+        if (body.action === 'start') return Response.json({token:'test-start',deadline:Date.now()+1200000,questions:questions.slice(0,15)});
+        if (body.action === 'listening') { firstAnswers=body.answers; return Response.json({token:'test-second',deadline:Date.now()+600000,questions:questions.slice(15)}); }
+        return Response.json({results:examItems.map(q=>({id:q.id,domain:q.domain,question:q.questionText,selected:({...firstAnswers,...body.answers})[q.id]||'',correct:({...firstAnswers,...body.answers})[q.id]===q.correctAnswer,answer:q.correctAnswer,explanation:q.hint}))});
+      }
       if (url.pathname.startsWith('/api/stages/')) {
         const number = Number(url.pathname.split('/').pop());
         const category = url.searchParams.get('category') || 'CHARACTERS';
@@ -136,7 +149,7 @@ try {
   console.log('PASS install prompt: hidden on play and bookmarks');
   await send('Page.navigate', { url: baseUrl });
   await waitFor(() => evaluate("!!document.querySelector('.mo-arena-btn button')"));
-  assert.equal(await evaluate("document.querySelectorAll('.arena-card-wrapper').length"), 4);
+  assert.equal(await evaluate("document.querySelectorAll('.arena-card-wrapper').length"), 5);
   for (const width of [900, 1280, 1536]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
     await delay(300);
@@ -195,6 +208,24 @@ try {
       console.log('PASS reading: passage, option submission and explanation');
     }
   }
+  await send('Page.navigate', { url: `${baseUrl}/play/6?jlptLevel=N1&category=MOCK_EXAM` });
+  await waitFor(() => evaluate("location.pathname === '/mock-exam'"));
+  console.log('PASS old N1 mixed-practice URL: redirects to mock exam');
+  await waitFor(() => evaluate("document.querySelector('.exam-intro button')?.disabled === false"));
+  await evaluate("document.querySelector('.exam-intro button').click()");
+  await waitFor(() => evaluate("document.querySelectorAll('.exam-question-nav button').length === 15"));
+  assert.equal(await evaluate("!!document.querySelector('.exam-review')"), false);
+  await evaluate("document.querySelector('.exam-options button').click(); document.querySelectorAll('.exam-question-nav button')[14].click()");
+  await evaluate("document.querySelector('.exam-controls .glow-btn').click()");
+  await waitFor(() => evaluate("document.querySelector('.exam-toolbar')?.textContent.includes('2부')"));
+  assert.equal(await evaluate("!!document.querySelector('.exam-question-nav')"), false);
+  for (let index=0; index<5; index++) {
+    await evaluate("document.querySelector('.exam-options button').click()");
+    await evaluate("document.querySelector('.exam-controls .glow-btn').click()");
+    await delay(100);
+  }
+  await waitFor(() => evaluate("document.querySelectorAll('.exam-review').length === 20"));
+  console.log('PASS mock exam: 15-question first part, locked listening, delayed 20-answer review');
 } finally {
   socket?.close();
   chrome.kill();

@@ -4,16 +4,36 @@ import { buildN1Quizzes } from '../src/data/n1QualityQuizzes.mjs';
 import { deduplicateN1, getN1Arena, stimulusKey } from '../src/lib/n1Arena.mjs';
 import { N1_COURSES, n1CourseForRoute } from '../src/data/n1Courses.mjs';
 import { evaluateQuizAnswer } from '../src/lib/quizScoring.mjs';
+import { syncLearningData } from '../src/lib/learningData.mjs';
 
 const ids = { 1: 's1', 2: 's2', 3: 's3', 4: 's4', 5: 's5' };
 const bank = buildN1Quizzes(ids);
+
+test('辞書で認められる異読を漢字読みの誤答選択肢にしない', () => {
+  // 小学館デジタル大辞泉: 端緒・融通。標準読みと異読を同時に出題しない。
+  for (const [word, accepted] of [
+    ['端緒', ['たんしょ', 'たんちょ']],
+    ['融通', ['ゆうずう', 'ゆずう']]
+  ]) {
+    const quiz = bank.find(item => item.id.endsWith('-reading') && item.japaneseWord === word);
+    assert.ok(quiz, word);
+    assert.ok(accepted.includes(quiz.correctAnswer), word);
+    assert.ok(JSON.parse(quiz.wrongAnswers).every(answer => !accepted.includes(answer)), word);
+    assert.ok(quiz.hint.includes(accepted[1]), word);
+  }
+});
 const stages = Object.entries(ids).map(([number, id]) => ({ id, stageNumber: Number(number) }));
 const saved = new Map();
+await syncLearningData({
+  stage: { upsert: async ({ create }) => stages.find(stage => stage.stageNumber === create.stageNumber) },
+  quiz: { findMany: async () => [], upsert: async ({ create }) => { saved.set(create.id, create); } },
+  $transaction: async operations => Promise.all(operations)
+});
 const prisma = {
   stage: { findMany: async () => stages },
   quiz: {
-    findMany: async () => { throw new Error('Unreviewed DB pool must not be sampled'); },
-    upsert: async ({ create }) => { saved.set(create.id, create); return create; }
+    findMany: async ({ where }) => [...saved.values()].filter(quiz => Object.entries(where).every(([field, value]) => quiz[field] === value)),
+    upsert: async () => { throw new Error('Runtime must not overwrite DB questions'); }
   },
   $transaction: async operations => Promise.all(operations)
 };
@@ -64,11 +84,11 @@ test('독해·조건 비교 청해·문맥·용법을 포함하고 지문별 해
 
 test('40개 시드에서 통합 유형 비율·같은 소재 중복 방지·정답 저장을 검증한다', async () => {
   for (let seed = 1; seed <= 40; seed++) {
-    for (const course of [...N1_COURSES, { stageNumber: 6, category: 'MOCK_EXAM' }, { stageNumber: 5, category: 'WORDLE' }]) {
+    for (const course of [...N1_COURSES, { stageNumber: 5, category: 'WORDLE' }]) {
       const result = await getN1Arena(prisma, course.stageNumber, course.category, rng(seed));
       assert.ok(result, `${seed} ${course.category}`);
       const quizzes = result.quizzes;
-      assert.equal(quizzes.length, course.category === 'MOCK_EXAM' ? 15 : 10);
+      assert.equal(quizzes.length, 10);
       assert.equal(new Set(quizzes.map(stimulusKey)).size, quizzes.length);
       if (course.category === 'VOCAB') {
         for (const [suffix, count] of [['reading', 3], ['context', 3], ['paraphrase', 2], ['usage', 2]]) {
@@ -76,11 +96,6 @@ test('40개 시드에서 통합 유형 비율·같은 소재 중복 방지·정�
         }
       }
       if (course.category === 'GRAMMAR') assert.equal(quizzes.filter(quiz => quiz.quizType === 'ASSEMBLY').length, 4);
-      if (course.category === 'MOCK_EXAM') {
-        assert.equal(quizzes.filter(quiz => quiz.quizType === 'READING').length, 3);
-        assert.equal(quizzes.filter(quiz => quiz.quizType === 'LISTENING').length, 4);
-        assert.equal(quizzes.filter(quiz => quiz.stageId === ids[1] || quiz.stageId === ids[2]).length, 4);
-      }
       assert.ok(quizzes.every(quiz => saved.has(quiz.id)));
     }
   }
@@ -92,5 +107,21 @@ test('이전 주소는 통합 코스로 연결하고 이전 문제 행은 읽거
   assert.equal(n1CourseForRoute(5, 'WORDLE').category, 'WORDLE');
   assert.equal(n1CourseForRoute(7).category, 'READING');
   assert.equal(await getN1Arena(prisma, 99, ''), null);
-  assert.ok([...saved.keys()].every(id => id.startsWith('n1-q3-')));
+  assert.equal(await getN1Arena(prisma, 6, 'MOCK_EXAM'), null);
+});
+
+test('DB에서 수정한 내용을 그대로 출제하며 비활성 문제나 코드 원본으로 대체하지 않는다', async () => {
+  const first = await getN1Arena(prisma, 7, 'READING', rng(3));
+  const quiz = saved.get(first.quizzes[0].id);
+  const original = quiz.questionText;
+  quiz.questionText = '[N1] DB edited question';
+  const second = await getN1Arena(prisma, 7, 'READING', rng(3));
+  assert.ok(second.quizzes.some(row => row.questionText === '[N1] DB edited question'));
+  quiz.status = 'ARCHIVED';
+  const third = await getN1Arena(prisma, 7, 'READING', rng(3));
+  assert.ok(third.quizzes.every(row => row.id !== quiz.id));
+  quiz.questionText = original;
+  quiz.status = 'ACTIVE';
+  const empty = { ...prisma, quiz: { findMany: async () => [] } };
+  assert.equal(await getN1Arena(empty, 7, 'READING'), null);
 });

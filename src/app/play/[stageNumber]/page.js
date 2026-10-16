@@ -65,8 +65,8 @@ export default function PlayStagePage({ params }) {
   // ⚔️ 문장 조립판 상태
   const [assemblyPads, setAssemblyPads] = useState([]);
 
-  // 📝 최종 진단 아레나 전용 상태 (초보 10분 / N1 15분)
-  const [mockTimer, setMockTimer] = useState(() => isBeginner ? 600 : 900);
+  // 초보 실력 진단 전용 상태 (10분)
+  const [mockTimer, setMockTimer] = useState(600);
 
   // 🖌️ [구글 실시간 손글씨 해독 주관식그림판] 핵심 엔진 상태 및 Refs
   const [isDrawingOpen, setIsDrawingOpen] = useState(true);
@@ -270,6 +270,10 @@ export default function PlayStagePage({ params }) {
 
   // 1. 선택한 트랙·난이도·아레나의 퀴즈 데이터 로드
   useEffect(() => {
+    if (!isBeginner && stageNumber === 6) {
+      router.replace('/mock-exam');
+      return;
+    }
     async function loadData() {
       setLoading(true);
       try {
@@ -306,12 +310,12 @@ export default function PlayStagePage({ params }) {
     timerRef.current = setInterval(() => {
       setTimeTaken(prev => prev + 1);
       
-      // 📝 6코스 하프 모의고사 역카운트다운 타이머
+      // 초보 실력 진단 역카운트다운
       if (stageNumber === 6) {
         setMockTimer(prev => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
-            // 15분 만료 시 강제 시험 완수 및 결과 공개
+            // 초보 실력 진단의 제한 시간 만료
             setGameCompleted(true);
             return 0;
           }
@@ -990,7 +994,7 @@ export default function PlayStagePage({ params }) {
             </div>
           )}
 
-          {/* 📝 15분 하프 모의고사 역카운트다운 타이머 바 */}
+          {/* 초보 실력 진단 역카운트다운 타이머 */}
           {stageNumber === 6 && !submitted && (
             <div style={{ 
               marginTop: '14px', 
@@ -1004,7 +1008,7 @@ export default function PlayStagePage({ params }) {
               animation: 'pulse 2s infinite' 
             }}>
               <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#ff5e7e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ⏱️ {isBeginner ? '초보 실력 진단 제한시간' : 'N1 하프 모의고사 제한시간'}
+                ⏱️ 초보 실력 진단 제한시간
               </span>
               <span style={{ fontSize: '1.05rem', fontWeight: '950', color: '#ff5e7e', fontFamily: 'monospace' }}>
                 {String(Math.floor(mockTimer / 60)).padStart(2, '0')}:{String(mockTimer % 60).padStart(2, '0')}
@@ -1052,7 +1056,7 @@ export default function PlayStagePage({ params }) {
             </div>
           </div>
 
-          {/* 📝 6코스 N1 하프 모의고사 합격 정밀 진단 3단계 리포트 */}
+          {/* 초보 실력 진단 결과 */}
           {stageNumber === 6 && (
             <div style={{
               marginTop: '24px',
@@ -1064,7 +1068,7 @@ export default function PlayStagePage({ params }) {
               marginBottom: '30px'
             }}>
               <h4 style={{ fontSize: '1.1rem', fontWeight: '950', color: 'var(--accent-color)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📝 {isBeginner ? '초보 종합 실력 진단 결과 리포트' : 'N1 실전 언어지식 진단 결과 리포트'}
+                📝 초보 종합 실력 진단 결과 리포트
               </h4>
               
               {(() => {
@@ -1072,26 +1076,20 @@ export default function PlayStagePage({ params }) {
                 let gradeDesc = '';
                 let gradeColor = '';
                 
-                const topThreshold = isBeginner ? 9 : 13;
-                const passThreshold = isBeginner ? 6 : 9;
+                const topThreshold = 9;
+                const passThreshold = 6;
 
                 if (userScore >= topThreshold) {
-                  gradeTitle = isBeginner ? '🏆 기초 실력 우수 (READY-UP)' : '🏆 최우수 합격 안정권 (TOP-CLASS)';
-                  gradeDesc = isBeginner
-                    ? `${beginnerLevelLabel} 기초 문자·어휘·문법·청해를 고르게 익혔습니다. 다음 난이도에도 충분히 도전할 수 있습니다!`
-                    : '어휘, 문법, 독해 기초 전 분야에서 극도의 무결점 실력을 입증하셨습니다. 실전 시험장에서 문자·어휘 파트를 10분 내 해결하고 독해 파트 골든타임을 확보할 준비가 끝났습니다!';
+                  gradeTitle = '🏆 기초 실력 우수 (READY-UP)';
+                  gradeDesc = `${beginnerLevelLabel} 기초 문자·어휘·문법·청해를 고르게 익혔습니다. 다음 난이도에도 충분히 도전할 수 있습니다!`;
                   gradeColor = '#1dd1a1';
                 } else if (userScore >= passThreshold) {
-                  gradeTitle = isBeginner ? '📈 기초 성장권 (ON-TRACK)' : '📈 합격 우수권 (SAFE-PASS)';
-                  gradeDesc = isBeginner
-                    ? '기본기는 잘 잡혀 있습니다. 틀린 문자와 단어를 오답노트로 한 번 더 복습하면 다음 단계가 훨씬 수월해집니다.'
-                    : '안정적으로 N1 합격을 거머질 수 있는 단단한 기초 체력을 다지셨습니다. 헷갈린 문장 조립이나 NHK 받아쓰기 시사 오답들만 에빙하우스 SRS 복습으로 가볍게 메워주시면 충분합니다!';
+                  gradeTitle = '📈 기초 성장권 (ON-TRACK)';
+                  gradeDesc = '기본기는 잘 잡혀 있습니다. 틀린 문자와 단어를 오답노트로 한 번 더 복습하면 다음 단계가 훨씬 수월해집니다.';
                   gradeColor = 'var(--accent-color)';
                 } else {
-                  gradeTitle = isBeginner ? '🌱 기초 복습 권장 (KEEP-GROWING)' : '🚨 과락 경계 요망 (WEAK-POINT DETECTED)';
-                  gradeDesc = isBeginner
-                    ? '처음부터 잘할 필요는 없습니다. 문자 아레나부터 천천히 반복하고 틀린 문제를 오답노트에서 다시 만나보세요.'
-                    : 'N1 합격을 위해 어휘력과 조사 조립 훈련의 집중 보완이 시급한 수준입니다. 대시보드의 N1 필수 어휘 수확과 오답노트 5단계 사냥 훈련을 반복하여 맹점을 메워주세요!';
+                  gradeTitle = '🌱 기초 복습 권장 (KEEP-GROWING)';
+                  gradeDesc = '처음부터 잘할 필요는 없습니다. 문자 아레나부터 천천히 반복하고 틀린 문제를 오답노트에서 다시 만나보세요.';
                   gradeColor = '#ff6b6b';
                 }
                 
@@ -1105,7 +1103,7 @@ export default function PlayStagePage({ params }) {
                     </p>
                     
                     <div style={{ marginTop: '16px', background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
-                      ⏱️ <strong>{isBeginner ? '남은 제한시간' : '실전 독해 세이브 가능 예상 시간'}</strong>: {Math.max(0, Math.floor(mockTimer / 60))}분 {mockTimer % 60}초 남김{isBeginner ? '' : ' (독해 영역에 이 시간을 고스란히 추가 투자할 수 있습니다!)'}
+                      ⏱️ <strong>남은 제한시간</strong>: {Math.max(0, Math.floor(mockTimer / 60))}분 {mockTimer % 60}초 남김
                     </div>
                   </div>
                 );

@@ -53,6 +53,7 @@ export async function GET(request, { params }) {
     const requestedCategory = searchParams.get('category') || '';
     
     if (jlptLevel === 'N1') {
+      if (stageNumber === 6) return NextResponse.json({ success: false, redirectTo: '/mock-exam' }, { status: 410 });
       const result = await getN1Arena(prisma, stageNumber, requestedCategory);
       if (!result) return NextResponse.json({ success: false, error: '아레나 정보를 찾을 수 없습니다.' }, { status: 404 });
       return NextResponse.json({ success: true, stage: result.stage, quizzes: result.quizzes.map(prepareQuizForClient) });
@@ -63,6 +64,8 @@ export async function GET(request, { params }) {
       const sample = async (where, take) => {
         const fullWhere = {
           ...where,
+          jlptLevel: 'BEGINNER',
+          status: 'ACTIVE',
           questionText: { contains: tag }
         };
         const count = await prisma.quiz.count({ where: fullWhere });
@@ -118,12 +121,13 @@ export async function GET(request, { params }) {
       return NextResponse.json({ success: false, error: '존재하지 않는 스테이지입니다.' }, { status: 404 });
     }
 
-    // 2. 다차원 메타 태그 검색 쿼리 수행
-    // [N2-EASY], [N1-HARD] 등 본문 접두사 매핑
+    // 초보 트랙은 DB에 저장된 난이도별 문제를 조회한다.
     const metaSearchTag = `[${jlptLevel}-${difficulty}]`;
 
     const quizWhere = {
       stageId: stage.id,
+      jlptLevel: 'BEGINNER',
+      status: 'ACTIVE',
       questionText: {
         contains: metaSearchTag
       }

@@ -1,57 +1,10 @@
-import fs from 'fs';
-import path from 'path';
 import prisma from '@/lib/prisma';
 import ClientDashboard from './ClientDashboard';
 import ClientSeedButton from './ClientSeedButton';
 
 export const dynamic = 'force-dynamic';
 
-// Vercel 런타임 자가 복구 헬퍼 (데이터 없을 시 완제품 template.db 자동 복제)
-async function ensureDatabaseIsReady() {
-  const dbUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
-  if (!dbUrl.startsWith('file:')) {
-    return; // PostgreSQL 등 외부 클라우드 DB는 자가 복구 불요
-  }
-
-  let shouldCopy = false;
-  try {
-    const userCount = await prisma.user.count();
-    const stageCount = await prisma.stage.count();
-    if (userCount === 0 || stageCount === 0) {
-      shouldCopy = true;
-    }
-  } catch (dbError) {
-    shouldCopy = true;
-  }
-
-  if (shouldCopy) {
-    console.log("[HOME ENGINE] DB 데이터가 비어 있거나 테이블이 존재하지 않습니다. SQLite 템플릿 복사를 수행합니다...");
-    try {
-      const srcDbPath = path.join(process.cwd(), 'prisma', 'template.db');
-      
-      const rawPath = dbUrl.replace(/^file:/, '');
-      const destDbPath = path.isAbsolute(rawPath) 
-        ? rawPath 
-        : path.join(process.cwd(), rawPath);
-
-      if (fs.existsSync(srcDbPath)) {
-        const destDir = path.dirname(destDbPath);
-        if (!fs.existsSync(destDir)) {
-          fs.mkdirSync(destDir, { recursive: true });
-        }
-        fs.copyFileSync(srcDbPath, destDbPath);
-        console.log("[HOME ENGINE] 완제품 SQLite 템플릿 복사 완료!");
-      }
-    } catch (copyError) {
-      console.error("[HOME ENGINE] DB 자가 복구 실패:", copyError);
-    }
-  }
-}
-
 export default async function HomePage() {
-  // 런타임 DB 체크 및 자가 복구
-  await ensureDatabaseIsReady();
-
   // 홈 화면은 초기화 여부 판별에 스테이지 개수만 필요하다.
   // 퀴즈 전체를 Client Component에 전달하면 RSC 응답이 수 MB까지 커진다.
   let stageCount = 0;
@@ -94,7 +47,7 @@ export default async function HomePage() {
           <h2 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '16px' }}>학습 데이터베이스 준비 완료!</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', marginBottom: '32px', fontSize: '0.95rem' }}>
             성공적으로 독립 데이터베이스가 연동되었습니다! 아래 버튼을 한 번만 클릭해 주시면 
-            <strong> 히라가나부터 TTS 청해, 일본어 워들까지 포함된 고품질 시드 데이터(25문항)</strong>를 즉시 자동 주입합니다.
+            <strong> 현재 N1·초보 아레나의 학습 데이터</strong>를 준비합니다.
           </p>
           {showSeedControls ? (
             <ClientSeedButton />

@@ -46,10 +46,20 @@ model Quiz {
   wrongAnswers  String // JSON 배열 문자열
   hint          String?
 
+  // Existing rows stay archived until explicitly reviewed and activated.
+  jlptLevel     String @default("LEGACY")
+  arenaCategory String @default("LEGACY")
+  itemType      String @default("LEGACY")
+  status        String @default("ARCHIVED")
+  stimulusId    String?
+  examOrder     Int?
+  examDomain    String?
+
   attempts   QuizAttempt[]
   wrongNotes WrongAnswer[]
 
   @@index([stageId])
+  @@index([jlptLevel, arenaCategory, status])
 }
 
 model Bookmark {
