@@ -1,14 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import { legacyN1Assembly } from '../src/data/n1LegacyAssembly.mjs';
 
 function loadAssemblyQuizzes() {
-  const source = fs.readFileSync('src/app/api/stages/[stageNumber]/route.js', 'utf8');
-  const declaration = source.indexOf('const assemblyQuizzes = [');
-  const arrayStart = source.indexOf('[', declaration);
-  const arrayEnd = source.indexOf('\n      ];', arrayStart);
-  assert.ok(declaration >= 0 && arrayEnd > arrayStart, 'N1 문장조립 문제 배열을 찾을 수 없습니다.');
-  return Function(`"use strict"; return ${source.slice(arrayStart, arrayEnd + 8)}`)();
+  return legacyN1Assembly;
 }
 
 const quizzes = loadAssemblyQuizzes();

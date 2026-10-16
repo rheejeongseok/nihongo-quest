@@ -63,9 +63,10 @@ export default function JlptTimer() {
 
   return (
     <div className='count-timer' style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+      <span className="count-timer-summary">D-{timeLeft.days}</span>
       {units.map((unit) => (
-        <div key={unit.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{
+        <div className="count-timer-unit" key={unit.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="count-timer-value" style={{
             minWidth: '54px',
             height: '54px',
             background: 'var(--bg-secondary)',

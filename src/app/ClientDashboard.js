@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import JlptTimer from './JlptTimer';
 import { showToast } from '@/lib/toast';
+import ReadableText from './ReadableText';
+import { N1_COURSES } from '@/data/n1Courses.mjs';
 
 const BEGINNER_CONVERSATIONS = [
   {
@@ -99,7 +101,6 @@ export default function ClientDashboard({ showSeedControls = false }) {
   const searchParams = useSearchParams();
 
   const [user, setUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [targetLevel, setTargetLevel] = useState('N1');
   const [isArenaModalOpen, setIsArenaModalOpen] = useState(false);
@@ -107,12 +108,12 @@ export default function ClientDashboard({ showSeedControls = false }) {
   // --- 🌱 왕초보 손글씨 캔버스 전용 상태 및 Refs ---
   const [selectedChar, setSelectedChar] = useState({ h: 'あ', k: 'ア', r: 'a' });
   const [isHiraganaTab, setIsHiraganaTab] = useState(true);
-  const [brushColor, setBrushColor] = useState('#486b48'); 
+  const [brushColor, setBrushColor] = useState('#486b48');
   const [brushWidth, setBrushWidth] = useState(6);
   const [showStamp, setShowStamp] = useState(false);
   const [confettiParticles, setConfettiParticles] = useState([]);
   const [isCalligraphyModalOpen, setIsCalligraphyModalOpen] = useState(false);
-  
+
   const canvasRef = useRef(null);
   const isDrawingRef = useRef(false);
   const lastXRef = useRef(0);
@@ -126,7 +127,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
     ctx.font = '900 160px "M PLUS Rounded 1c", "NanumSquareRound", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
+
     const isDark = typeof window !== 'undefined' && localStorage.getItem('nihongo_quest_theme') === 'cyber';
     ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
     ctx.fillText(text, width / 2, height / 2);
@@ -187,7 +188,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
     if (!ctx) return;
 
     const coords = getCoordinates(e, canvas);
-    
+
     ctx.strokeStyle = brushColor;
     ctx.lineWidth = brushWidth;
     ctx.lineCap = 'round';
@@ -238,7 +239,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
 
   const handleDrawSuccess = async () => {
     if (showStamp) return;
-    
+
     setShowStamp(true);
     setTimeout(() => setShowStamp(false), 2000);
 
@@ -365,66 +366,8 @@ export default function ClientDashboard({ showSeedControls = false }) {
         }
       ];
     }
-    
-    // N1 마스터 코스 목록
-    return [
-      {
-        id: "stage-1-uuid",
-        stageNumber: 1,
-        title: "시사 한자 & 문자 정복 아레나",
-        category: "CHARACTERS",
-        difficulty: "HARD",
-        desc: "최고난도 기출 한자 쓰기 및 음독/훈독 판독 훈련을 수행합니다."
-      },
-      {
-        id: "stage-2-uuid",
-        stageNumber: 2,
-        title: "최우선순위 1000+ 고급 어휘 아레나",
-        category: "VOCAB",
-        difficulty: "HARD",
-        desc: "문서 해독 및 뉴스 청해에 즉시 쓰이는 고급 비즈니스 필수 어휘를 정복합니다."
-      },
-      {
-        id: "stage-3-uuid",
-        stageNumber: 3,
-        title: "킬러 문법 & 고난도 조사 아레나",
-        category: "GRAMMAR",
-        difficulty: "HARD",
-        desc: "N1 합격을 좌우하는 난해한 기능어 및 접속 규칙 문법을 철저하게 정복합니다."
-      },
-      {
-        id: "stage-4-uuid",
-        stageNumber: 4,
-        title: "NHK 시사 뉴스 청해 배틀 아레나",
-        category: "LISTENING",
-        difficulty: "HARD",
-        desc: "원어민 아나운서의 시사 원문 음성을 듣고 빈칸을 완성하는 딕테이션 훈련입니다."
-      },
-      {
-        id: "stage-5-uuid",
-        stageNumber: 5,
-        title: "고난도 단어 워들 아레나",
-        category: "WORDLE",
-        difficulty: "HARD",
-        desc: "5글자의 복잡한 고난도 명품 한자 단어를 유추해 맞추는 초성 두뇌 워들 게임입니다."
-      },
-      {
-        id: "virtual-stage-5-uuid",
-        stageNumber: 5,
-        title: "최고급 경어 & 문장 조립 아레나",
-        category: "ASSEMBLY",
-        difficulty: "HARD",
-        desc: "N1 킬러 경어와 격식 표현 단어 카드를 결합하여 유려한 격식 비즈니스 문장을 직조합니다."
-      },
-      {
-        id: "virtual-stage-6-uuid",
-        stageNumber: 6,
-        title: "실전 15분 하프 모의고사 아레나",
-        category: "MOCK_EXAM",
-        difficulty: "HARD",
-        desc: "문자·어휘·문법 총 15문항을 N1 황금비율로 무작위 셔플 추출하여 15분 실전 모의고사를 극복합니다."
-      }
-    ];
+
+    return N1_COURSES;
   };
 
   // 실시간 유저 정보 로드
@@ -450,8 +393,6 @@ export default function ClientDashboard({ showSeedControls = false }) {
         }
       } catch (e) {
         console.error(e);
-      } finally {
-        setUserLoading(false);
       }
     }
     loadUser();
@@ -581,13 +522,13 @@ export default function ClientDashboard({ showSeedControls = false }) {
     const getNextJlptExamDate = () => {
       const now = new Date();
       const currentYear = now.getFullYear();
-      
+
       const julyExam = getFirstSundayOfMonth(currentYear, 6); // 7월
       julyExam.setHours(13, 10, 0, 0);
-      
+
       const decExam = getFirstSundayOfMonth(currentYear, 11); // 12월
       decExam.setHours(13, 10, 0, 0);
-      
+
       if (now < julyExam) {
         return { date: julyExam, type: '7월 시험' };
       }
@@ -713,7 +654,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
   const handleDictationSubmit = (newsItem) => {
     const corrects = {};
     let allCorrect = true;
-    
+
     newsItem.n1Words.forEach((wordObj, idx) => {
       const val = (dictationInputs[idx] || '').trim();
       const isCorrect = val === wordObj.word || val === wordObj.reading;
@@ -734,10 +675,6 @@ export default function ClientDashboard({ showSeedControls = false }) {
     }
   };
 
-  // 모달 팝업 상태 관리
-  const [selectedStage, setSelectedStage] = useState(null);
-  const [chosenDifficulty, setChosenDifficulty] = useState('EASY'); // 소분류 기본값: EASY
-
   // 스테이지별 이모지 및 색상 매핑
   const categoryMeta = {
     CALLIGRAPHY: { emoji: '🌱', color: '#486b48', label: '손글씨 연습', mobileTitle: '글자쓰기' },
@@ -745,6 +682,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
     VOCAB: { emoji: '🍱', color: '#ffb37e', label: '어휘 마스터', mobileTitle: '어휘마스터' },
     GRAMMAR: { emoji: '⚙️', color: '#a6cf98', label: '문법 조사', mobileTitle: '문법조사' },
     LISTENING: { emoji: '🎧', color: '#90b4fc', label: '청해 배틀', mobileTitle: '청해배틀' },
+    READING: { emoji: '📖', color: '#b19ffb', label: '독해', mobileTitle: '독해' },
     WORDLE: { emoji: '🧩', color: '#b19ffb', label: '단어 워들', mobileTitle: '단어워들' },
     ASSEMBLY: { emoji: '⚔️', color: '#ffd32a', label: '문장 조립', mobileTitle: '문장조립' },
     MOCK_EXAM: { emoji: '📝', color: '#ff5e7e', label: '모의고사', mobileTitle: '모의고사' }
@@ -773,14 +711,18 @@ export default function ClientDashboard({ showSeedControls = false }) {
     }
   };
 
-  const openDifficultyModal = (stage) => {
+  const openDifficultyModal = (stage, selectCourse = false) => {
     if (stage.category === 'CALLIGRAPHY') {
       setIsCalligraphyModalOpen(true);
       return;
     }
+    if (targetLevel === 'N1' && !selectCourse) {
+      router.push(`/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
+      return;
+    }
     const allStagesList = getDynamicStages();
     const idx = allStagesList.findIndex(s => s.stageNumber === stage.stageNumber && s.category === stage.category);
-    window.dispatchEvent(new CustomEvent('open-arena-modal', { detail: { stageIndex: idx !== -1 ? idx : 0 } }));
+    window.dispatchEvent(new CustomEvent('open-arena-modal', { detail: { stageIndex: idx !== -1 ? idx : 0, selectCourse } }));
   };
 
   // 🏟️ 다른 페이지에서 드로워 메뉴 클릭 후 넘어온 경우 파라미터 감지
@@ -799,13 +741,6 @@ export default function ClientDashboard({ showSeedControls = false }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, targetLevel]);
 
-  const handleStartPlay = () => {
-    if (!selectedStage) return;
-    const learningTrack = targetLevel === 'BEGINNER' ? 'BEGINNER' : 'N1';
-    router.push(`/play/${selectedStage.stageNumber}?jlptLevel=${learningTrack}&difficulty=${chosenDifficulty}&category=${selectedStage.category}`);
-    setSelectedStage(null); // 모달 닫기
-  };
-
   // 🔮 [3.8.8 명품 글래스모피즘] 3D 입체 틸트 & 마우스 광택 실시간 좌표 핸들러
   const handleMouseMove = (e) => {
     // 모바일(768px 이하) 혹은 터치 기기에서는 스크롤 및 레이아웃을 위해 틸트 작동을 완전히 배제
@@ -817,14 +752,14 @@ export default function ClientDashboard({ showSeedControls = false }) {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const xc = x / rect.width - 0.5;
     const yc = y / rect.height - 0.5;
-    
+
     // 큰 카드 영역에서도 심한 요동 없이 우아하고 기품 있게 3도로 정밀 완화
-    const rotateX = yc * -3; 
+    const rotateX = yc * -3;
     const rotateY = xc * 3;
-    
+
     card.style.transform = `perspective(62.5rem) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.008)`;
     card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
     card.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
@@ -839,23 +774,26 @@ export default function ClientDashboard({ showSeedControls = false }) {
   };
 
   return (
-    <div>      {/* 0. 개발 환경 전용 데이터 동기화 패널 */}
+    <div>
+      <div className="dashboard-overview">
+      {/* 0. 개발 환경 전용 데이터 동기화 패널 */}
       {showSeedControls && (
-      <div className="glass-premium-card rainbow-border sync-panel-premium" 
-        onMouseMove={handleMouseMove} 
+      <div className="glass-premium-card rainbow-border sync-panel-premium"
+        onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
         <div className="sync-panel-content">
           <span className="sync-panel-title">
-            {targetLevel === 'BEGINNER' ? '🌱 최신 왕초보 문항 데이터 동기화' : '🌱 최신 자격증 문항 데이터 동기화'}
+            <span className="sync-title-full">{targetLevel === 'BEGINNER' ? '🌱 최신 왕초보 문항 데이터 동기화' : '🌱 최신 자격증 문항 데이터 동기화'}</span>
+            <span className="sync-title-short">🌱 {targetLevel === 'BEGINNER' ? '초보 문제' : 'N1 문제'}</span>
           </span>
           <span className="sync-panel-desc">
-            {targetLevel === 'BEGINNER' 
+            {targetLevel === 'BEGINNER'
               ? 'N5~N3 기초 문자·어휘·문법·청해·워들·문장조립 278문제를 초기화 및 갱신합니다.'
-              : '실전 최고난도 JLPT N1 완벽 대비용 초대형 5000+개 퀴즈 풀로 초기화 및 갱신합니다.'}
+              : '기존 풀이 기록을 보존하면서 N1 자체 연습문제 데이터를 동기화합니다.'}
           </span>
         </div>
-        
+
         <button
           onClick={handleSyncData}
           disabled={syncing || syncDone}
@@ -866,15 +804,15 @@ export default function ClientDashboard({ showSeedControls = false }) {
           ) : syncDone ? (
             <>🎉 성공! 새로고침 중...</>
           ) : (
-            <>{targetLevel === 'BEGINNER' ? '🌱 초보 278문항 동기화' : '🌱 5000+ 문항 강제 동기화'}</>
+            <><span className="sync-action-full">{targetLevel === 'BEGINNER' ? '🌱 초보 278문항 동기화' : '🌱 N1 연습문제 동기화'}</span><span className="sync-action-short">↻ 동기화</span></>
           )}
         </button>
       </div>
       )}
 
       {/* 📅 실시간 JLPT D-Day 카운트다운 & 접수 안내 보드 */}
-      <div className="glass-premium-card rainbow-border dday-countdown-card" 
-        onMouseMove={handleMouseMove} 
+      <div className="glass-premium-card rainbow-border dday-countdown-card"
+        onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
           marginBottom: '32px',
@@ -887,9 +825,9 @@ export default function ClientDashboard({ showSeedControls = false }) {
           gap: '20px'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))', animation: 'float 3s infinite' }}>📅</span>
-          <div>
+        <div className="dday-heading" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span className="dday-icon" style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))', animation: 'float 3s infinite' }}>📅</span>
+          <div className="dday-details">
             <h4 className='count-title' style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {targetLevel === 'BEGINNER' ? 'JLPT N5~N3 D-Day' : 'JLPT N1 D-Day'}
               <span style={{
@@ -905,7 +843,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
               </span>
             </h4>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '600' }}>
-              목표 시험 일시: <strong style={{ color: 'var(--accent-color)' }}>{examInfo.dateStr} 13:10</strong>
+              <span className="dday-date-prefix">목표 시험 일시: </span><strong style={{ color: 'var(--accent-color)' }}>{examInfo.dateStr} 13:10</strong>
             </p>
           </div>
         </div>
@@ -932,9 +870,9 @@ export default function ClientDashboard({ showSeedControls = false }) {
             <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#ff6b6b', display: 'flex', alignItems: 'center', gap: '6px' }}>
               🚨 긴급 알림: 현재 JLPT 공식 원서 접수 기간입니다!
             </span>
-            <a 
-              href="https://www.jlpt.or.kr" 
-              target="_blank" 
+            <a
+              href="https://www.jlpt.or.kr"
+              target="_blank"
               rel="noopener noreferrer"
               className="glow-btn"
               style={{
@@ -951,105 +889,105 @@ export default function ClientDashboard({ showSeedControls = false }) {
         )}
       </div>
 
-      {/* 1. 상단 정보 대시보드 카드 그리드 */}
-      <div className="dashboard-info-grid">
-        
-        {/* 프로필 및 포인트 카드 */}
-        <div className="glass-premium-card rainbow-border info-card-wrapper" 
-          onMouseMove={handleMouseMove} 
-          onMouseLeave={handleMouseLeave}
-        >
-          <div className="card-header-group">
-            <h3 className="card-title">
-              {userLoading ? (
-                <span className="card-skeleton-pulse">사용자 로드 중...</span>
-              ) : (
-                `👋 어서오세요, ${user?.username || '학습자'}님!`
-              )}
-            </h3>
-            <p className="card-desc">
-              {userLoading ? "실시간 클라우드 프로필을 동기화하고 있습니다..." : "오늘도 즐거운 일본어 모험이 당신을 기다립니다."}
-            </p>
-          </div>
-          <div className="card-footer-group">
-            <div>
-              <span className="card-stat-label">누적 포인트</span>
-              <span className="card-stat-value">
-                {userLoading ? "..." : user?.points} <span className="card-stat-unit">pts</span>
-              </span>
-            </div>
-            <span className="card-large-emoji">🏆</span>
-          </div>
-        </div>
-
-        {/* 일일 학습 스트릭 카드 */}
-        <div className="glass-premium-card rainbow-border info-card-wrapper" 
-          onMouseMove={handleMouseMove} 
-          onMouseLeave={handleMouseLeave}
-        >
-          <div className="card-header-group">
-            <h3 className="card-title">
-              🔥 일일 학습 스트릭
-            </h3>
-            <p className="card-desc">
-              매일 연속으로 학습을 이어가고 스트릭 불꽃을 꺼뜨리지 마세요!
-            </p>
-          </div>
-          <div className="card-footer-group">
-            <div>
-              <span className="card-stat-value streak-color">
-                {userLoading ? "..." : user?.currentStreak} <span className="card-stat-unit-text">일째 연속</span>
-              </span>
-              <span className="card-stat-label-small">
-                최대 기록: {userLoading ? "..." : user?.maxStreak}일 연속 학습
-              </span>
-            </div>
-            {/* 스트릭 잔디 심기 미니 연출 */}
-            <div className="streak-grass-container">
-              {[1, 2, 3, 4, 5].map((day) => (
-                <div 
-                  key={day}
-                  className={`streak-grass-node ${(!userLoading && day <= (user?.currentStreak || 0)) ? 'active' : 'inactive'}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 스마트 복습 & 단어 센터 (비로그인 환경 최적화 퀵 패스) */}
-        <div className="glass-premium-card rainbow-border info-card-wrapper large-card" 
-          onMouseMove={handleMouseMove} 
-          onMouseLeave={handleMouseLeave}
-        >
-          <div className="card-header-group">
-            <h3 className="card-title">
-              🎯 스마트 복습 & 단어 센터
-            </h3>
-            <p className="card-desc">
-              틀린 오답을 복습하고, 퀴즈 도중 수집한 나만의 단어장을 한눈에 관리하세요.
-            </p>
-          </div>
-
-          <div className="study-hub-box">
+      <nav className="dashboard-review-links" aria-label="복습 바로가기">
             <a href="/wrong-notes" className="study-hub-item wrong-hub">
-              <span>📓 스마트 오답노트 복습</span>
+              <span>📓 오답노트</span>
               <span className="pulse-ani study-hub-badge wrong-badge">
                 {wrongCount}개 대기
               </span>
             </a>
 
             <a href="/bookmarks" className="study-hub-item bookmark-hub">
-              <span>⭐ 나의 일본어 단어장</span>
+              <span>⭐ 단어장</span>
               <span className="study-hub-badge bookmark-badge">
                 {bookmarkCount}개 단어
               </span>
             </a>
-          </div>
-        </div>
+      </nav>
+      </div>
+      {/* 아레나를 뉴스보다 먼저 표시한다. 모바일은 코스 선택 아이콘으로 진입한다. */}
+      <div className="arena-section-container pc-only">
+        <h2 className="arena-section-title">
+          🏟️ {targetLevel === 'BEGINNER' ? '왕초보 스타터 아레나 (Beginner Quest)' : 'N1 실전 아레나 (N1 Extreme Masters)'}
+        </h2>
 
+        <div className="arena-cards-grid">
+          {getDynamicStages().map((stage) => {
+            const meta = categoryMeta[stage.category] || { emoji: '❓', color: 'gray', label: '학습' };
+            const dynamicLabel = targetLevel === 'BEGINNER' ? {
+              CALLIGRAPHY: "글자 쓰기",
+              CHARACTERS: "기초 문자",
+              VOCAB: "기초 어휘",
+              GRAMMAR: "기초 조사",
+              LISTENING: "일상 청해",
+              WORDLE: "기초 워들",
+              ASSEMBLY: "기초 조립",
+              MOCK_EXAM: "실력 진단"
+            }[stage.category] || meta.label : meta.label;
+
+            return (
+              <div
+                key={stage.id}
+                className="glass-premium-card rainbow-border interactive-arena arena-card-wrapper"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                  boxShadow: `0 8px 30px rgba(0, 0, 0, 0.02), 0 0 20px ${meta.color}0a`
+                }}
+              >
+                {/* 상단: 카테고리 정보 및 아이콘 */}
+                <div className="arena-card-body-wrapper">
+                  <div className="arena-card-top">
+                    <span className="arena-card-emoji">{meta.emoji}</span>
+                    <span
+                      className="arena-card-badge"
+                      style={{
+                        background: `${meta.color}22`,
+                        color: meta.color,
+                        border: `1px solid ${meta.color}66`
+                      }}
+                    >
+                      {dynamicLabel}
+                    </span>
+                  </div>
+
+                  <h4 className="arena-card-title">
+                    {stage.title}
+                  </h4>
+
+                  <p className="arena-card-desc">
+                    {stage.desc || (targetLevel === 'BEGINNER'
+                      ? 'N5~N3 기초 문제 풀에서 무작위 라이브 추출'
+                      : 'N1 출제 유형에 맞춘 자체 연습문제를 무작위 출제')}
+                  </p>
+                </div>
+
+                {/* 하단: 입장 버튼 및 매칭 명세 */}
+                <div className="arena-card-footer">
+                  {targetLevel === 'N1' && stage.category === 'VOCAB' && (
+                    <button className="outline-btn arena-card-btn" onClick={() => router.push('/play/5?jlptLevel=N1&category=WORDLE')}>🧩 워들 복습</button>
+                  )}
+                  <span className="arena-card-footer-label">
+                    독자 아레나 코스
+                  </span>
+                  <button
+                    onClick={() => openDifficultyModal(stage)}
+                    className="glass-neon-btn arena-card-btn"
+                  >
+                    아레나 입장 ➔
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* 1.5. [N1 PREMIUM / BEGINNER DAILY] 랜덤 뉴스 및 회화 브리핑 */}
+      {targetLevel === 'N1' && <div className="arena-practice-actions pc-only">
+        <button className="glass-neon-btn" onClick={() => router.push('/play/6?jlptLevel=N1&category=MOCK_EXAM')}>📝 15분 종합 연습</button>
+        <span>문자·어휘 · 문법·문장 구성 · 청해 · 독해를 섞어 연습합니다.</span>
+      </div>}
+      {/* 뉴스 및 회화 브리핑 */}
       <div ref={newsSectionRef} className="glass-premium-card rainbow-border nhk-news-briefing-card">
         <div className="nhk-news-header">
           <div className="nhk-news-header-title-box">
@@ -1057,8 +995,8 @@ export default function ClientDashboard({ showSeedControls = false }) {
               {targetLevel === 'BEGINNER' ? '🌸 왕초보 일상 회화 & 애니 딕테이션 브리핑' : '📰 일본 최신 시사 & 사회 뉴스 브리핑'}
             </h2>
             <p className="nhk-news-header-desc">
-              {targetLevel === 'BEGINNER' 
-                ? '친근한 애니메이션 명대사와 실생활 상황극 대화로 기초 표현 및 청해력을 기르세요' 
+              {targetLevel === 'BEGINNER'
+                ? '친근한 애니메이션 명대사와 실생활 상황극 대화로 기초 표현 및 청해력을 기르세요'
                 : '매일 수집한 최신 일본 뉴스 100건 중 무작위 10건으로 N1 핵심 어휘를 학습하세요'}
             </p>
           </div>
@@ -1121,8 +1059,8 @@ export default function ClientDashboard({ showSeedControls = false }) {
             {nhkNews.map((item, idx) => {
               const isExpanded = expandedNews === idx;
               return (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className={`nhk-news-item ${isExpanded ? 'active' : ''}`}
                 >
                   {/* 뉴스 제목 및 간략 보기 영역 */}
@@ -1135,8 +1073,8 @@ export default function ClientDashboard({ showSeedControls = false }) {
                   >
                     <div className="nhk-news-item-title-row">
                       <span className="nhk-news-emoji">{targetLevel === 'BEGINNER' ? '🌸' : '📰'}</span>
-                      <h4 className="nhk-news-item-title">{item.title}</h4>
-                      
+                      <h4 className="nhk-news-item-title"><ReadableText text={item.title} /></h4>
+
                       <span className="nhk-toggle-arrow" aria-hidden="true">상세 보기 ↗</span>
                     </div>
                     <div className="nhk-news-meta-row">
@@ -1174,7 +1112,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                             <span className="news-detail-modal-eyebrow">
                               {targetLevel === 'BEGINNER' ? '🌸 일상 회화 학습' : `📰 ${item.sourceName || '일본 뉴스'}`}
                             </span>
-                            <h2 id={`news-modal-title-${idx}`}>{item.title}</h2>
+                            <h2 id={`news-modal-title-${idx}`}><ReadableText text={item.title} /></h2>
                             <div className="news-detail-modal-meta">
                               <span>
                                 {item.pubDate ? new Date(item.pubDate).toLocaleDateString('ko-KR', {
@@ -1205,7 +1143,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                           )}
                       <p className="nhk-news-raw-desc">
                         <strong>{targetLevel === 'BEGINNER' ? '[회화 지문]' : '[일본어 원문]'}</strong><br />
-                        {item.description}
+                        <ReadableText text={item.description} />
                       </p>
 
                       {/* 딕테이션 버튼 그룹 */}
@@ -1217,7 +1155,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                         >
                           🔊 전체 지문 발음 청취 (TTS)
                         </button>
-                        
+
                         <button
                           onClick={() => {
                             if (dictatingNews === idx) {
@@ -1346,7 +1284,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                           )}
                         </div>
                       )}
-                      
+
                       <div className="nhk-news-analysis-box">
                         {/* 1. 핵심 어휘집 */}
                         <div className="nhk-analysis-subsect">
@@ -1362,7 +1300,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                                       <span className="nhk-word-meaning">{wordObj.meaning}</span>
                                     </div>
                                   </div>
-                                  
+
                                   {/* 🌾 단어 즉시 수확 뱃지 */}
                                   <button
                                     onClick={() => handleHarvestWord(wordObj)}
@@ -1411,10 +1349,10 @@ export default function ClientDashboard({ showSeedControls = false }) {
                             </button>
                           </div>
                         )}
-                        <a 
-                          href={targetLevel === 'BEGINNER' ? 'https://ja.dict.naver.com/#/main' : item.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={targetLevel === 'BEGINNER' ? 'https://ja.dict.naver.com/#/main' : item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="nhk-raw-link-btn"
                         >
                           {targetLevel === 'BEGINNER' ? '네이버 일본어 사전 바로가기 🔗' : '기사 원문 보기 🔗'}
@@ -1434,28 +1372,28 @@ export default function ClientDashboard({ showSeedControls = false }) {
 
       {/* 🚀 모바일 전용 아레나 팝업 트리거 단축 버튼 (하단 플로팅 고정 고도화 - React Portal로 스태킹 컨텍스트 완벽 이탈) */}
       {mounted && !isArenaModalOpen && createPortal(
-        <div className="mobile-only animate-scale mo-arena-btn" style={{ 
-          position: 'fixed', 
-          bottom: '1.25rem', 
-          left: '50%', 
-          transform: 'translateX(-50%)', 
-          width: '90%', 
-          maxWidth: '26.25rem', 
-          zIndex: 999999 
+        <div className="mobile-only animate-scale mo-arena-btn" style={{
+          position: 'fixed',
+          bottom: 'max(12px, env(safe-area-inset-bottom))',
+          right: 'calc(max(12px, env(safe-area-inset-right)) + 60px)',
+          zIndex: 4100
         }}>
           <button
             onClick={() => {
-              const startStage = targetLevel === 'BEGINNER' 
-                ? getDynamicStages().find(s => s.category === 'CHARACTERS') 
+              const startStage = targetLevel === 'BEGINNER'
+                ? getDynamicStages().find(s => s.category === 'CHARACTERS')
                 : getDynamicStages()[0];
-              openDifficultyModal(startStage);
+              openDifficultyModal(startStage, true);
             }}
             className="glass-neon-btn"
+            aria-label="아레나 코스 선택"
+            title="아레나 코스 선택"
             style={{
-              width: '100%',
+              width: '48px',
+              height: '48px',
               justifyContent: 'center',
-              padding: '0.9375rem 1.25rem',
-              fontSize: '0.92rem',
+              padding: 0,
+              fontSize: '1.4rem',
               borderRadius: '100px',
               boxShadow: 'var(--neon-glow)',
               backdropFilter: 'blur(0.75rem)',
@@ -1464,86 +1402,11 @@ export default function ClientDashboard({ showSeedControls = false }) {
               border: '1.5px solid var(--accent-color)'
             }}
           >
-            🏟️ {targetLevel === 'BEGINNER' ? '왕초보 스타터 아레나' : 'N1 실전 아레나'} 챌린지 시작하기 ➔
+            <span aria-hidden="true">🏟️</span>
           </button>
         </div>,
         document.body
       )}
-
-      {/* 2. 대망 of 5대 카테고리 독립형 실전 아레나 (PC 전용으로 모바일 은폐) */}
-      <div className="arena-section-container pc-only">
-        <h2 className="arena-section-title">
-          🏟️ {targetLevel === 'BEGINNER' ? '왕초보 스타터 아레나 (Beginner Quest)' : 'N1 실전 아레나 (N1 Extreme Masters)'}
-        </h2>
-        
-        <div className="arena-cards-grid">
-          {getDynamicStages().map((stage) => {
-            const meta = categoryMeta[stage.category] || { emoji: '❓', color: 'gray', label: '학습' };
-            const dynamicLabel = targetLevel === 'BEGINNER' ? {
-              CALLIGRAPHY: "글자 쓰기",
-              CHARACTERS: "기초 문자",
-              VOCAB: "기초 어휘",
-              GRAMMAR: "기초 조사",
-              LISTENING: "일상 청해",
-              WORDLE: "기초 워들",
-              ASSEMBLY: "기초 조립",
-              MOCK_EXAM: "실력 진단"
-            }[stage.category] || meta.label : meta.label;
-            
-            return (
-              <div 
-                key={stage.id}
-                className="glass-premium-card rainbow-border interactive-arena arena-card-wrapper"
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-                style={{
-                  boxShadow: `0 8px 30px rgba(0, 0, 0, 0.02), 0 0 20px ${meta.color}0a`
-                }}
-              >
-                {/* 상단: 카테고리 정보 및 아이콘 */}
-                <div className="arena-card-body-wrapper">
-                  <div className="arena-card-top">
-                    <span className="arena-card-emoji">{meta.emoji}</span>
-                    <span 
-                      className="arena-card-badge"
-                      style={{
-                        background: `${meta.color}22`,
-                        color: meta.color,
-                        border: `1px solid ${meta.color}66`
-                      }}
-                    >
-                      {dynamicLabel}
-                    </span>
-                  </div>
-
-                  <h4 className="arena-card-title">
-                    {stage.title}
-                  </h4>
-                  
-                  <p className="arena-card-desc">
-                    {stage.desc || (targetLevel === 'BEGINNER'
-                      ? 'N5~N3 기초 문제 풀에서 무작위 라이브 추출'
-                      : '5,000+개 N1 최고난도 기출 풀에서 무작위 라이브 추출')}
-                  </p>
-                </div>
-
-                {/* 하단: 입장 버튼 및 매칭 명세 */}
-                <div className="arena-card-footer">
-                  <span className="arena-card-footer-label">
-                    독자 아레나 코스
-                  </span>
-                  <button 
-                    onClick={() => openDifficultyModal(stage)}
-                    className="glass-neon-btn arena-card-btn" 
-                  >
-                    아레나 입장 ➔
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* ==================== [3.0 JLPT 5대 아레나 실시간 통합 변경 + 상중하 난이도 조절 우아한 모달 팝업] ==================== */}
       {/* 공통 Header.js 에서 관리하는 글로벌 아레나 모달이 렌더링되므로, 이 파일 내 중복 팝업은 완전 제거합니다. */}
@@ -1552,7 +1415,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
       {confettiParticles.length > 0 && (
         <div className="pure-confetti-container">
           {confettiParticles.map((p) => (
-            <div 
+            <div
               key={p.id}
               className="pure-confetti-particle"
               style={{
@@ -1573,7 +1436,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
           if (e.target === e.currentTarget) setIsCalligraphyModalOpen(false);
         }}>
           <div className="calligraphy-modal-window">
-            
+
             {/* 모달 헤더 */}
             <div className="calligraphy-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1583,7 +1446,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>히라가나/가타카나 표준 50음도 정복 코스</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsCalligraphyModalOpen(false)}
                 className="calligraphy-modal-close-btn"
                 title="코스 종료 및 대시보드로 돌아가기"
@@ -1595,18 +1458,18 @@ export default function ClientDashboard({ showSeedControls = false }) {
             {/* 모달 바디 */}
             <div className="calligraphy-modal-body">
               <div className="beginner-quest-board">
-                
+
                 {/* 좌측: 50음도 그리드 */}
                 <div className="beginner-left-pane">
                   <div className="beginner-tabs-container">
                     <div className="beginner-tabs">
-                      <button 
+                      <button
                         onClick={() => { setIsHiraganaTab(true); clearCanvas(); }}
                         className={`beginner-tab-btn ${isHiraganaTab ? 'active' : ''}`}
                       >
                         히라가나 (ひらがな)
                       </button>
-                      <button 
+                      <button
                         onClick={() => { setIsHiraganaTab(false); clearCanvas(); }}
                         className={`beginner-tab-btn ${!isHiraganaTab ? 'active' : ''}`}
                       >
@@ -1623,7 +1486,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                         }
                         const isSelected = selectedChar.h === char.h;
                         return (
-                          <div 
+                          <div
                             key={char.h}
                             onClick={() => {
                               setSelectedChar(char);
@@ -1652,7 +1515,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
 
                     <div className="canvas-container-relative">
                       <div className="canvas-traditional-grid-bg" />
-                      <canvas 
+                      <canvas
                         ref={canvasRef}
                         onMouseDown={startDrawing}
                         onMouseMove={draw}
@@ -1663,7 +1526,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                         onTouchEnd={(e) => { e.preventDefault(); stopDrawing(); }}
                         className="drawing-canvas"
                       />
-                      
+
                       {/* 스탬프 레이어 */}
                       <div className={`canvas-stamp-overlay ${showStamp ? 'show' : ''}`}>
                         💮
@@ -1682,7 +1545,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                             { color: '#ffd32a', label: '선샤인 옐로' },
                             { color: '#2d382e', label: '진한 묵즙' }
                           ].map((c) => (
-                            <div 
+                            <div
                               key={c.color}
                               onClick={() => setBrushColor(c.color)}
                               className={`color-chip ${brushColor === c.color ? 'active' : ''}`}
@@ -1703,7 +1566,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
                             { size: 10, label: '두껍게' },
                             { size: 15, label: '아주두껍게' }
                           ].map((b) => (
-                            <button 
+                            <button
                               key={b.size}
                               onClick={() => setBrushWidth(b.size)}
                               className={`brush-btn ${brushWidth === b.size ? 'active' : ''}`}

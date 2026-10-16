@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { createHash, timingSafeEqual } from 'crypto';
 import { buildBeginnerQuizzes } from '@/data/beginnerQuizzes.mjs';
+import { buildN1Quizzes } from '@/data/n1QualityQuizzes.mjs';
 
 // https://news.web.nhk/newsweb 참조 할 사이트
 
@@ -3563,6 +3564,13 @@ export async function POST(request) {
       });
     });
 
+    quizzesToInsert.push(...buildN1Quizzes({
+      1: stage1.id,
+      2: stage2.id,
+      3: stage3.id,
+      4: stage4.id,
+      5: stage5.id
+    }));
     quizzesToInsert.push(...buildBeginnerQuizzes({
       1: stage1.id,
       2: stage2.id,

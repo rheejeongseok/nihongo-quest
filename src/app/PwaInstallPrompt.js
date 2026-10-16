@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { showToast } from '@/lib/toast';
 
 export default function PwaInstallPrompt() {
+  const pathname = usePathname();
   const [installPrompt, setInstallPrompt] = useState(null);
   const [isIos, setIsIos] = useState(false);
   const [isInstalled, setIsInstalled] = useState(true);
@@ -40,7 +42,7 @@ export default function PwaInstallPrompt() {
     };
   }, []);
 
-  if (isInstalled || (!installPrompt && !isIos)) return null;
+  if (pathname !== '/' || isInstalled || (!installPrompt && !isIos)) return null;
 
   const handleInstall = async () => {
     if (installPrompt) {
@@ -59,9 +61,10 @@ export default function PwaInstallPrompt() {
       className="pwa-install-button"
       onClick={handleInstall}
       aria-label="니혼고퀘스트 앱 설치"
+      title={isIos ? '홈 화면에 추가' : '앱으로 설치'}
     >
       <span aria-hidden="true">📲</span>
-      {isIos ? '홈 화면에 추가' : '앱으로 설치'}
+      <span className="pwa-install-label">{isIos ? '홈 화면에 추가' : '앱으로 설치'}</span>
     </button>
   );
 }

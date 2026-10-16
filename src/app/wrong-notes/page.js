@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
+import ReadableText from '@/app/ReadableText';
 
 export default function WrongNotesPage() {
   const [loading, setLoading] = useState(true);
@@ -444,10 +445,8 @@ export default function WrongNotesPage() {
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
             모든 퀴즈 문제를 완벽하게 통과하셨습니다. 정말 대단한 실력입니다!
           </p>
-          <Link href="/" passHref legacyBehavior>
-            <a className="glow-btn" style={{ padding: '12px 30px', textDecoration: 'none' }}>
-              더 많은 퀴즈 도전하기 ➔
-            </a>
+          <Link href="/" className="glow-btn" style={{ padding: '12px 30px', textDecoration: 'none' }}>
+            더 많은 퀴즈 도전하기 ➔
           </Link>
         </div>
       ) : (
@@ -534,16 +533,16 @@ export default function WrongNotesPage() {
                   <div className="wrong-question-content">
                     {/* 원래 출제 문제 설명 */}
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                      원래 질문: {quiz.questionText
+                      원래 질문: <ReadableText text={quiz.questionText
                         .replace(/\[N(1|2)-(EASY|MEDIUM|HARD)\]\s*/g, '')
                         .replace(/\s*\((정답|정답은|정답인)?\s*:\s*[^)]+\)/g, '')
-                        .replace(/\s*\[(정답|정답은|정답인)?\s*:\s*[^\]]+\]/g, '')}
+                        .replace(/\s*\[(정답|정답은|정답인)?\s*:\s*[^\]]+\]/g, '')} />
                     </span>
                     
                     {/* 단어 및 요미가나 */}
                     <div className="wrong-word-row" style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginTop: '6px' }}>
                       <h4 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)' }}>
-                        {quiz.japaneseWord}
+                        <ReadableText text={quiz.japaneseWord} />
                       </h4>
                       <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
                         [{quiz.pronunciation}]

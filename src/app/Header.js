@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { showToast } from '@/lib/toast';
+import { N1_COURSES } from '@/data/n1Courses.mjs';
 
 const THEMES = [
   { id: 'zen', name: '젠 (Zen)', emoji: '🌸', color: '#557c55' },
@@ -31,6 +32,7 @@ const CATEGORY_META = {
   VOCAB: { emoji: '🍱', color: '#ffb37e', label: '어휘 마스터', mobileTitle: '어휘마스터' },
   GRAMMAR: { emoji: '⚙️', color: '#a6cf98', label: '문법 조사', mobileTitle: '문법조사' },
   LISTENING: { emoji: '🎧', color: '#90b4fc', label: '청해 배틀', mobileTitle: '청해배틀' },
+  READING: { emoji: '📖', color: '#b19ffb', label: '독해', mobileTitle: '독해' },
   WORDLE: { emoji: '🧩', color: '#b19ffb', label: '단어 워들', mobileTitle: '단어워들' },
   ASSEMBLY: { emoji: '⚔️', color: '#ffd32a', label: '문장 조립', mobileTitle: '문장조립' },
   MOCK_EXAM: { emoji: '📝', color: '#ff5e7e', label: '모의고사', mobileTitle: '모의고사' }
@@ -39,25 +41,17 @@ const CATEGORY_META = {
 const getStagesList = (level) => {
   if (level === 'BEGINNER') {
     return [
-      { id: "stage-calligraphy-uuid", stageNumber: 0, title: "문자 비법서 & 손글씨 연습", category: "CALLIGRAPHY" },
-      { id: "stage-1-uuid", stageNumber: 1, title: "기초 문자", category: "CHARACTERS" },
-      { id: "stage-2-uuid", stageNumber: 2, title: "기초 어휘", category: "VOCAB" },
-      { id: "stage-3-uuid", stageNumber: 3, title: "기초 조사", category: "GRAMMAR" },
-      { id: "stage-4-uuid", stageNumber: 4, title: "일상 회화", category: "LISTENING" },
-      { id: "stage-5-uuid", stageNumber: 5, title: "기초 워들", category: "WORDLE" },
-      { id: "virtual-stage-5-uuid", stageNumber: 5, title: "기초 문장 조립", category: "ASSEMBLY" },
-      { id: "virtual-stage-6-uuid", stageNumber: 6, title: "초보 실력 진단", category: "MOCK_EXAM" }
+      { id: 'stage-calligraphy-uuid', stageNumber: 0, title: '문자 비법서 & 손글씨 연습', category: 'CALLIGRAPHY' },
+      { id: 'stage-1-uuid', stageNumber: 1, title: '기초 문자', category: 'CHARACTERS' },
+      { id: 'stage-2-uuid', stageNumber: 2, title: '기초 어휘', category: 'VOCAB' },
+      { id: 'stage-3-uuid', stageNumber: 3, title: '기초 조사', category: 'GRAMMAR' },
+      { id: 'stage-4-uuid', stageNumber: 4, title: '일상 회화', category: 'LISTENING' },
+      { id: 'stage-5-uuid', stageNumber: 5, title: '기초 워들', category: 'WORDLE' },
+      { id: 'virtual-stage-5-uuid', stageNumber: 5, title: '기초 문장 조립', category: 'ASSEMBLY' },
+      { id: 'virtual-stage-6-uuid', stageNumber: 6, title: '초보 실력 진단', category: 'MOCK_EXAM' }
     ];
   }
-  return [
-    { id: "stage-1-uuid", stageNumber: 1, title: "문자 정복", category: "CHARACTERS" },
-    { id: "stage-2-uuid", stageNumber: 2, title: "어휘 마스터", category: "VOCAB" },
-    { id: "stage-3-uuid", stageNumber: 3, title: "문법 조사", category: "GRAMMAR" },
-    { id: "stage-4-uuid", stageNumber: 4, title: "청해 배틀", category: "LISTENING" },
-    { id: "stage-5-uuid", stageNumber: 5, title: "단어 워들", category: "WORDLE" },
-    { id: "virtual-stage-5-uuid", stageNumber: 5, title: "경어랑 조사 문장 조립", category: "ASSEMBLY" },
-    { id: "virtual-stage-6-uuid", stageNumber: 6, title: "실전 15분 모의고사", category: "MOCK_EXAM" }
-  ];
+  return N1_COURSES;
 };
 
 export default function Header() {
@@ -76,6 +70,7 @@ export default function Header() {
 
   // 🏟️ 글로벌 아레나 모달 상태
   const [selectedStage, setSelectedStage] = useState(null);
+  const [showCourseSelection, setShowCourseSelection] = useState(true);
   const [chosenDifficulty, setChosenDifficulty] = useState('EASY');
 
   // ⚡ 글로벌 등급 차원 전환 상태
@@ -147,6 +142,7 @@ export default function Header() {
     if (!mounted) return;
 
     const handleOpenArenaModal = (e) => {
+      setShowCourseSelection(e.detail?.selectCourse !== false);
       const stageIndex = e.detail?.stageIndex ?? 0;
       const stages = getStagesList(targetLevel);
       const stage = stages[stageIndex];
@@ -154,6 +150,11 @@ export default function Header() {
         if (stage.category === 'CALLIGRAPHY') {
           setSelectedStage(null);
           window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
+          return;
+        }
+        if (targetLevel === 'N1' && e.detail?.selectCourse === false) {
+          setSelectedStage(null);
+          router.push(`/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
           return;
         }
         setSelectedStage(stage);
@@ -173,6 +174,8 @@ export default function Header() {
         if (stage.category === 'CALLIGRAPHY') {
           setSelectedStage(null);
           window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
+        } else if (targetLevel === 'N1') {
+          router.push(`/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
         } else {
           setSelectedStage(stage);
           setChosenDifficulty('EASY');
@@ -186,7 +189,7 @@ export default function Header() {
     return () => {
       window.removeEventListener('open-arena-modal', handleOpenArenaModal);
     };
-  }, [mounted, targetLevel]);
+  }, [mounted, targetLevel, router]);
 
   // 1.2 모바일 드로워 오픈 시 뒷배경 바디 스크롤 고정 및 속성 마킹
   useEffect(() => {
@@ -913,15 +916,10 @@ export default function Header() {
                       { stageIndex: 6, emoji: '⚔️', label: '기초 조립', bg: 'rgba(255, 211, 42, 0.09)', color: '#ffd32a' },
                       { stageIndex: 7, emoji: '📝', label: '실력 진단', bg: 'rgba(255, 94, 126, 0.09)', color: '#ff5e7e' }
                     ]
-                  : [
-                      { stageIndex: 0, emoji: '🌸', label: '문자 정복', bg: 'rgba(255, 148, 148, 0.09)', color: '#ff9494' },
-                      { stageIndex: 1, emoji: '🍱', label: '어휘 마스터', bg: 'rgba(255, 179, 126, 0.09)', color: '#ffb37e' },
-                      { stageIndex: 2, emoji: '⚙️', label: '문법 조사', bg: 'rgba(166, 207, 152, 0.09)', color: '#a6cf98' },
-                      { stageIndex: 3, emoji: '🎧', label: '청해 배틀', bg: 'rgba(144, 180, 252, 0.09)', color: '#90b4fc' },
-                      { stageIndex: 4, emoji: '🧩', label: '단어 워들', bg: 'rgba(177, 159, 251, 0.09)', color: '#b19ffb' },
-                      { stageIndex: 5, emoji: '⚔️', label: '문장 조립', bg: 'rgba(255, 211, 42, 0.09)', color: '#ffd32a' },
-                      { stageIndex: 6, emoji: '📝', label: '하프 모의', bg: 'rgba(255, 94, 126, 0.09)', color: '#ff5e7e' }
-                    ]
+                  : N1_COURSES.map((course, stageIndex) => ({
+                      stageIndex, emoji: course.emoji, label: course.title,
+                      bg: 'var(--bg-secondary)', color: course.color
+                    }))
                 ).map(({ stageIndex, emoji, label, bg, color, full }) => (
                   <button
                     key={stageIndex}
@@ -941,9 +939,9 @@ export default function Header() {
                       if (stageIndex === 0 && targetLevel === 'BEGINNER') {
                         window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
                       } else {
-                        const stages = getStagesList(targetLevel);
-                        setSelectedStage(stages[stageIndex]);
-                        setChosenDifficulty('EASY');
+                        window.dispatchEvent(new CustomEvent('open-arena-modal', {
+                          detail: { stageIndex, selectCourse: false }
+                        }));
                       }
                     }}
                   >
@@ -954,6 +952,10 @@ export default function Header() {
             </div>
 
             {/* 네비게이션 메뉴 섹션 */}
+            {targetLevel === 'N1' && <div className="arena-practice-actions">
+              <button className="outline-btn" onClick={() => { setIsDrawerOpen(false); router.push('/play/5?jlptLevel=N1&category=WORDLE'); }}>🧩 어휘 워들 복습</button>
+              <button className="glass-neon-btn" onClick={() => { setIsDrawerOpen(false); router.push('/play/6?jlptLevel=N1&category=MOCK_EXAM'); }}>📝 15분 종합 연습</button>
+            </div>}
             <div className="drawer-section" style={{ marginTop: '16px' }}>
               <span className="drawer-sec-label">🧭 빠른 탐색 이동</span>
               <nav className="drawer-nav">
@@ -1004,13 +1006,14 @@ export default function Header() {
           }}>
             <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '8px' }}>🏟️</span>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '900', marginBottom: '4px' }}>
-              {targetLevel === 'BEGINNER' ? '왕초보 스타터 아레나' : 'N1 실전 아레나'} 챌린지
+              {showCourseSelection ? `${targetLevel === 'BEGINNER' ? '왕초보 스타터 아레나' : 'N1 실전 아레나'} 챌린지` : getStageTitle(selectedStage)}
             </h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '1.25rem' }}>
-              도전하실 아레나 코스와 세부 난이도를 선택해 주세요!
+              {targetLevel === 'N1' ? '코스를 선택하면 바로 시작합니다.' : showCourseSelection ? '도전하실 아레나 코스와 세부 난이도를 선택해 주세요!' : '이 아레나에서 도전할 난이도를 선택해 주세요!'}
             </p>
 
             {/* 1. 5대 아레나 실시간 코스 변환기 그리드 */}
+            {showCourseSelection && <>
             <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>
               🎯 코스 선택
             </div>
@@ -1027,6 +1030,11 @@ export default function Header() {
                         // 아레나 모달 닫고 칠판 모달 열기
                         setSelectedStage(null);
                         window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
+                        return;
+                      }
+                      if (targetLevel === 'N1') {
+                        setSelectedStage(null);
+                        router.push(`/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
                         return;
                       }
                       setSelectedStage(stage);
@@ -1056,7 +1064,13 @@ export default function Header() {
               })}
             </div>
 
+            </>}
             {/* 2. 세부 난이도 선택 (쉬움 🌱, 보통 🍱, 어려움 ⚡) */}
+            {targetLevel === 'N1' && <div className="arena-practice-actions">
+              <button className="outline-btn" onClick={() => { setSelectedStage(null); router.push('/play/5?jlptLevel=N1&category=WORDLE'); }}>🧩 어휘 워들 복습</button>
+              <button className="glass-neon-btn" onClick={() => { setSelectedStage(null); router.push('/play/6?jlptLevel=N1&category=MOCK_EXAM'); }}>📝 15분 종합 연습</button>
+            </div>}
+            {targetLevel === 'BEGINNER' && <>
             <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>
               ⚡ 난이도 설정
             </div>
@@ -1096,6 +1110,7 @@ export default function Header() {
             </div>
 
             {/* 모달 제어 */}
+            </>}
             <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center' }}>
               <button 
                 onClick={() => setSelectedStage(null)}
@@ -1104,7 +1119,7 @@ export default function Header() {
               >
                 닫기
               </button>
-              <button 
+              {targetLevel === 'BEGINNER' && <button
                 onClick={() => {
                   if (!selectedStage) return;
                   if (selectedStage.category === 'CALLIGRAPHY') {
@@ -1120,7 +1135,7 @@ export default function Header() {
                 style={{ padding: '0.625rem 1.5rem', fontSize: '0.82rem', flex: 1 }}
               >
                 {selectedStage?.category === 'CALLIGRAPHY' ? '손글씨 연습장 열기 ✍️' : '아레나 입장 ➔'}
-              </button>
+              </button>}
             </div>
 
           </div>

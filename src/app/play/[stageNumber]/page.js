@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import { showToast } from '@/lib/toast';
+import ReadableText from '@/app/ReadableText';
+import { evaluateQuizAnswer } from '@/lib/quizScoring.mjs';
 
 export default function PlayStagePage({ params }) {
   const { stageNumber: stageNumberParam } = use(params);
@@ -271,7 +273,8 @@ export default function PlayStagePage({ params }) {
     async function loadData() {
       setLoading(true);
       try {
-        const query = new URLSearchParams({ jlptLevel, difficulty });
+        const query = new URLSearchParams({ jlptLevel });
+        if (isBeginner) query.set('difficulty', difficulty);
         if (category) query.set('category', category);
         const res = await fetch(`/api/stages/${stageNumber}?${query.toString()}`);
         const data = await res.json();
@@ -294,7 +297,7 @@ export default function PlayStagePage({ params }) {
       }
     }
     loadData();
-  }, [stageNumber, jlptLevel, difficulty, category, router]);
+  }, [stageNumber, jlptLevel, difficulty, category, router, isBeginner]);
 
   // 2. 타이머 작동
   useEffect(() => {
@@ -523,11 +526,11 @@ export default function PlayStagePage({ params }) {
     if (!currentQuiz) return;
     if (currentQuiz.quizType === 'LISTENING') {
       const timer = setTimeout(() => {
-        speak(currentQuiz.japaneseWord);
+        speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1);
       }, 400);
       return () => clearTimeout(timer);
     }
-  }, [currentIndex, currentQuiz, speak]);
+  }, [currentIndex, currentQuiz, speak, isBeginner]);
 
   const getSyncHeaders = (extra = {}) => {
     const username = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터';
@@ -570,8 +573,7 @@ export default function PlayStagePage({ params }) {
     clearInterval(timerRef.current);
 
     // 공백을 다듬고 영단어/한자/일어가 완벽하게 일치하는지 비교
-    const isCorrectAns = finalAns.trim() === currentQuiz.correctAnswer.trim() || 
-                         finalAns.trim() === currentQuiz.japaneseWord.trim();
+    const isCorrectAns = evaluateQuizAnswer(finalAns, currentQuiz);
     setIsCorrect(isCorrectAns);
     setSelectedAns(finalAns);
 
@@ -849,7 +851,7 @@ export default function PlayStagePage({ params }) {
     );
   }
 
-  const hasDrawingFeature = stage && stage.category !== 'VOCAB' && stage.category !== 'LISTENING' && stage.category !== 'ASSEMBLY';
+  const hasDrawingFeature = stage && stage.category === 'CHARACTERS';
 
   return (
     <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', position: 'relative' }}>
@@ -882,7 +884,7 @@ export default function PlayStagePage({ params }) {
                 급수: {trackLabel}
               </span>
 
-              <span style={{
+              {isBeginner && <span style={{
                 fontSize: '0.75rem',
                 fontWeight: '900',
                 background: difficulty === 'EASY' ? '#557c5522' : difficulty === 'MEDIUM' ? '#ff9f4322' : '#ff6b6b22',
@@ -892,7 +894,7 @@ export default function PlayStagePage({ params }) {
                 border: '1.5px solid transparent'
               }}>
                 난이도: {difficultyLabel}
-              </span>
+              </span>}
             </span>
             <span style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-color)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
               {comboCount > 0 && (
@@ -1022,7 +1024,7 @@ export default function PlayStagePage({ params }) {
           <span style={{ fontSize: '5rem', display: 'block', marginBottom: '16px', animation: 'pulse 2.5s infinite' }}>🏆</span>
           <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '8px', color: 'var(--text-primary)' }}>스테이지 완벽 격파!</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '600', marginBottom: '32px' }}>
-            {stage.title} [{trackLabel} • {difficultyLabel}] 코스를 성공적으로 완수하셨습니다!
+            {stage.title} [{trackLabel}{isBeginner ? ` • ${difficultyLabel}` : ''}] 코스를 성공적으로 완수하셨습니다!
           </p>
 
           <div className="report-summary-grid" style={{
@@ -1111,16 +1113,14 @@ export default function PlayStagePage({ params }) {
             </div>
           )}
 
-          <Link href="/" passHref legacyBehavior>
-            <a className="glass-neon-btn" style={{
-              padding: '16px 40px',
-              fontSize: '1.05rem',
-              borderRadius: '100px',
-              textDecoration: 'none',
-              boxShadow: 'var(--neon-glow)'
-            }}>
-              🏠 로드맵 홈으로 복귀
-            </a>
+          <Link href="/" className="glass-neon-btn" style={{
+            padding: '16px 40px',
+            fontSize: '1.05rem',
+            borderRadius: '100px',
+            textDecoration: 'none',
+            boxShadow: 'var(--neon-glow)'
+          }}>
+            🏠 로드맵 홈으로 복귀
           </Link>
         </div>
       ) : (
@@ -1141,7 +1141,8 @@ export default function PlayStagePage({ params }) {
               <div className="play-action-bar-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                 <div className="play-btn-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button 
-                    onClick={() => speak(currentQuiz.japaneseWord)}
+                    onClick={() => speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1)}
+                    disabled={!submitted && (!isBeginner || ['WORDLE', 'ASSEMBLY'].includes(currentQuiz.quizType)) && currentQuiz.quizType !== 'LISTENING'}
                     className="outline-btn"
                     style={{ padding: '6px 12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
@@ -1190,14 +1191,19 @@ export default function PlayStagePage({ params }) {
 
               {/* 퀴즈 질문 */}
               <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '700', marginBottom: '12px' }}>
-                  {currentQuiz.questionText
-                    .replace(/\[N(1|2)-(EASY|MEDIUM|HARD)\]\s*/g, '')
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '700', marginBottom: '12px', whiteSpace: 'pre-line' }}>
+                  <ReadableText text={currentQuiz.questionText
+                    .replace(/\[(?:N[12](?:-(?:EASY|MEDIUM|HARD|ASSEMBLY))?|BEGINNER-(?:EASY|MEDIUM|HARD))\]\s*/g, '')
                     .replace(/\s*\((정답|정답은|정답인)?\s*:\s*[^)]+\)/g, '')
-                    .replace(/\s*\[(정답|정답은|정답인)?\s*:\s*[^\]]+\]/g, '')}
+                    .replace(/\s*\[(정답|정답은|정답인)?\s*:\s*[^\]]+\]/g, '')} />
                 </p>
                 
-                 {currentQuiz.quizType !== 'LISTENING' && (
+                {currentQuiz.quizType === 'READING' && (
+                  <section className="reading-passage" aria-label="독해 지문" lang="ja">
+                    <ReadableText text={currentQuiz.japaneseWord} />
+                  </section>
+                )}
+                 {!['LISTENING', 'READING'].includes(currentQuiz.quizType) && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                     
                     {/* 붓글씨 기능이 활성화된 스테이지에서만 획수 가이드 배지 노출 */}
@@ -1223,21 +1229,21 @@ export default function PlayStagePage({ params }) {
                     {submitted ? (
                       // 1) 제출이 끝났을 경우: 해설 검토를 위해 한자 단어 공개
                       <h3 style={{ fontSize: '2.8rem', fontWeight: '900', color: 'var(--accent-color)', letterSpacing: '1px', marginTop: '6px' }}>
-                        {currentQuiz.japaneseWord}
+                        <ReadableText text={currentQuiz.japaneseWord} />
                       </h3>
                     ) : (
                       // 2) 플레이 중인 경우: 카테고리별 철저 분기
-                      stage.category === 'WORDLE' ? (
+                      currentQuiz.quizType === 'WORDLE' ? (
                         <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-color)', letterSpacing: '1px', marginTop: '12px' }}>
                           🧩 숨겨진 {currentQuiz.japaneseWord.length}글자 단어 맞추기
                         </h3>
-                      ) : stage.category === 'GRAMMAR' ? (
+                      ) : currentQuiz.quizType === 'ASSEMBLY' || !currentQuiz.japaneseWord || stage.category === 'GRAMMAR' || currentQuiz.questionText.includes('【文法形式】') || currentQuiz.questionText.includes('【文章の文法】') ? (
                         // 문법 조사는 문장만 보고 사지선다를 풀어야 하므로 단어 노출 금지
                         null
                       ) : (
                         // 문자 정복 등은 한자를 보고 풀어야 하므로 기존 한자 노출
                         <h3 style={{ fontSize: '2.8rem', fontWeight: '900', color: 'var(--accent-color)', letterSpacing: '1px', marginTop: '6px' }}>
-                          {currentQuiz.japaneseWord}
+                          <ReadableText text={currentQuiz.japaneseWord} />
                         </h3>
                       )
                     )}
@@ -1249,7 +1255,7 @@ export default function PlayStagePage({ params }) {
                 {currentQuiz.quizType === 'LISTENING' && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '10px 0' }}>
                     <button 
-                      onClick={() => speak(currentQuiz.japaneseWord)}
+                      onClick={() => speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1)}
                       style={{
                         width: '100px',
                         height: '100px',
@@ -1397,7 +1403,7 @@ export default function PlayStagePage({ params }) {
               ) : (
                 /* ==================== [기존 붓글씨 그림판 기반 주관식 제출 통합지] ==================== */
                 <>
-                  <div style={{
+                  {(isBeginner || !currentQuiz.options?.length) && <div style={{
                     marginTop: '10px',
                     background: 'var(--bg-secondary)',
                     padding: '16px',
@@ -1444,11 +1450,12 @@ export default function PlayStagePage({ params }) {
                     </div>
                   </div>
 
+                  }
                   {/* [기존 사지선다 보기도 하단 보조 힌트로 유지] */}
                   {(currentQuiz.options && currentQuiz.options.length > 0) && (
                     <div style={{ marginTop: '16px' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
-                        💡 참고용 객관식 사지선다형 보기 (객관식으로 즉시 맞추기 가능)
+                        {isBeginner ? '💡 참고용 객관식 보기' : '답안 선택'}
                       </span>
                       <div className="options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         {currentQuiz.options?.map((option, idx) => (
@@ -1465,12 +1472,12 @@ export default function PlayStagePage({ params }) {
                               fontSize: '0.8rem',
                               textAlign: 'left',
                               whiteSpace: 'normal',
-                              wordBreak: 'break-all',
+                              wordBreak: 'keep-all',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis'
                             }}
                           >
-                            {idx + 1}. {option}
+                            {idx + 1}. <ReadableText text={option} />
                           </button>
                         ))}
                       </div>
@@ -1582,15 +1589,16 @@ export default function PlayStagePage({ params }) {
                       {isCorrect && speedBonusEarned > 0 && ` (⚡ 속도 보너스 +${speedBonusEarned} pts 포함!)`}
                     </span>
                   </span>
-                  <p style={{ marginTop: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                  {currentQuiz.pronunciation && <p style={{ marginTop: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
                     요미가나(발음): <strong style={{ color: 'var(--text-primary)' }}>{currentQuiz.pronunciation}</strong>
-                  </p>
+                  </p>}
                   <p style={{ marginTop: '4px', fontSize: '0.85rem', color: 'var(--accent-color)', fontWeight: '700' }}>
-                    정답: <strong style={{ textDecoration: 'underline' }}>{currentQuiz.correctAnswer}</strong> (요미가나) 또는 <strong style={{ textDecoration: 'underline' }}>{currentQuiz.japaneseWord}</strong> (한자/원어)
+                    정답: <strong style={{ textDecoration: 'underline' }}><ReadableText text={currentQuiz.correctAnswer} /></strong>
+                    {isBeginner && <> 또는 <strong><ReadableText text={currentQuiz.japaneseWord} /></strong></>}
                   </p>
                   {currentQuiz.hint && (
                     <p style={{ marginTop: '4px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      💡 설명: {currentQuiz.hint}
+                      💡 설명: <ReadableText text={currentQuiz.hint} />
                     </p>
                   )}
                 </div>
@@ -1665,7 +1673,7 @@ export default function PlayStagePage({ params }) {
                     userSelect: 'none',
                     textAlign: 'center',
                     zIndex: 0,
-                    wordBreak: 'break-all',
+                    wordBreak: 'keep-all',
                     maxWidth: '90%'
                   }}>
                     {currentQuiz.japaneseWord}

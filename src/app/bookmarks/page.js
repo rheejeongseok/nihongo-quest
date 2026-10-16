@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import { getExampleSentence } from '@/utils/exampleSentences';
+import ReadableText from '@/app/ReadableText';
 
 export default function BookmarksPage() {
   const [loading, setLoading] = useState(true);
@@ -665,10 +666,8 @@ export default function BookmarksPage() {
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
                 퀴즈 플레이 도중 마음에 드는 단어나 헷갈리는 문자를 보면 <strong>[나의 단어장 추가]</strong>를 꾹 눌러보세요.
               </p>
-              <Link href="/" passHref legacyBehavior>
-                <a className="glow-btn" style={{ padding: '12px 30px', textDecoration: 'none' }}>
-                  퀴즈 풀고 단어 수집하러 가기 ➔
-                </a>
+              <Link href="/" className="glow-btn" style={{ padding: '12px 30px', textDecoration: 'none' }}>
+                퀴즈 풀고 단어 수집하러 가기 ➔
               </Link>
             </div>
           ) : (
@@ -709,7 +708,7 @@ export default function BookmarksPage() {
                       
                       {/* 단어 본문 */}
                       <h4 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)' }}>
-                        {item.word}
+                        <ReadableText text={item.word} />
                       </h4>
                       
                       {/* 단어 뜻 */}
@@ -870,7 +869,7 @@ export default function BookmarksPage() {
                 color: 'var(--text-primary)', 
                 lineHeight: '1.6',
                 marginBottom: '10px',
-                wordBreak: 'break-all'
+                wordBreak: 'keep-all'
               }}>
                 {getExampleSentence(selectedWord.word, selectedWord.meaning).sentence}
               </p>

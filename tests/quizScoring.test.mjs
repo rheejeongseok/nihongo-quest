@@ -36,3 +36,12 @@ test("clamps invalid attempt durations", () => {
   assert.equal(normalizeTimeTaken(99999), 3600);
   assert.equal(normalizeTimeTaken("invalid"), 0);
 });
+
+test('새 N1 객관식·청해·독해는 제시문을 답으로 인정하지 않는다', () => {
+  for (const quizType of ['MULTIPLE_CHOICE', 'LISTENING', 'READING']) {
+    const quiz = { id: 'n1-q3-test-choice', quizType, japaneseWord: '本文', correctAnswer: '選択肢' };
+    assert.equal(evaluateQuizAnswer('本文', quiz), false);
+    assert.equal(evaluateQuizAnswer('選択肢', quiz), true);
+  }
+  assert.equal(evaluateQuizAnswer('日本', { id: 'beginner-1', quizType: 'MULTIPLE_CHOICE', japaneseWord: '日本', correctAnswer: 'にほん' }), true);
+});

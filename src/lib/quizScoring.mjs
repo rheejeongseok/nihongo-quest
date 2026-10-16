@@ -8,7 +8,10 @@ export function evaluateQuizAnswer(selectedAnswer, quiz) {
   const submitted = normalizeQuizAnswer(selectedAnswer);
   if (!submitted) return false;
 
-  return [quiz?.correctAnswer, quiz?.japaneseWord]
+  const answers = quiz?.id?.startsWith('n1-q3-') && ['MULTIPLE_CHOICE', 'LISTENING', 'READING'].includes(quiz?.quizType)
+    ? [quiz?.correctAnswer]
+    : [quiz?.correctAnswer, quiz?.japaneseWord];
+  return answers
     .map(normalizeQuizAnswer)
     .filter(Boolean)
     .some(answer => answer === submitted);
