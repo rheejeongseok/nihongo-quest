@@ -4185,6 +4185,19 @@ html, body {
 }
 
 .study-hub-short-label { display: none; }
+.dday-registration {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.dday-registration-status { font-weight: 800; color: var(--accent-color); }
+.dday-registration a { color: inherit; text-underline-offset: 3px; }
+.dday-registration a:hover { text-decoration: underline; }
 .sync-title-short, .sync-action-short, .count-timer-summary { display: none; }
 
 @media (min-width: 769px) {
@@ -4326,7 +4339,7 @@ html, body {
 .play-arena-grid .options-grid button { min-width: 0; gap: 8px; text-overflow: clip !important; }
 .wrong-question-content { line-height: 1.8; }
 @media (min-width: 769px) {
-  .dashboard-review-links { margin-bottom: 0; }
+  .dashboard-review-links { display: none; }
   .dashboard-overview { margin-bottom: 16px; }
   .arena-section-container { margin-top: 16px; }
   .arena-cards-grid { row-gap: 16px; }
@@ -4373,6 +4386,8 @@ html, body {
   .dashboard-overview .dday-date-prefix,
   .dashboard-overview .count-timer-unit { display: none !important; }
   .dashboard-overview .count-title { font-size: 0.8rem !important; }
+  .dashboard-overview .dday-countdown-card { row-gap: 6px !important; }
+  .dashboard-overview .dday-registration { font-size: 0.68rem; gap: 4px 8px; line-height: 1.5; }
   .dashboard-overview .dday-details p { margin-top: 3px !important; font-size: 0.68rem !important; }
   .dashboard-overview .count-timer { margin: 0 !important; flex-shrink: 0; }
   .dashboard-overview .count-timer-summary {

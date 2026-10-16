@@ -8,6 +8,7 @@ import JlptTimer from './JlptTimer';
 import { showToast } from '@/lib/toast';
 import ReadableText from './ReadableText';
 import { N1_COURSES, N1_EXAM } from '@/data/n1Courses.mjs';
+import { getJlptRegistration } from '@/data/jlptSchedule.mjs';
 
 const BEGINNER_CONVERSATIONS = [
   {
@@ -506,7 +507,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
 
   // 📅 JLPT D-Day 연산 전용 상태 및 유틸
   const [examInfo, setExamInfo] = useState({ type: '', dateStr: '' });
-  const [isRegistrationPeriod, setIsRegistrationPeriod] = useState(false);
+  const [registrationInfo, setRegistrationInfo] = useState({ status: '', label: '' });
 
   useEffect(() => {
     // 특정 연도의 특정 월 첫째 주 일요일 반환 유틸
@@ -551,11 +552,7 @@ export default function ClientDashboard({ showSeedControls = false }) {
       })
     });
 
-    // 원서 접수 달 감지 (7월 시험: 4월 접수, 12월 시험: 9월 접수)
-    const month = new Date().getMonth() + 1;
-    if ((exam.type === '7월 시험' && month === 4) || (exam.type === '12월 시험' && month === 9)) {
-      setIsRegistrationPeriod(true);
-    }
+    setRegistrationInfo(getJlptRegistration(exam.date));
 
   }, []);
 
@@ -853,41 +850,12 @@ export default function ClientDashboard({ showSeedControls = false }) {
         <JlptTimer />
 
         {/* 원서 접수 기간 연동 배너 */}
-        {isRegistrationPeriod && (
-          <div className="fade-in" style={{
-            width: '100%',
-            background: 'linear-gradient(95deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 94, 126, 0.15) 100%)',
-            border: '1.5px solid #ff6b6b',
-            borderRadius: '12px',
-            padding: '12px 20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '12px',
-            boxShadow: '0 0 15px rgba(255, 107, 107, 0.2)',
-            animation: 'pulse 1.5s infinite'
-          }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#ff6b6b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🚨 긴급 알림: 현재 JLPT 공식 원서 접수 기간입니다!
-            </span>
-            <a
-              href="https://www.jlpt.or.kr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="glow-btn"
-              style={{
-                padding: '6px 14px',
-                fontSize: '0.75rem',
-                background: '#ff6b6b',
-                boxShadow: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              공식 접수처 바로가기 🔗
-            </a>
-          </div>
-        )}
+        {registrationInfo.label && <div className="dday-registration">
+          <span className="dday-registration-status">{registrationInfo.status}</span>
+          {registrationInfo.source
+            ? <a href={registrationInfo.source} target="_blank" rel="noopener noreferrer">{registrationInfo.label} ↗</a>
+            : <span>{registrationInfo.label}</span>}
+        </div>}
       </div>
 
       <nav className="dashboard-review-links" aria-label="복습 바로가기">

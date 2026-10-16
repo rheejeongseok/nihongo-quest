@@ -162,7 +162,7 @@ try {
         overflow: document.documentElement.scrollWidth > innerWidth };
     })()`);
     assert.equal(sizes.removedCards, 0);
-    assert.ok(sizes.review.every(height => height <= 64), JSON.stringify(sizes));
+    assert.ok(sizes.review.every(height => height === 0), JSON.stringify(sizes));
     assert.ok(sizes.arena.every(height => height <= 270), JSON.stringify(sizes));
     assert.equal(sizes.arenaFirst, true);
     assert.equal(sizes.timer, 32);
@@ -170,6 +170,11 @@ try {
     console.log(`PASS desktop ${width}px: review ${Math.max(...sizes.review)}px, arena ${Math.max(...sizes.arena)}px; no profile/streak cards, arena above news, no overflow`);
   }
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
+  await evaluate("[...document.querySelectorAll('button')].find(button => button.textContent.includes('설정 & 학습 도구')).click()");
+  await waitFor(() => evaluate("!!document.querySelector('.tools-dropdown a[href=\"/wrong-notes\"]')"));
+  assert.ok(await evaluate("!!document.querySelector('.tools-dropdown a[href=\"/bookmarks\"]')"));
+  await evaluate("document.body.click()");
+  console.log('PASS desktop: review links moved into learning tools');
   await evaluate("document.querySelector('.arena-card-btn').click()");
   await waitFor(() => evaluate("location.pathname.startsWith('/play/')"));
   assert.equal(await evaluate("location.search.includes('difficulty=')"), false);

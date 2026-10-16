@@ -7,6 +7,11 @@ import Link from 'next/link';
 import { showToast } from '@/lib/toast';
 import { N1_COURSES, N1_EXAM } from '@/data/n1Courses.mjs';
 
+const JLPT_REGISTRATION_LINKS = [
+  { label: 'JLPT 시험 접수 · 서울·제주권', href: 'https://www.jlpt.or.kr/html/' },
+  { label: 'JLPT 시험 접수 · 부산권', href: 'https://www.bsjlpt.or.kr/' }
+];
+
 const THEMES = [
   { id: 'zen', name: '젠 (Zen)', emoji: '🌸', color: '#557c55' },
   { id: 'cyber', name: '사이버 (Cyber)', emoji: '⚡', color: '#00f0ff' },
@@ -274,18 +279,12 @@ export default function Header() {
           >
             메인
           </Link>
-          <a 
-            href="/wrong-notes" 
-            className={`nav-item ${pathname === '/wrong-notes' ? 'active' : ''}`}
-          >
+          <Link href="/wrong-notes" className={`nav-item ${pathname === '/wrong-notes' ? 'active' : ''}`}>
             오답노트
-          </a>
-          <a 
-            href="/bookmarks" 
-            className={`nav-item ${pathname === '/bookmarks' ? 'active' : ''}`}
-          >
+          </Link>
+          <Link href="/bookmarks" className={`nav-item ${pathname === '/bookmarks' ? 'active' : ''}`}>
             단어장
-          </a>
+          </Link>
         </nav>
 
         {/* 우측 유틸리티 영역 (PC 전용) */}
@@ -456,6 +455,12 @@ export default function Header() {
                     <span>📖</span> 일본어 학습 도구
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link href="/wrong-notes" className="tools-dropdown-item" onClick={() => setIsToolsOpen(false)}>
+                      📓 오답노트 ➔
+                    </Link>
+                    <Link href="/bookmarks" className="tools-dropdown-item" onClick={() => setIsToolsOpen(false)}>
+                      ⭐ 단어장 ➔
+                    </Link>
                     <a 
                       href="https://ja.dict.naver.com/#/main" 
                       target="_blank" 
@@ -474,6 +479,12 @@ export default function Header() {
                     >
                       🦜 파파고 일-한 번역 ➔
                     </a>
+                    {JLPT_REGISTRATION_LINKS.map(link => (
+                      <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
+                        className="tools-dropdown-item" onClick={() => setIsToolsOpen(false)}>
+                        📝 {link.label} ↗
+                      </a>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -898,6 +909,12 @@ export default function Header() {
                 >
                   🦜 파파고 일-한 번역기 ➔
                 </a>
+                {JLPT_REGISTRATION_LINKS.map(link => (
+                  <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
+                    className="drawer-nav-item tools-item" onClick={() => setIsDrawerOpen(false)}>
+                    📝 {link.label} ↗
+                  </a>
+                ))}
               </nav>
             </div>
 
