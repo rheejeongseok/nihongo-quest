@@ -1,63 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import MobileDrawer from './components/MobileDrawer';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { JLPT_REGISTRATION_LINKS, THEMES, CONCEPTS, getStagesList } from '@/data/uiCatalog.mjs';
+import AccountModal from './components/AccountModal';
+import ArenaEntryModal from './components/ArenaEntryModal';
 import { showToast } from '@/lib/toast';
-import { N1_COURSES, N1_EXAM } from '@/data/n1Courses.mjs';
-
-const JLPT_REGISTRATION_LINKS = [
-  { label: 'JLPT 시험 접수 · 서울·제주권', href: 'https://www.jlpt.or.kr/html/' },
-  { label: 'JLPT 시험 접수 · 부산권', href: 'https://www.bsjlpt.or.kr/' }
-];
-
-const THEMES = [
-  { id: 'zen', name: '젠 (Zen)', emoji: '🌸', color: '#557c55' },
-  { id: 'cyber', name: '사이버 (Cyber)', emoji: '⚡', color: '#00f0ff' },
-  { id: 'kawaii', name: '파스텔 (Kawaii)', emoji: '🍑', color: '#ff9494' },
-  { id: 'academic', name: '클래식 (Classic)', emoji: '📜', color: '#1a4d80' },
-  { id: 'neon-dream', name: '네온드림 (Neon)', emoji: '🛸', color: '#00ffb9' },
-  { id: 'nordic-frost', name: '오로라 (Frost)', emoji: '❄️', color: '#00f2fe' },
-  { id: 'velvet-rose', name: '벨벳로즈 (Rose)', emoji: '🌹', color: '#ff6b8b' },
-  { id: 'golden-sand', name: '샤인사하라 (Gold)', emoji: '🌟', color: '#d4af37' }
-];
-
-const CONCEPTS = [
-  { id: 'glass', name: '오로라 판타지', emoji: '🌌' },
-  { id: 'retro', name: '레트로 도트', emoji: '👾' },
-  { id: 'heritage', name: '교토 헤리티지', emoji: '🏮' },
-  { id: 'chalkboard', name: '추억의 칠판', emoji: '🏫' },
-  { id: 'eco', name: '오가닉 미니멀', emoji: '🍃' }
-];
-
-const CATEGORY_META = {
-  CALLIGRAPHY: { emoji: '🌱', color: '#486b48', label: '손글씨 연습', mobileTitle: '글자쓰기' },
-  CHARACTERS: { emoji: '🌸', color: '#ff9494', label: '문자 정복', mobileTitle: '문자어휘' },
-  VOCAB: { emoji: '🍱', color: '#ffb37e', label: '어휘 마스터', mobileTitle: '어휘마스터' },
-  GRAMMAR: { emoji: '⚙️', color: '#a6cf98', label: '문법 조사', mobileTitle: '문법조사' },
-  LISTENING: { emoji: '🎧', color: '#90b4fc', label: '청해 배틀', mobileTitle: '청해배틀' },
-  READING: { emoji: '📖', color: '#b19ffb', label: '독해', mobileTitle: '독해' },
-  WORDLE: { emoji: '🧩', color: '#b19ffb', label: '단어 워들', mobileTitle: '단어워들' },
-  ASSEMBLY: { emoji: '⚔️', color: '#ffd32a', label: '문장 조립', mobileTitle: '문장조립' },
-  MOCK_EXAM: { emoji: '📝', color: '#ff5e7e', label: '모의고사', mobileTitle: '모의고사' }
-};
-
-const getStagesList = (level) => {
-  if (level === 'BEGINNER') {
-    return [
-      { id: 'stage-calligraphy-uuid', stageNumber: 0, title: '문자 비법서 & 손글씨 연습', category: 'CALLIGRAPHY' },
-      { id: 'stage-1-uuid', stageNumber: 1, title: '기초 문자', category: 'CHARACTERS' },
-      { id: 'stage-2-uuid', stageNumber: 2, title: '기초 어휘', category: 'VOCAB' },
-      { id: 'stage-3-uuid', stageNumber: 3, title: '기초 조사', category: 'GRAMMAR' },
-      { id: 'stage-4-uuid', stageNumber: 4, title: '일상 회화', category: 'LISTENING' },
-      { id: 'stage-5-uuid', stageNumber: 5, title: '기초 워들', category: 'WORDLE' },
-      { id: 'virtual-stage-5-uuid', stageNumber: 5, title: '기초 문장 조립', category: 'ASSEMBLY' },
-      { id: 'virtual-stage-6-uuid', stageNumber: 6, title: '초보 실력 진단', category: 'MOCK_EXAM' }
-    ];
-  }
-  return [...N1_COURSES, N1_EXAM];
-};
 
 export default function Header() {
   const pathname = usePathname();
@@ -125,20 +75,6 @@ export default function Header() {
 
   const getStageTitle = (stage) => {
     if (!stage) return "";
-    if (targetLevel === 'BEGINNER') {
-      const beginnerTitles = {
-        1: "기초 문자",
-        2: "기초 어휘",
-        3: "기초 조사",
-        4: "일상 회화",
-        5: stage.category === "ASSEMBLY" ? "기초 문장 조립" : "기초 워들",
-        6: "초보 실력 진단"
-      };
-      // For virtual stage 6 (stageNumber 6 in beginner mode)
-      if (stage.category === "MOCK_EXAM") return "초보 실력 진단";
-      if (stage.category === "ASSEMBLY") return "기초 문장 조립";
-      return beginnerTitles[stage.stageNumber] || stage.title;
-    }
     return stage.title;
   };
 
@@ -198,11 +134,10 @@ export default function Header() {
 
   // 1.2 모바일 드로워 오픈 시 뒷배경 바디 스크롤 고정 및 속성 마킹
   useEffect(() => {
+    document.body.style.overflow = isDrawerOpen ? 'hidden' : 'unset';
     if (isDrawerOpen) {
-      document.body.style.overflow = 'hidden';
       document.body.setAttribute('data-drawer-open', 'true');
     } else {
-      document.body.style.overflow = 'unset';
       document.body.removeAttribute('data-drawer-open');
     }
     return () => {
@@ -261,28 +196,29 @@ export default function Header() {
   };
 
   return (
-    <header className="header-glass">
+    <header className="header-glass site-header">
       <div className="container header-container">
-        {/* 그라데이션 프리미엄 로고 */}
+        {/* 간결한 책 모양 심벌과 단색 워드마크 */}
         <Link href="/" className="header-logo">
-          <span className="logo-emoji">🌸</span>
-          <span className="logo-text">
-            Nihongo<span className="logo-highlight">Quest</span>
-          </span>
+          <svg className="brand-mark" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <path d="M14 7C10 4 6 5 3 6v16c4-1 7-1 11 2 4-3 7-3 11-2V6c-3-1-7-2-11 1Zm0 0v17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="logo-text">NihongoQuest</span>
         </Link>
 
         {/* 네비게이션 칩 캡슐 (PC 전용) */}
-        <nav className="header-nav pc-only">
+        <nav className="header-nav pc-only" aria-label="주요 메뉴">
           <Link
-            href="/" 
+            href="/"
+            aria-current={pathname === '/' ? 'page' : undefined}
             className={`nav-item ${pathname === '/' ? 'active' : ''}`}
           >
             메인
           </Link>
-          <Link href="/wrong-notes" className={`nav-item ${pathname === '/wrong-notes' ? 'active' : ''}`}>
+          <Link href="/wrong-notes" aria-current={pathname === '/wrong-notes' ? 'page' : undefined} className={`nav-item ${pathname === '/wrong-notes' ? 'active' : ''}`}>
             오답노트
           </Link>
-          <Link href="/bookmarks" className={`nav-item ${pathname === '/bookmarks' ? 'active' : ''}`}>
+          <Link href="/bookmarks" aria-current={pathname === '/bookmarks' ? 'page' : undefined} className={`nav-item ${pathname === '/bookmarks' ? 'active' : ''}`}>
             단어장
           </Link>
         </nav>
@@ -290,76 +226,37 @@ export default function Header() {
         {/* 우측 유틸리티 영역 (PC 전용) */}
         <div className="header-btns pc-only" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {/* ⚡ 글로벌 등급 전환 캡슐 기어 */}
-          <div className="target-level-pill-switch" style={{
-            display: 'flex',
-            background: 'var(--bg-secondary)',
-            border: '1.5px solid var(--card-border)',
-            borderRadius: '2rem',
-            padding: '2px',
-            position: 'relative',
-            cursor: 'pointer',
-            userSelect: 'none',
-            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
-          }}>
-            <button
-              onClick={() => handleToggleTargetLevel('N1')}
-              style={{
-                padding: '0.375rem 0.875rem',
-                borderRadius: '1.5rem',
-                fontSize: '0.75rem',
-                fontWeight: '800',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                background: targetLevel === 'N1' ? 'var(--accent-color, #00f0ff)' : 'transparent',
-                color: targetLevel === 'N1' ? '#ffffff' : 'var(--text-secondary)',
-                boxShadow: targetLevel === 'N1' ? '0 2px 8px rgba(0, 240, 255, 0.4)' : 'none'
-              }}
-            >
-              ⚡ N1 마스터
-            </button>
-            <button
-              onClick={() => handleToggleTargetLevel('BEGINNER')}
-              style={{
-                padding: '0.375rem 0.875rem',
-                borderRadius: '1.5rem',
-                fontSize: '0.75rem',
-                fontWeight: '800',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                background: targetLevel === 'BEGINNER' ? '#557c55' : 'transparent',
-                color: targetLevel === 'BEGINNER' ? '#ffffff' : 'var(--text-secondary)',
-                boxShadow: targetLevel === 'BEGINNER' ? '0 2px 8px rgba(85, 124, 85, 0.4)' : 'none'
-              }}
-            >
-              🌱 초보 스타터
-            </button>
+          <div className="target-level-pill-switch" role="group" aria-label="학습 트랙 선택">
+            {[['N1', 'N1 마스터'], ['BEGINNER', '초보 스타터']].map(([level, label]) =>
+              <button key={level} type="button" aria-pressed={targetLevel === level} onClick={() => handleToggleTargetLevel(level)}>{label}</button>)}
           </div>
 
           {/* ⚡ 실시간 Supabase 계정 동기화 닉네임 칩 */}
-          <button 
+          <button
             onClick={() => setIsModalOpen(true)}
             className="header-premium-btn sync-chip"
+            title="학습 계정 변경"
           >
-            <span className="pulse-dot"></span>
-            <span>☁️ {username}</span>
+            <span className="account-avatar" aria-hidden="true">{username.slice(0, 1)}</span>
+            <span className="account-name">{username}</span>
           </button>
 
 					{/* 🛠️ [PC 전용 설정 및 학습 도구 통합 드롭다운] */}
           <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-            <button 
+            <button
               onClick={() => setIsToolsOpen(!isToolsOpen)}
               className="header-premium-btn"
+              aria-expanded={isToolsOpen}
               style={{
                 borderColor: THEMES.find(t => t.id === currentTheme)?.color || 'var(--card-border)',
                 boxShadow: isToolsOpen ? 'var(--neon-glow)' : 'none'
               }}
             >
-              <span>🛠️ 설정 & 학습 도구</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>▼</span>
+              <span className="tools-label-full">설정 & 학습 도구</span>
+              <span className="tools-label-short">학습 도구</span>
+              <svg className="tools-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
 
             {isToolsOpen && (
@@ -461,18 +358,21 @@ export default function Header() {
                     <Link href="/bookmarks" className="tools-dropdown-item" onClick={() => setIsToolsOpen(false)}>
                       ⭐ 단어장 ➔
                     </Link>
-                    <a 
-                      href="https://ja.dict.naver.com/#/main" 
-                      target="_blank" 
+                    {targetLevel === 'BEGINNER' && <Link href="/?practiceWriting=1" className="tools-dropdown-item" onClick={() => setIsToolsOpen(false)}>
+                      🌱 문자 비법서·손글씨 연습 ➔
+                    </Link>}
+                    <a
+                      href="https://ja.dict.naver.com/#/main"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="tools-dropdown-item"
                       onClick={() => setIsToolsOpen(false)}
                     >
                       📖 네이버 일어사전 ➔
                     </a>
-                    <a 
-                      href="https://papago.naver.com/?sk=ja&tk=ko" 
-                      target="_blank" 
+                    <a
+                      href="https://papago.naver.com/?sk=ja&tk=ko"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="tools-dropdown-item"
                       onClick={() => setIsToolsOpen(false)}
@@ -493,670 +393,24 @@ export default function Header() {
         </div>
 
         {/* 🍔 모바일 전용 햄버거 메뉴 트리거 */}
-        <button 
-          onClick={() => setIsDrawerOpen(true)} 
+        <button
+          onClick={() => setIsDrawerOpen(true)}
           className="mobile-menu-trigger mobile-only"
           aria-label="메뉴 열기"
+          aria-expanded={isDrawerOpen}
         >
-          ☰
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
         </button>
       </div>
 
       {/* 🔮 [계정 동기화 닉네임 교체 모달] */}
-      {isModalOpen && mounted && createPortal(
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div className="premium-card animate-scale modal-premium-content" style={{
-            maxWidth: '28.75rem',
-            width: '90%',
-            border: '2px solid var(--accent-color)',
-            boxShadow: 'var(--neon-glow)',
-            textAlign: 'center',
-            padding: '2rem'
-          }}>
-            <span style={{ fontSize: '3rem', display: 'block', marginBottom: '12px' }}>☁️</span>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: '900', marginBottom: '8px' }}>
-              크로스 클라우드 동기화 계정
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px', lineHeight: '1.6' }}>
-              고유 닉네임 하나만 입력하면 모바일 폰, 태블릿, PC 간에 나의 단어장과 오답노트가 **실시간으로 완전 공유 및 영구 백업**됩니다!
-            </p>
-
-            <div style={{ marginBottom: '24px' }}>
-              <input 
-                type="text"
-                value={inputName}
-                onChange={(e) => setInputName(e.target.value)}
-                placeholder="나만의 고유 닉네임 입력..."
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--custom-radius)',
-                  background: 'var(--bg-secondary)',
-                  border: '1.5px solid var(--card-border)',
-                  color: 'var(--text-primary)',
-                  fontWeight: '700',
-                  fontSize: '0.95rem',
-                  textAlign: 'center',
-                  outline: 'none',
-                  transition: 'border-color 0.2s',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveUsername();
-                }}
-              />
-            </div>
-
-            {/* 모달 버튼 */}
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="outline-btn"
-                style={{ padding: '0.625rem 1.25rem', fontSize: '0.85rem', flex: 1 }}
-              >
-                취소
-              </button>
-              <button 
-                onClick={handleSaveUsername}
-                className="glow-btn"
-                style={{ padding: '0.625rem 1.5rem', fontSize: '0.85rem', flex: 1 }}
-              >
-                연동 적용 ➔
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {isModalOpen && mounted && <AccountModal inputName={inputName} setInputName={setInputName} setIsModalOpen={setIsModalOpen} handleSaveUsername={handleSaveUsername} />}
 
       {/* 🔮 [모바일 전용 사이드 드로워 메뉴] */}
-      {isDrawerOpen && mounted && createPortal(
-        <div className="mobile-drawer-overlay fade-in" onClick={() => setIsDrawerOpen(false)}>
-          <div className="mobile-drawer-content slide-left" onClick={(e) => e.stopPropagation()}>
-            
-            {/* 드로워 헤더 */}
-            <div className="drawer-header">
-              <span className="drawer-logo">🌸 NihongoQuest</span>
-              <button onClick={() => setIsDrawerOpen(false)} className="drawer-close-btn">✕</button>
-            </div>
-
-            {/* 동기화 계정 섹션 */}
-            <div className="drawer-section">
-              <span className="drawer-sec-label">☁️ 클라우드 동기화 계정</span>
-              <button 
-                onClick={() => {
-                  setIsDrawerOpen(false);
-                  setIsModalOpen(true);
-                }}
-                className="glass-neon-btn drawer-sync-chip"
-                style={{
-                  width: '100%',
-                  justifyContent: 'center',
-                  padding: '0.75rem 0.875rem',
-                  borderRadius: 'var(--custom-radius)'
-                }}
-              >
-                <span className="pulse-dot"></span>
-                <span>☁️ {username}</span>
-              </button>
-            </div>
-
-            {/* ⚡ 글로벌 등급 차원 전환 섹션 (모바일) */}
-            <div className="drawer-section" style={{ marginTop: '0.75rem' }}>
-              <span className="drawer-sec-label">⚡ 글로벌 학습 등급</span>
-              <div style={{
-                display: 'flex',
-                background: 'var(--bg-secondary)',
-                border: '1.5px solid var(--card-border)',
-                borderRadius: '2rem',
-                padding: '3px',
-                width: '100%',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
-              }}>
-                <button
-                  onClick={() => handleToggleTargetLevel('N1')}
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem 0',
-                    borderRadius: '1.5rem',
-                    fontSize: '0.78rem',
-                    fontWeight: '800',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    transition: 'all 0.3s ease',
-                    background: targetLevel === 'N1' ? 'var(--accent-color, #00f0ff)' : 'transparent',
-                    color: targetLevel === 'N1' ? '#ffffff' : 'var(--text-secondary)',
-                    boxShadow: targetLevel === 'N1' ? '0 2px 8px rgba(0, 240, 255, 0.4)' : 'none'
-                  }}
-                >
-                  ⚡ N1 마스터
-                </button>
-                <button
-                  onClick={() => handleToggleTargetLevel('BEGINNER')}
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem 0',
-                    borderRadius: '1.5rem',
-                    fontSize: '0.78rem',
-                    fontWeight: '800',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    transition: 'all 0.3s ease',
-                    background: targetLevel === 'BEGINNER' ? '#557c55' : 'transparent',
-                    color: targetLevel === 'BEGINNER' ? '#ffffff' : 'var(--text-secondary)',
-                    boxShadow: targetLevel === 'BEGINNER' ? '0 2px 8px rgba(85, 124, 85, 0.4)' : 'none'
-                  }}
-                >
-                  🌱 초보 스타터
-                </button>
-              </div>
-            </div>
-
-            {/* 테마 셀렉터 섹션 (공간 효율을 극대화한 명품 커스텀 셀렉트박스 대개조) */}
-            <div className="drawer-section">
-              <span className="drawer-sec-label">🎨 인터페이스 테마</span>
-              
-              <div style={{ position: 'relative', marginTop: '0.375rem' }}>
-                {/* 1. 커스텀 셀렉트 트리거 바 */}
-                <button
-                  onClick={() => setIsDrawerThemeOpen(!isDrawerThemeOpen)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.75rem 1rem',
-                    background: 'var(--bg-secondary)',
-                    border: `1.5px solid ${THEMES.find(t => t.id === currentTheme)?.color || 'var(--card-border)'}`,
-                    borderRadius: 'var(--custom-radius)',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                    fontSize: '0.85rem',
-                    fontWeight: '700',
-                    boxShadow: `0 2px 10px rgba(0, 0, 0, 0.05), 0 0 8px ${THEMES.find(t => t.id === currentTheme)?.color}15`,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <span style={{ fontSize: '1.1rem' }}>{THEMES.find(t => t.id === currentTheme)?.emoji}</span>
-                    <span>{THEMES.find(t => t.id === currentTheme)?.name}</span>
-                  </div>
-                  <span style={{ 
-                    fontSize: '0.7rem', 
-                    opacity: 0.8,
-                    transform: isDrawerThemeOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.25s ease',
-                    display: 'inline-block'
-                  }}>
-                    ▼
-                  </span>
-                </button>
-
-                {/* 2. 유려하게 슬라이드 드롭되는 테마 셀렉트 보드 */}
-                {isDrawerThemeOpen && (
-                  <div 
-                    className="fade-in"
-                    style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 0.375rem)',
-                      left: 0,
-                      right: 0,
-                      background: 'var(--card-bg)',
-                      border: '1.5px solid var(--card-border)',
-                      borderRadius: 'var(--custom-radius)',
-                      boxShadow: '0 0.5rem 1.5rem rgba(0, 0, 0, 0.25)',
-                      padding: '0.375rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.25rem',
-                      zIndex: 1100,
-                      maxHeight: '16.5rem',
-                      overflowY: 'auto'
-                    }}
-                  >
-                    {THEMES.map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => {
-                          changeTheme(t.id);
-                          setIsDrawerThemeOpen(false);
-                        }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '0.625rem 0.75rem',
-                          background: currentTheme === t.id ? 'var(--bg-secondary)' : 'transparent',
-                          border: '1px solid transparent',
-                          borderRadius: 'calc(var(--custom-radius) - 4px)',
-                          color: 'var(--text-primary)',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem',
-                          fontFamily: 'inherit',
-                          fontWeight: currentTheme === t.id ? '700' : '500',
-                          textAlign: 'left',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '1rem' }}>{t.emoji}</span>
-                          <span>{t.name}</span>
-                        </div>
-                        {currentTheme === t.id && (
-                          <span style={{ 
-                            width: '8px', 
-                            height: '8px', 
-                            background: t.color, 
-                            borderRadius: '50%',
-                            boxShadow: `0 0 6px ${t.color}`
-                          }} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 비주얼 컨셉 셀렉터 섹션 (공간 효율을 극대화한 명품 커스텀 셀렉트박스 패밀리룩) */}
-            <div className="drawer-section" style={{ marginTop: '0.75rem' }}>
-              <span className="drawer-sec-label">🕹️ 비주얼 컨셉 모드</span>
-              
-              <div style={{ position: 'relative', marginTop: '0.375rem' }}>
-                {/* 1. 커스텀 셀렉트 트리거 바 */}
-                <button
-                  onClick={() => setIsDrawerConceptOpen(!isDrawerConceptOpen)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.75rem 1rem',
-                    background: 'var(--bg-secondary)',
-                    border: '1.5px solid var(--card-border)',
-                    borderRadius: 'var(--custom-radius)',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                    fontSize: '0.85rem',
-                    fontWeight: '700',
-                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <span style={{ fontSize: '1.1rem' }}>{CONCEPTS.find(c => c.id === currentConcept)?.emoji}</span>
-                    <span>{CONCEPTS.find(c => c.id === currentConcept)?.name}</span>
-                  </div>
-                  <span style={{ 
-                    fontSize: '0.7rem', 
-                    opacity: 0.8,
-                    transform: isDrawerConceptOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.25s ease',
-                    display: 'inline-block'
-                  }}>
-                    ▼
-                  </span>
-                </button>
-
-                {/* 2. 유려하게 슬라이드 드롭되는 컨셉 셀렉트 보드 */}
-                {isDrawerConceptOpen && (
-                  <div 
-                    className="fade-in"
-                    style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 0.375rem)',
-                      left: 0,
-                      right: 0,
-                      background: 'var(--card-bg)',
-                      border: '1.5px solid var(--card-border)',
-                      borderRadius: 'var(--custom-radius)',
-                      boxShadow: '0 0.5rem 1.5rem rgba(0, 0, 0, 0.25)',
-                      padding: '0.375rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.25rem',
-                      zIndex: 1100,
-                      maxHeight: '16.5rem',
-                      overflowY: 'auto'
-                    }}
-                  >
-                    {CONCEPTS.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => {
-                          changeConcept(c.id);
-                          setIsDrawerConceptOpen(false);
-                        }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '0.625rem 0.75rem',
-                          background: currentConcept === c.id ? 'var(--bg-secondary)' : 'transparent',
-                          border: '1px solid transparent',
-                          borderRadius: 'calc(var(--custom-radius) - 4px)',
-                          color: 'var(--text-primary)',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem',
-                          fontFamily: 'inherit',
-                          fontWeight: currentConcept === c.id ? '700' : '500',
-                          textAlign: 'left',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '1rem' }}>{c.emoji}</span>
-                          <span>{c.name}</span>
-                        </div>
-                        {currentConcept === c.id && (
-                          <span style={{ 
-                            width: '8px', 
-                            height: '8px', 
-                            background: 'var(--accent-color)', 
-                            borderRadius: '50%',
-                            boxShadow: '0 0 6px var(--accent-color)'
-                          }} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 유용한 학습 도구 섹션 (모바일 전용) */}
-            <div className="drawer-section" style={{ marginTop: '0.75rem' }}>
-              <span className="drawer-sec-label">🛠️ 일본어 학습 도구</span>
-              <nav className="drawer-nav">
-                <a 
-                  href="https://ja.dict.naver.com/#/main" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="drawer-nav-item tools-item"
-                  style={{
-                    background: 'rgba(85, 124, 85, 0.04)',
-                    border: '1.2px solid rgba(85, 124, 85, 0.15)',
-                    color: 'var(--accent-color)'
-                  }}
-                >
-                  📖 네이버 일본어 사전 ➔
-                </a>
-                <a 
-                  href="https://papago.naver.com/?sk=ja&tk=ko" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="drawer-nav-item tools-item"
-                  style={{
-                    background: 'rgba(255, 179, 126, 0.04)',
-                    border: '1.2px solid rgba(255, 179, 126, 0.15)',
-                    color: '#ffb37e'
-                  }}
-                >
-                  🦜 파파고 일-한 번역기 ➔
-                </a>
-                {JLPT_REGISTRATION_LINKS.map(link => (
-                  <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
-                    className="drawer-nav-item tools-item" onClick={() => setIsDrawerOpen(false)}>
-                    📝 {link.label} ↗
-                  </a>
-                ))}
-              </nav>
-            </div>
-
-            {/* 🏟️ N1 실전 아레나 바로입장 퀵 그리드 (모바일 전용) */}
-            <div className="drawer-section" style={{ marginTop: '0.75rem' }}>
-              <span className="drawer-sec-label">🏟️ {targetLevel === 'BEGINNER' ? '왕초보 스타터 아레나' : 'N1 실전 아레나'} 바로입장</span>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem', marginTop: '0.25rem' }}>
-                {(targetLevel === 'BEGINNER' 
-                  ? [
-                      { stageIndex: 0, emoji: '🌱', label: '글자 쓰기 코스', bg: 'rgba(85, 124, 85, 0.09)', color: '#557c55'},
-                      { stageIndex: 1, emoji: '🌸', label: '기초 문자 퀴즈', bg: 'rgba(255, 148, 148, 0.09)', color: '#ff9494' },
-                      { stageIndex: 2, emoji: '🍱', label: '기초 어휘', bg: 'rgba(255, 179, 126, 0.09)', color: '#ffb37e' },
-                      { stageIndex: 3, emoji: '⚙️', label: '기초 조사', bg: 'rgba(166, 207, 152, 0.09)', color: '#a6cf98' },
-                      { stageIndex: 4, emoji: '🎧', label: '일상 회화', bg: 'rgba(144, 180, 252, 0.09)', color: '#90b4fc' },
-                      { stageIndex: 5, emoji: '🧩', label: '기초 워들', bg: 'rgba(177, 159, 251, 0.09)', color: '#b19ffb' },
-                      { stageIndex: 6, emoji: '⚔️', label: '기초 조립', bg: 'rgba(255, 211, 42, 0.09)', color: '#ffd32a' },
-                      { stageIndex: 7, emoji: '📝', label: '실력 진단', bg: 'rgba(255, 94, 126, 0.09)', color: '#ff5e7e' }
-                    ]
-                  : [...N1_COURSES, N1_EXAM].map((course, stageIndex) => ({
-                      stageIndex, emoji: course.emoji, label: course.title,
-                      bg: 'var(--bg-secondary)', color: course.color
-                    }))
-                ).map(({ stageIndex, emoji, label, bg, color, full }) => (
-                  <button
-                    key={stageIndex}
-                    className="drawer-nav-item"
-                    style={{
-                      padding: '0.625rem 0.5rem',
-                      fontSize: '0.75rem',
-                      justifyContent: 'center',
-                      background: bg,
-                      border: 'none',
-                      color,
-                      fontWeight: '800',
-                      ...(full ? { gridColumn: '1 / 3' } : {})
-                    }}
-                    onClick={() => {
-                      setIsDrawerOpen(false);
-                      if (stageIndex === 0 && targetLevel === 'BEGINNER') {
-                        window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
-                      } else {
-                        window.dispatchEvent(new CustomEvent('open-arena-modal', {
-                          detail: { stageIndex, selectCourse: false }
-                        }));
-                      }
-                    }}
-                  >
-                    {emoji} {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 네비게이션 메뉴 섹션 */}
-            {targetLevel === 'N1' && <div className="arena-practice-actions">
-              <button className="outline-btn" onClick={() => { setIsDrawerOpen(false); router.push('/play/5?jlptLevel=N1&category=WORDLE'); }}>🧩 어휘 워들 복습</button>
-            </div>}
-            <div className="drawer-section" style={{ marginTop: '16px' }}>
-              <span className="drawer-sec-label">🧭 빠른 탐색 이동</span>
-              <nav className="drawer-nav">
-                <Link href="/" className={`drawer-nav-item ${pathname === '/' ? 'active' : ''}`} onClick={() => setIsDrawerOpen(false)}>
-                  🏠 메인 대시보드
-                </Link>
-                <a href="/wrong-notes" className={`drawer-nav-item ${pathname === '/wrong-notes' ? 'active' : ''}`} onClick={() => setIsDrawerOpen(false)}>
-                  📓 스마트 오답노트
-                </a>
-                <a href="/bookmarks" className={`drawer-nav-item ${pathname === '/bookmarks' ? 'active' : ''}`} onClick={() => setIsDrawerOpen(false)}>
-                  ⭐ 나의 비밀단어장
-                </a>
-              </nav>
-            </div>
-
-            {/* 드로워 푸터 */}
-            <div className="drawer-footer">
-              <p>오늘도 즐거운 일본어 모험! 🌸</p>
-              <span className="version-label">v1.2 Premium Sync</span>
-            </div>
-
-          </div>
-        </div>,
-        document.body
-      )}
+      {isDrawerOpen && mounted && <MobileDrawer setIsDrawerOpen={setIsDrawerOpen} setIsModalOpen={setIsModalOpen} username={username} targetLevel={targetLevel} handleToggleTargetLevel={handleToggleTargetLevel} currentTheme={currentTheme} currentConcept={currentConcept} isDrawerThemeOpen={isDrawerThemeOpen} setIsDrawerThemeOpen={setIsDrawerThemeOpen} isDrawerConceptOpen={isDrawerConceptOpen} setIsDrawerConceptOpen={setIsDrawerConceptOpen} changeTheme={changeTheme} changeConcept={changeConcept} router={router} pathname={pathname} />}
 
       {/* ==================== [글로벌 실시간 N1 실전 아레나 난이도/급수 통합 모달] ==================== */}
-      {selectedStage && mounted && createPortal(
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 99999
-        }}>
-          <div className="premium-card animate-scale modal-premium-content" style={{
-            maxWidth: '38.75rem',
-            width: '92%',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            border: '2px solid var(--accent-color)',
-            boxShadow: 'var(--neon-glow)',
-            textAlign: 'center',
-            padding: '1.5rem'
-          }}>
-            <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '8px' }}>🏟️</span>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '900', marginBottom: '4px' }}>
-              {showCourseSelection ? `${targetLevel === 'BEGINNER' ? '왕초보 스타터 아레나' : 'N1 실전 아레나'} 챌린지` : getStageTitle(selectedStage)}
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '1.25rem' }}>
-              {targetLevel === 'N1' ? '코스를 선택하면 바로 시작합니다.' : showCourseSelection ? '도전하실 아레나 코스와 세부 난이도를 선택해 주세요!' : '이 아레나에서 도전할 난이도를 선택해 주세요!'}
-            </p>
-
-            {/* 1. 5대 아레나 실시간 코스 변환기 그리드 */}
-            {showCourseSelection && <>
-            <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>
-              🎯 코스 선택
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(6.25rem, 1fr))', gap: '0.375rem', marginBottom: '1.25rem' }}>
-              {getStagesList(targetLevel).map((stage) => {
-                const meta = CATEGORY_META[stage.category] || { emoji: '❓', color: 'gray', label: '학습' };
-                const isSelected = selectedStage.stageNumber === stage.stageNumber && selectedStage.category === stage.category;
-                const dynamicTitle = getStageTitle(stage);
-                return (
-                  <button
-                    key={stage.id}
-                    onClick={() => {
-                      if (stage.category === 'CALLIGRAPHY') {
-                        // 아레나 모달 닫고 칠판 모달 열기
-                        setSelectedStage(null);
-                        window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
-                        return;
-                      }
-                      if (targetLevel === 'N1') {
-                        setSelectedStage(null);
-                        router.push(stage.href || `/play/${stage.stageNumber}?jlptLevel=N1&category=${stage.category}`);
-                        return;
-                      }
-                      setSelectedStage(stage);
-                    }}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.5rem 0.25rem',
-                      borderRadius: '0.75rem',
-                      background: isSelected ? 'var(--bg-secondary)' : 'rgba(255,255,255,0.02)',
-                      border: isSelected ? `2px solid ${meta.color}` : '1.5px solid var(--card-border)',
-                      color: 'var(--text-primary)',
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      transition: 'all 0.2s ease',
-                      boxShadow: isSelected ? `0 0 0.625rem ${meta.color}20` : 'none'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.4rem' }}>{meta.emoji}</span>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '900', whiteSpace: 'nowrap' }}>
-                      {dynamicTitle}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            </>}
-            {/* 2. 세부 난이도 선택 (쉬움 🌱, 보통 🍱, 어려움 ⚡) */}
-            {targetLevel === 'N1' && <div className="arena-practice-actions">
-              <button className="outline-btn" onClick={() => { setSelectedStage(null); router.push('/play/5?jlptLevel=N1&category=WORDLE'); }}>🧩 어휘 워들 복습</button>
-            </div>}
-            {targetLevel === 'BEGINNER' && <>
-            <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>
-              ⚡ 난이도 설정
-            </div>
-            <div className="difficulty-btn-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '0.5rem',
-              marginBottom: '1.75rem'
-            }}>
-              {['EASY', 'MEDIUM', 'HARD'].map((diff) => {
-                const isActive = chosenDifficulty === diff;
-                const labels = { EASY: '쉬움 🌱', MEDIUM: '보통 🍱', HARD: '어려움 ⚡' };
-                const colors = { EASY: '#557c55', MEDIUM: '#ff9f43', HARD: '#ff6b6b' };
-
-                return (
-                  <button
-                    key={diff}
-                    onClick={() => setChosenDifficulty(diff)}
-                    style={{
-                      padding: '0.6875rem 0.25rem',
-                      borderRadius: '0.625rem',
-                      background: isActive ? colors[diff] : 'var(--bg-secondary)',
-                      color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                      border: `1.5px solid ${isActive ? colors[diff] : 'var(--card-border)'}`,
-                      fontFamily: 'inherit',
-                      fontWeight: '800',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      boxShadow: isActive ? '0 0.25rem 0.625rem rgba(0,0,0,0.1)' : 'none',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {labels[diff]}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* 모달 제어 */}
-            </>}
-            <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center' }}>
-              <button 
-                onClick={() => setSelectedStage(null)}
-                className="outline-btn"
-                style={{ padding: '0.625rem 1.25rem', fontSize: '0.82rem', flex: 1 }}
-              >
-                닫기
-              </button>
-              {targetLevel === 'BEGINNER' && <button
-                onClick={() => {
-                  if (!selectedStage) return;
-                  if (selectedStage.category === 'CALLIGRAPHY') {
-                    setSelectedStage(null);
-                    window.dispatchEvent(new CustomEvent('open-calligraphy-modal'));
-                    return;
-                  }
-                  const learningTrack = targetLevel === 'BEGINNER' ? 'BEGINNER' : 'N1';
-                  router.push(`/play/${selectedStage.stageNumber}?jlptLevel=${learningTrack}&difficulty=${chosenDifficulty}&category=${selectedStage.category}`);
-                  setSelectedStage(null);
-                }}
-                className="glow-btn"
-                style={{ padding: '0.625rem 1.5rem', fontSize: '0.82rem', flex: 1 }}
-              >
-                {selectedStage?.category === 'CALLIGRAPHY' ? '손글씨 연습장 열기 ✍️' : '아레나 입장 ➔'}
-              </button>}
-            </div>
-
-          </div>
-        </div>,
-        document.body
-      )}
+      {selectedStage && mounted && <ArenaEntryModal selectedStage={selectedStage} setSelectedStage={setSelectedStage} showCourseSelection={showCourseSelection} targetLevel={targetLevel} chosenDifficulty={chosenDifficulty} setChosenDifficulty={setChosenDifficulty} getStageTitle={getStageTitle} router={router} />}
     </header>
   );
 }

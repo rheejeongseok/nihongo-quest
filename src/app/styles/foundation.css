@@ -1,0 +1,726 @@
+/* ========================================================
+   2. BASE RESET & TRANSITION SYSTEM
+   ======================================================== */
+* {
+  word-break: keep-all;
+  overflow-wrap: normal;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.3s ease, box-shadow 0.4s ease, transform 0.2s ease;
+}
+
+body {
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+  word-spacing: 0.04em;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--custom-font);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* 클래식 아카데믹 테마의 모눈종이 질감 적용 */
+:root[data-theme='academic'] body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: var(--academic-grid);
+  background-size: 24px 24px;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========================================================
+   3. MODERN PREMIUM UTILITIES
+   ======================================================== */
+/* ========================================================
+   3. MODERN PREMIUM UTILITIES & GLASSMORPHISM
+   ======================================================== */
+.container {
+  max-width: 80rem; /* 1280px → 80rem */
+  margin: 0 auto;
+  padding: 0 1.5rem; /* 24px → 1.5rem */
+  position: relative;
+  z-index: 1;
+}
+
+/* 프리미엄 글래스모피즘 네비바 */
+.header-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* ========================================================
+   헤더 프리미엄 네비게이션 바 디자인 (PC)
+   ======================================================== */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 5rem; /* 80px → 5rem */
+  transition: all 0.3s ease;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  text-decoration: none;
+}
+
+.logo-emoji {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin-top: -0.3rem; /* -5px → -0.3rem */
+  /* animation: pulse 3s infinite; */
+}
+
+.logo-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-highlight {
+  color: var(--accent-color);
+  -webkit-text-fill-color: var(--accent-color);
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  border-radius: 100px;
+  border: 1px solid var(--card-border);
+}
+
+.nav-item {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 100px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.nav-item.active {
+  color: #ffffff !important;
+  background: var(--accent-color) !important;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.header-theme-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* ========================================================
+   홈페이지 대표 배너 스타일 (PC)
+   ======================================================== */
+.home-banner-wrapper {
+  text-align: center;
+  margin-bottom: 32px; /* 48px에서 32px로 콤팩트 축소 */
+}
+
+.home-banner-title {
+  font-size: 2.2rem; /* 2.5rem에서 약간 단정하게 축소 */
+  font-weight: 800;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-banner-desc {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+/* 🌌 동적 오로라 빛무리 배경 시스템 */
+
+@keyframes float-aurora {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(5vw, 5vh) scale(1.1) rotate(120deg); } /* px → vw/vh 전환으로 콘테이너 밍겨나오지 않음 */
+  66% { transform: translate(-4vw, 7vh) scale(0.9) rotate(240deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+}
+
+/* 🔮 극의에 달한 프리미엄 글래스모피즘 카드 */
+.glass-premium-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(1.25rem); /* 20px → 1.25rem */
+  -webkit-backdrop-filter: blur(1.25rem);
+  border: 1.5px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--custom-radius);
+  box-shadow: 0 0.75rem 2.188rem rgba(0, 0, 0, 0.04),
+              inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  padding: 1.5rem; /* 24px → 1.5rem */
+  position: relative;
+  overflow: visible;
+  transform-style: preserve-3d;
+  perspective: 62.5rem; /* 1000px → 62.5rem */
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.1s ease, color 0.3s ease;
+  will-change: transform, box-shadow;
+}
+
+/* 🌟 호버 시 카드의 테두리와 은은한 입체감만 차분하고 세련되게 연출 (눈부심 및 글씨 번쩍거림 방지) */
+.glass-premium-card.interactive-arena:hover {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 15px 45px var(--accent-glow);
+}
+
+/* 테마별 특수 다크 글래스 필터링 */
+:root[data-theme='cyber'] .glass-premium-card {
+  background: rgba(18, 19, 28, 0.85) !important; /* 다크 모드 시인성 확보를 위해 불투명도 0.85 극대화 */
+  border: 1.5px solid rgba(0, 240, 255, 0.25) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+              inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 3D 틸팅 무지개 광택 Sweep 가상요소 */
+.glass-premium-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.05) 0%, /* 광량을 0.05로 과감히 내려 텍스트 묻힘 방지 */
+    rgba(255, 255, 255, 0) 60%
+  );
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  opacity: 0;
+  z-index: 0; /* z-index를 0으로 내려 콘텐츠 아래에 렌더링되게 처리 */
+}
+
+.glass-premium-card:hover::after {
+  opacity: 1;
+}
+
+/* 카드 내부 모든 콘텐츠 레이어 최상위 자동 승격 (글씨 가독성 100% 보존) */
+.glass-premium-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* 1px 초미세 반투명 그라데이션 경계선 */
+.rainbow-border {
+  position: relative;
+}
+
+.rainbow-border::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px; bottom: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.8;
+  padding: 1px; /* 1px의 얇은 테두리 두께 확보 */
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude; /* 🌟 안쪽 면적을 투명하게 완전히 파내어 글씨 배경 침범 차단 */
+  transition: opacity 0.3s, background 0.3s;
+}
+
+.rainbow-border:hover::before {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    var(--accent-color) 30%,
+    #ffb37e 70%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  opacity: 1;
+}
+
+/* ========================================================
+   3.6 메인 대시보드 스튜디오 모던 CSS 레이아웃 시스템 (PC/모바일 공용)
+   ======================================================== */
+
+/* 대시보드 정보 그리드 */
+
+.card-header-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.card-desc {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.card-footer-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto; /* 자석처럼 카드 바닥에 고정 */
+  padding-top: 6px;
+}
+
+.card-stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.card-stat-label-small {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+.card-stat-value {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--accent-color);
+  text-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.card-stat-value.streak-color {
+  color: #ff6b6b;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-stat-unit {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.card-stat-unit-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 스트릭 잔디 */
+.streak-grass-container {
+  display: flex;
+  gap: 4px;
+}
+
+/* ========================================================
+   스마트 복습 & 단어 센터 퀵 버튼 스타일 (PC)
+   ======================================================== */
+.study-hub-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.study-hub-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.wrong-hub {
+  background: rgba(255, 107, 107, 0.05);
+  border: 1.2px solid rgba(255, 107, 107, 0.18);
+}
+
+.wrong-hub:hover {
+  background: rgba(255, 107, 107, 0.12) !important;
+}
+
+.bookmark-hub {
+  background: rgba(85, 124, 85, 0.05);
+  border: 1.2px solid rgba(85, 124, 85, 0.18);
+}
+
+.bookmark-hub:hover {
+  background: rgba(85, 124, 85, 0.12) !important;
+}
+
+.study-hub-badge {
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.wrong-badge {
+  background: #ff6b6b;
+}
+
+.bookmark-badge {
+  background: var(--accent-color);
+}
+
+.streak-grass-node {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.streak-grass-node.active {
+  background: var(--accent-color);
+  box-shadow: var(--neon-glow);
+}
+
+.streak-grass-node.inactive {
+  background: rgba(255,255,255,0.05);
+}
+
+/* 배지 그룹 */
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+
+.custom-badge {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(4px);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 메달 섹션 */
+.medals-section {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(4px);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,0.15);
+  margin-top: 8px;
+}
+
+.achievement-medals-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.medals-sec-title {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.medal-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: help;
+  transition: all 0.2s;
+}
+
+.medal-emoji-wrapper {
+  font-size: 1.8rem;
+  padding: 4px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+}
+
+.medal-emoji-wrapper.unlocked {
+  background: rgba(255, 159, 67, 0.15);
+  border: 1.5px solid #ff9f43;
+  box-shadow: 0 4px 10px rgba(255, 159, 67, 0.25);
+}
+
+.medal-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-top: 4px;
+  color: var(--text-secondary);
+}
+
+.medal-label.unlocked {
+  color: var(--accent-color);
+}
+
+/* N1 실전 아레나 섹션 */
+.arena-section-container {
+  margin-top: 40px;
+	flex-direction:column;
+}
+
+.arena-section-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arena-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(23.75rem, 1fr)); /* 380px → 23.75rem */
+  gap: 1.75rem; /* 28px → 1.75rem */
+  width: 100%;
+}
+
+.arena-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.75rem; /* 28px → 1.75rem */
+  border-color: rgba(255,255,255,0.08);
+  min-height: 17.5rem; /* 280px → 17.5rem */
+}
+
+.arena-card-body-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.arena-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.arena-card-emoji {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+.arena-card-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.arena-card-title {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.arena-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.arena-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 16px;
+}
+
+.arena-card-footer-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.arena-card-btn {
+  padding: 10px 24px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+/* 🔮 극강의 네온 유리 캡슐 버튼 */
+.glass-neon-btn {
+  background: var(--card-bg);
+  backdrop-filter: blur(0.5rem); /* 8px → 0.5rem */
+  -webkit-backdrop-filter: blur(0.5rem);
+  color: var(--accent-color);
+  border: 1.5px solid var(--accent-color);
+  padding: 0.75rem 1.75rem; /* 12px 28px → rem */
+  border-radius: 100px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 0.25rem 0.938rem rgba(0, 0, 0, 0.05),
+              0 0 0.625rem rgba(0, 0, 0, 0.02);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; /* 8px → 0.5rem */
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.glass-neon-btn:hover {
+  background: var(--accent-color) !important;
+  color: #ffffff !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: var(--neon-glow);
+  transform: translateY(-2px);
+}
+
+.glow-btn {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border: none;
+  padding: 0.625rem 1.25rem; /* 10px 20px → rem */
+  border-radius: var(--custom-radius);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--neon-glow);
+  display: inline-flex;
+  align-items: center;
+	justify-content:center;
+  gap: 0.5rem; /* 8px → 0.5rem */
+}
+
+.glow-btn:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+.outline-btn {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1.5px solid var(--card-border);
+  padding: 0.625rem 1.25rem; /* 10px 20px → rem */
+  border-radius: var(--custom-radius);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.03);
+}
+
+.outline-btn:hover {
+  border-color: var(--accent-color);
+  background: var(--bg-secondary);
+}
+
+.premium-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--custom-radius);
+  box-shadow: var(--neon-glow);
+  padding: 1.5rem; /* 24px → 1.5rem */
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: var(--accent-color);
+  opacity: 0.8;
+}
+
+.premium-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 30px var(--accent-glow);
+}
+
+/* ========================================================
+   3.5 퀴즈 아레나 2단 그리드 기본 시스템 (PC 기준 2분할)
+   ======================================================== */
+.play-arena-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 28px;
+  width: 100%;
+}
+
+.play-arena-grid.drawing-active {
+  grid-template-columns: 1.2fr 0.8fr;
+}
+
+/* 그림판이 꺼졌거나 드로잉 피처가 없는 경우 1열 전체 너비 스케일링 */
+.play-arena-grid:not(.drawing-active) {
+  grid-template-columns: 1fr;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+.pulse-ani {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* 🏆 업적 달성 알림 토스트 슬라이드인 애니메이션 */

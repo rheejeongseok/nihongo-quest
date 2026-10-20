@@ -1,0 +1,48 @@
+/* Shared header uses the same palette, edges and spacing as the dashboard. */
+.site-header { background: var(--bg-primary); border-bottom: 1px solid var(--card-border); box-shadow: none; }
+.site-header .header-container { max-width: 1160px; min-width: 0; height: 72px; gap: 28px; justify-content: flex-start; }
+.site-header .header-logo { gap: 9px; flex-shrink: 0; }
+.site-header .brand-mark { color: var(--accent-color); flex-shrink: 0; }
+.site-header .logo-text { font-size: 1.15rem; font-weight: 750; letter-spacing: -.035em; background: none; -webkit-text-fill-color: currentColor; color: var(--text-primary); text-shadow: none; }
+.site-header .header-nav { align-self: stretch; padding: 0; gap: 20px; background: none; border: 0; border-radius: 0; }
+.site-header .header-nav .nav-item { position: relative; display: inline-flex; align-items: center; padding: 0 2px; border-radius: 0; font-size: .8rem; font-weight: 650; white-space: nowrap; }
+.site-header .header-nav .nav-item:is(:hover,.active) { background: none !important; box-shadow: none; color: var(--text-primary) !important; }
+.site-header .header-nav .nav-item.active::after { content: ''; position: absolute; height: 2px; bottom: 0; left: 0; right: 0; background: var(--accent-color); border-radius: 2px; }
+.site-header .header-btns { margin-left: auto; gap: 10px !important; min-width: 0; }
+.site-header .target-level-pill-switch { display: flex; padding: 3px; border: 1px solid var(--card-border); background: var(--bg-secondary); border-radius: 10px; flex-shrink: 0; }
+.site-header .target-level-pill-switch button { border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: .72rem; font-weight: 750; padding: 7px 10px; cursor: pointer; white-space: nowrap; }
+.site-header .target-level-pill-switch button[aria-pressed=true] { background: var(--card-bg); color: var(--accent-color); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.site-header .header-premium-btn { height: 40px !important; border-radius: 9px !important; border: 1px solid var(--card-border) !important; padding: 0 12px !important; background: var(--card-bg) !important; color: var(--text-primary) !important; box-shadow: none !important; text-shadow: none !important; font-size: .73rem !important; font-weight: 650 !important; gap: 8px !important; transform: none !important; white-space: nowrap; }
+.site-header .header-premium-btn:hover { background: var(--bg-secondary) !important; border-color: var(--accent-color) !important; box-shadow: none !important; transform: none !important; }
+.site-header .header-premium-btn.sync-chip { background: transparent !important; border-color: transparent !important; padding: 0 5px !important; }
+.site-header .account-avatar { display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center; flex-shrink: 0; background: var(--bg-secondary); border: 1px solid var(--card-border); color: var(--text-secondary); border-radius: 8px; font-size: .7rem; }
+.site-header .account-name { max-width: 70px; overflow: hidden; text-overflow: ellipsis; }
+.tools-label-short { display: none; }
+.site-header .tools-chevron { display: block; width: 16px; height: 16px; flex-shrink: 0; align-self: center; color: var(--text-secondary); transform-origin: center; transition: transform .2s; }
+.site-header [aria-expanded=true] .tools-chevron { transform: rotate(180deg); }
+.site-header .tools-dropdown { border-radius: 12px !important; border-color: var(--card-border) !important; box-shadow: 0 12px 36px rgba(0,0,0,.13) !important; max-height: calc(100dvh - 92px); overflow-y: auto; }
+.site-header .tools-dropdown button, .site-header .tools-dropdown-item { border-radius: 7px !important; box-shadow: none !important; line-height: 1.65; }
+.site-header :is(a,button):focus-visible, .quest-drawer :is(a,button):focus-visible { outline: 2px solid var(--accent-color) !important; outline-offset: 3px; }
+.quest-drawer.mobile-drawer-content { background: var(--bg-primary) !important; box-shadow: -12px 0 40px rgba(0,0,0,.16) !important; border-left: 1px solid var(--card-border); }
+.quest-drawer .drawer-logo { font-size: 1rem !important; color: var(--text-primary) !important; background: none !important; -webkit-text-fill-color: currentColor !important; text-shadow: none; }
+.quest-drawer .drawer-nav-item { border-radius: 9px !important; box-shadow: none !important; border-color: var(--card-border) !important; font-size: .85rem; }
+.quest-drawer .header-premium-btn { border-radius: 9px !important; box-shadow: none !important; background: var(--card-bg) !important; border-color: var(--card-border) !important; text-shadow: none !important; }
+.quest-drawer .pulse-dot { display: none; }
+.quest-drawer .drawer-track-switch { border: 1px solid var(--card-border) !important; border-radius: 10px !important; box-shadow: none !important; }
+.quest-drawer .drawer-track-switch button { border-radius: 7px !important; box-shadow: none !important; background: transparent !important; color: var(--text-secondary) !important; }
+.quest-drawer .drawer-track-switch button[aria-pressed=true] { background: var(--card-bg) !important; color: var(--accent-color) !important; }
+@media (min-width: 769px) and (max-width: 1100px) {
+  .site-header .header-container { gap: 20px; padding-left: 20px; padding-right: 20px; }
+  .site-header .header-nav { gap: 14px; }
+  .site-header .header-btns { gap: 6px !important; }
+  .site-header .account-name { display: none; }
+  .site-header .tools-label-full { display: none; }
+  .site-header .tools-label-short { display: inline; }
+}
+@media (max-width: 768px) {
+  header.site-header .container.header-container { height: 64px !important; }
+  .site-header .header-logo .logo-text { font-size: 1.05rem !important; }
+  .site-header .brand-mark { width: 25px; height: 25px; }
+  .site-header .mobile-menu-trigger { width: 40px; height: 40px; padding: 0 !important; border: 1px solid var(--card-border) !important; border-radius: 9px; background: var(--card-bg) !important; }
+  .quest-drawer .drawer-close-btn { width: 40px; height: 40px; border: 1px solid var(--card-border) !important; border-radius: 9px !important; font-size: .9rem !important; }
+}

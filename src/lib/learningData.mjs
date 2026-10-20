@@ -1,6 +1,8 @@
-import { buildBeginnerQuizzes } from '../data/beginnerQuizzes.mjs';
+import { buildBeginnerQuizzes } from '../data/beginnerRebuilt.mjs';
 import { buildN1Quizzes } from '../data/n1QualityQuizzes.mjs';
 import { buildN1Exam } from '../data/n1Exam.mjs';
+import { buildN1Expansion } from '../data/n1Expansion20261019.mjs';
+import { buildN1ExpansionBatch2 } from '../data/n1ExpansionBatch2.mjs';
 
 // Physical stage IDs stay stable because existing attempts reference their quizzes.
 const stages = [
@@ -31,7 +33,9 @@ export async function syncLearningData(prisma, { overwrite = false, level } = {}
   }
   const quizzes = [
     ...buildN1Quizzes(ids).map(quiz => practiceMetadata(quiz, ids, 'N1')),
-    ...buildBeginnerQuizzes(ids).map(quiz => practiceMetadata(quiz, ids, 'BEGINNER')),
+    ...buildN1Expansion(ids),
+    ...buildN1ExpansionBatch2(ids),
+    ...buildBeginnerQuizzes(ids),
     ...buildN1Exam(ids).map(({ domain, ...quiz }, index) => ({ ...quiz, jlptLevel: 'N1', arenaCategory: 'MOCK_EXAM',
       status: 'ACTIVE', itemType: quiz.quizType, stimulusId: quiz.id, examOrder: index + 1, examDomain: domain }))
   ].filter(quiz => !level || quiz.jlptLevel === level);

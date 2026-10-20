@@ -1,4 +1,7 @@
 import "./globals.css";
+import "./dashboard.css";
+import "./header.css";
+import "./simple-ui.css";
 
 export const metadata = {
   title: "NihongoQuest | 일본어 공부 퀴즈 아레나",
@@ -40,11 +43,12 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body suppressHydrationWarning>
+      <body className="simple-ui" suppressHydrationWarning>
         <Header />
         <main style={{ position: "relative", zIndex: 1 }}>{children}</main>
         <AppToast />
         <PwaInstallPrompt />
+        <ModalDragController />
       </body>
     </html>
   );
@@ -54,3 +58,4 @@ export default function RootLayout({ children }) {
 import Header from "./Header";
 import AppToast from "./AppToast";
 import PwaInstallPrompt from "./PwaInstallPrompt";
+import ModalDragController from "./ModalDragController";

@@ -1,6 +1,5 @@
 import prisma from '@/lib/prisma';
 import ClientDashboard from './ClientDashboard';
-import ClientSeedButton from './ClientSeedButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,20 +16,9 @@ export default async function HomePage() {
 
   // 만약 첫 구동이라 데이터베이스가 아예 비어 있다면
   const isDbEmpty = stageCount === 0;
-  const showSeedControls = process.env.NODE_ENV !== 'production';
 
   return (
-    <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', minHeight: 'calc(100vh - 5rem)' }}>
-      {/* 타이틀 헤더 */}
-      <div className="home-banner-wrapper">
-        <h1 className="home-banner-title">
-          🌸 일본어 퀴즈 퀘스트 <span className="logo-highlight">NihongoQuest</span>
-        </h1>
-        <p className="home-banner-desc">
-          게임을 깨듯이 한 단계씩 즐겁게 헤쳐나가는 나만의 일본어 공부 모험
-        </p>
-      </div>
-
+    <div className="container quest-home" style={{ minHeight: 'calc(100vh - 5rem)' }}>
       {isDbEmpty ? (
         /* ==================== [DB가 비어있을 때의 초프리미엄 웰컴 & 시딩 가이드] ==================== */
         <div style={{
@@ -44,22 +32,17 @@ export default async function HomePage() {
           boxShadow: 'var(--neon-glow)',
         }}>
           <span style={{ fontSize: '4rem', display: 'block', marginBottom: '20px', animation: 'pulse 2s infinite' }}>📦</span>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '16px' }}>학습 데이터베이스 준비 완료!</h2>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '16px' }}>학습 데이터를 준비 중입니다</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', marginBottom: '32px', fontSize: '0.95rem' }}>
-            성공적으로 독립 데이터베이스가 연동되었습니다! 아래 버튼을 한 번만 클릭해 주시면 
-            <strong> 현재 N1·초보 아레나의 학습 데이터</strong>를 준비합니다.
+            아직 학습 데이터를 불러올 수 없습니다. 잠시 후 다시 접속해 주세요.
           </p>
-          {showSeedControls ? (
-            <ClientSeedButton />
-          ) : (
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              운영 환경에서는 관리자만 서버에서 학습 데이터를 초기화할 수 있습니다.
+              문제가 계속되면 관리자에게 문의해 주세요.
             </p>
-          )}
         </div>
       ) : (
         /* ==================== [실제 대시보드 및 학습 로드맵] ==================== */
-        <ClientDashboard showSeedControls={showSeedControls} />
+        <ClientDashboard />
       )}
     </div>
   );

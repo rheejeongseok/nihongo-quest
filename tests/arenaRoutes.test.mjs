@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { buildBeginnerQuizzes } from '../src/data/beginnerQuizzes.mjs';
+import { buildBeginnerQuizzes } from '../src/data/beginnerRebuilt.mjs';
+import { getBeginnerArena } from '../src/lib/beginnerArena.mjs';
+import { beginnerCourseForRoute } from '../src/data/beginnerCourses.mjs';
 import { buildN1Quizzes } from '../src/data/n1QualityQuizzes.mjs';
 import { n1CourseForRoute } from '../src/data/n1Courses.mjs';
 import { getN1Arena } from '../src/lib/n1Arena.mjs';
@@ -55,8 +57,8 @@ function loadHandler(path, handler, env = {}) {
   const source = fs.readFileSync(path, 'utf8')
     .replace(/^import .*;\r?\n/gm, '')
     .replace(/^export /gm, '');
-  return Function('prisma', 'NextResponse', 'buildBeginnerQuizzes', 'buildN1Quizzes', 'getN1Arena', 'createHash', 'timingSafeEqual', 'syncLearningData', 'process',
-    `${source}\nreturn ${handler};`)(prisma, NextResponse, buildBeginnerQuizzes, buildN1Quizzes, getN1Arena, createHash, timingSafeEqual, syncLearningData,
+  return Function('prisma', 'NextResponse', 'buildBeginnerQuizzes', 'buildN1Quizzes', 'getN1Arena', 'getBeginnerArena', 'createHash', 'timingSafeEqual', 'syncLearningData', 'process',
+    `${source}\nreturn ${handler};`)(prisma, NextResponse, buildBeginnerQuizzes, buildN1Quizzes, getN1Arena, getBeginnerArena, createHash, timingSafeEqual, syncLearningData,
     { env: { NODE_ENV: 'test', DATABASE_URL: 'postgresql://memory', ...env } });
 }
 
@@ -65,11 +67,11 @@ test('실제 생성 데이터로 두 트랙의 7개 아레나 × 3개 난이도 
   const seeded = await seed({});
   assert.equal(seeded.status, 200);
   assert.equal(seeded.body.success, true);
-  assert.equal(seeded.body.totalQuizzesSeeded, 682);
+  assert.equal(seeded.body.totalQuizzesSeeded, 1696);
   const second = await seed({});
   assert.equal(second.body.created, 0);
   assert.equal(second.body.updated, 0);
-  assert.equal(second.body.unchanged, 682);
+  assert.equal(second.body.unchanged, 1696);
   const get = loadHandler('src/app/api/stages/[stageNumber]/route.js', 'GET');
   const categories = ['CHARACTERS', 'VOCAB', 'GRAMMAR', 'LISTENING', 'WORDLE', 'ASSEMBLY', 'MOCK_EXAM'];
   for (const track of ['N1', 'BEGINNER']) {
@@ -87,7 +89,7 @@ test('실제 생성 데이터로 두 트랙의 7개 아레나 × 3개 난이도 
           }
           assert.equal(result.status, 200, JSON.stringify(result.body));
           assert.equal(result.body.stage.difficulty, track === 'N1' ? 'N1' : difficulty);
-          assert.equal(result.body.stage.category, track === 'N1' ? n1CourseForRoute(stageNumber, category).category : category);
+          assert.equal(result.body.stage.category, track === 'N1' ? n1CourseForRoute(stageNumber, category).category : beginnerCourseForRoute(stageNumber, category).category);
           const selected = result.body.quizzes;
           assert.equal(selected.length, 10);
           assert.equal(new Set(selected.map(quiz => quiz.id)).size, selected.length);
@@ -135,6 +137,14 @@ test('실제 생성 데이터로 두 트랙의 7개 아레나 × 3개 난이도 
     assert.equal(result.body.quizzes.length, 10);
     assert.ok(result.body.quizzes.every(quiz => quiz.quizType === 'READING' && quiz.japaneseWord.length >= 150 && quiz.options.length === 4));
   });
+  for (const difficulty of ['EASY','MEDIUM','HARD']) await t.test(`초보 독해 ${difficulty} DB 조회`, async () => {
+    const result = await get({ url: `http://localhost/api/stages/7?jlptLevel=BEGINNER&category=READING&difficulty=${difficulty}` },
+      { params: Promise.resolve({ stageNumber: '7' }) });
+    assert.equal(result.status,200);
+    assert.equal(result.body.stage.category,'READING');
+    assert.equal(result.body.quizzes.length,10);
+    assert.ok(result.body.quizzes.every(q=>q.quizType==='READING' && q.questionText.includes(`[BEGINNER-${difficulty}]`)));
+  });
 });
 
 test('현재 문제만 갱신하고 과거 문제 ID·기록 연결은 보존한다', async () => {
@@ -149,7 +159,7 @@ test('현재 문제만 갱신하고 과거 문제 ID·기록 연결은 보존한
   const result = await syncLearningData(prisma, { overwrite: true });
   assert.equal(result.updated, 1);
   assert.equal(result.created, 0);
-  assert.equal(result.unchanged, 681);
+  assert.equal(result.unchanged, 1695);
   assert.equal(current.id, referencedId);
   assert.equal(JSON.parse(current.wrongAnswers).length, 3);
   assert.equal(quizzes.find(quiz => quiz.id === legacy.id), legacy);

@@ -6,7 +6,7 @@ export function useJapaneseSpeech() {
   const [voice, setVoice] = useState(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
     const updateVoices = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -16,9 +16,8 @@ export function useJapaneseSpeech() {
     };
 
     updateVoices();
-    if (typeof window !== 'undefined' && window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = updateVoices;
-    }
+    window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
   }, []);
 
   const speak = useCallback((text, rate = 0.85) => {

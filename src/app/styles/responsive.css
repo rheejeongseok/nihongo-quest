@@ -1,0 +1,800 @@
+/* ========================================================
+   5. RESPONSIVE WEB DESIGN - FLUID MOBILE OPTIMIZATION (vw / rem BASED)
+   ======================================================== */
+/* 전역 가로 스크롤 완전 격리 차단 */
+html, body {
+  max-width: 100% !important; /* 100vw → 100% (vw는 스크롤바 포함으로 overflow 유발) */
+  overflow-x: hidden !important;
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  /* [1. 글로벌 유동형(Fluid) 패딩 및 박스 제어] */
+  *, *::before, *::after {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .container {
+    padding: 0 4vw !important; /* 기기 너비의 4% 패딩 부여 */
+    max-width: 100% !important; /* 100vw → 100% */
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  main {
+    padding: 3vw 0 !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* [2. 유동형 반응형 폰트 밸런스 - rem 대통합 및 중구난방 정리] */
+  h1 {
+    font-size: 1.25rem !important; /* 모바일 대제목 콤팩트화 */
+    letter-spacing: -0.03em !important;
+    line-height: 1.25 !important;
+    margin-bottom: 8px !important;
+  }
+  
+  h2 {
+    font-size: 1.12rem !important; /* 모바일 중제목 콤팩트화 */
+    letter-spacing: -0.02em !important;
+    margin-bottom: 12px !important;
+  }
+  
+  h3 {
+    font-size: 0.95rem !important; /* 모바일 소제목 콤팩트화 */
+  }
+
+  /* 홈 배너 대표 모바일 크기 및 여백 튜닝 */
+  .home-banner-wrapper {
+    margin-bottom: 16px !important; /* 모바일 하단 여백을 대폭 축소하여 콤팩트화 */
+  }
+
+  .home-banner-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 6px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  .home-banner-desc {
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* 대시보드 및 아레나 모바일 폰트 완벽 단정화 */
+  .card-title {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .card-desc {
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .card-stat-value {
+    font-size: 1.2rem !important;
+  }
+
+  .card-stat-label, .card-stat-label-small {
+    font-size: 0.68rem !important;
+  }
+
+  .arena-card-title {
+    font-size: 1.05rem !important;
+  }
+
+  .arena-card-desc {
+    font-size: 0.78rem !important;
+  }
+
+  .arena-card-footer-label {
+    font-size: 0.72rem !important;
+  }
+
+  .medals-sec-title {
+    font-size: 0.68rem !important;
+  }
+  
+  .custom-badge {
+    font-size: 0.7rem !important;
+    padding: 3px 8px !important;
+  }
+
+  /* [3. 프리미엄 카드 모바일 유동식 레이아웃 & 가로 스크롤 완전 차단 가드] */
+  html, body, #__next, main, .container {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+
+  body {
+    padding-bottom: 5.75rem !important; /* 92px → 5.75rem */
+  }
+
+  /* 📱 모바일 드로워 오픈 시 하단 고정 버튼 우아하게 페이드 아웃 및 뷰포트 하단 낙하 */
+  body[data-drawer-open='true'] .mo-arena-btn {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    transform: translate(-50%, 35px) !important; /* 아래로 부드럽게 하강 침강하며 은폐 */
+  }
+
+  /* 플로팅 고정 버튼의 움직임을 한없이 럭셔리하게 만드는 트랜지션 서명 */
+  .mobile-only {
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s !important;
+  }
+
+  .glass-premium-card, .premium-card {
+    padding: 4vw !important; /* 고정 px 대신 뷰포트 비례 패딩 */
+    min-height: auto !important;
+    border-radius: 3vw !important;
+    width: 100% !important;
+  }
+  
+  /* [4. 콤팩트 모바일 1단 헤더 - 로고와 햄버거 트리거만 간결 정렬] */
+  .mobile-only {
+    display: flex !important;
+  }
+  .pc-only {
+    display: none !important;
+  }
+
+  header.header-glass .container.header-container {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 3.75rem !important; /* 60px → 3.75rem */
+    padding: 0 1rem !important; /* 16px → 1rem */
+    gap: 0 !important;
+    grid-template-columns: unset !important;
+    grid-template-rows: unset !important;
+  }
+
+  .header-logo {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .header-logo .logo-text {
+    font-size: 1.1rem !important; /* 모바일 로고 콤팩트화 */
+  }
+
+  .logo-emoji {
+    font-size: 1.35rem !important;
+    margin-top: -3px !important;
+  }
+
+  /* 모바일 햄버거 버튼 트리거 */
+  .mobile-menu-trigger {
+    background: none !important;
+    border: none !important;
+    color: var(--text-primary) !important;
+    font-size: 1.8rem !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4px !important;
+    outline: none !important;
+    /* transition: transform 0.2s ease !important; */
+  }
+
+  .mobile-menu-trigger:active {
+    transform: scale(0.9) !important;
+  }
+
+  /* ========================================================
+     모바일 사이드 드로워 슬라이드 메뉴 프리미엄 디자인
+     ======================================================== */
+  .mobile-drawer-overlay {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+  }
+
+  .mobile-drawer-content {
+    width: 18.4375rem !important; /* 295px → 18.4375rem */
+    max-width: 82vw !important;
+    height: 100% !important;
+    background: var(--card-bg) !important;
+    border-left: 1.5px solid var(--card-border) !important;
+    box-shadow: -0.5rem 0 2.2rem rgba(0, 0, 0, 0.12) !important; /* -8px 35px → rem */
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 1.625rem 1.25rem !important; /* 26px 20px → rem */
+    position: relative !important;
+    transform: translateX(100%);
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    animation: drawer-slide-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+
+  /* 얇고 세련된 모던 드로워 전용 세로 스크롤바 디자인 */
+  .mobile-drawer-content::-webkit-scrollbar {
+    width: 3px !important;
+  }
+  .mobile-drawer-content::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+  .mobile-drawer-content::-webkit-scrollbar-thumb {
+    background: var(--card-border) !important;
+    border-radius: 10px !important;
+  }
+
+  @keyframes drawer-slide-left {
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .drawer-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1.2px solid var(--card-border) !important;
+    padding-bottom: 0.875rem !important; /* 14px → 0.875rem */
+    margin-bottom: 1.5rem !important; /* 24px → 1.5rem */
+  }
+
+  .drawer-logo {
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.5px !important;
+    color: var(--text-primary) !important;
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%) !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+
+  .drawer-close-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--text-secondary) !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    transition: transform 0.2s ease !important;
+  }
+
+  .drawer-close-btn:active {
+    transform: scale(0.85) !important;
+  }
+
+  .drawer-section {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important; /* 8px → 0.5rem */
+    margin-bottom: 1.5rem !important; /* 24px → 1.5rem */
+  }
+
+  .drawer-sec-label {
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    opacity: 0.8 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .drawer-theme-box {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .drawer-theme-box > div {
+    width: 100% !important;
+  }
+
+  .drawer-theme-box button.outline-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px 14px !important;
+    border-radius: var(--custom-radius) !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    background: var(--card-bg) !important;
+    border: 1.5px solid var(--card-border) !important;
+    color: var(--text-primary) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .drawer-theme-box button.outline-btn + div {
+    width: 100% !important;
+  }
+
+  .drawer-nav {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important; /* 8px → 0.5rem */
+  }
+
+  .drawer-nav-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 16px !important; /* 터치하기 넉넉하고 시크한 패딩 */
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+    border-radius: 10px !important;
+    border: none !important; /* 칙칙하고 올드한 보더 완전 파쇄! */
+    background: rgba(120, 120, 120, 0.05) !important; /* 뒷배경이 맑게 투영되는 은은한 틴트 */
+    box-shadow: none !important; /* 그림자 삭제로 플랫 모던함 극대화 */
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .drawer-nav-item:hover {
+    color: var(--accent-color) !important;
+    background: rgba(120, 120, 120, 0.09) !important;
+    transform: translateX(4px) !important; /* 시크하게 오른쪽으로 미끄러지는 마이크로 인터랙션 */
+  }
+
+  .drawer-nav-item.active {
+    color: var(--accent-color) !important;
+    background: rgba(85, 124, 85, 0.07) !important; /* 은은한 영롱함을 입힌 틴팅 */
+    font-weight: 800 !important;
+  }
+
+  /* 세련미의 극치: 활성화 상태 시 좌측에 아주 얇게 맺히는 테마 컬러 포인트 바 */
+  .drawer-nav-item.active::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 25% !important;
+    height: 50% !important;
+    width: 3.5px !important;
+    background: var(--accent-color) !important;
+    border-radius: 100px !important;
+  }
+
+  .drawer-footer {
+    margin-top: 1.5rem !important; /* 24px → 1.5rem */
+    border-top: 1px solid var(--card-border) !important;
+    padding-top: 1rem !important; /* 16px → 1rem */
+    text-align: center !important;
+    padding-bottom: 0.75rem !important; /* 12px → 0.75rem */
+  }
+
+  .drawer-footer p {
+    font-size: 0.7rem !important;
+    color: var(--text-secondary) !important;
+    font-weight: 700 !important;
+  }
+
+  .version-label {
+    font-size: 0.6rem !important;
+    color: var(--text-secondary) !important;
+    opacity: 0.5 !important;
+    display: block !important;
+    margin-top: 4px !important;
+  }
+
+  /* [5. 동기화 패널 유동형 정렬] */
+  /* [모바일 글래스모피즘 흐릿함 파쇄 및 선명도 극대화 치트키] */
+  .glass-premium-card {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    background: var(--card-bg) !important; /* 흐릿한 투명도 제거, 테마 고유의 단단하고 쨍한 카드 배경 대입 */
+    border: 1.5px solid var(--card-border) !important; /* 경계선을 확실하고 맑게 복원 */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05) !important;
+  }
+
+	.glass-premium-card .count-title span {
+		display:none !important;
+	}
+
+	.glass-premium-card .count-timer {
+		margin:0 auto;
+	}
+
+  /* [6. 대시보드 정보 그리드 - 모바일 1열 100% 웅장 배치 환원] */
+  
+  /* 자식 카드들 전부 가로 100% 가득 차도록 완전히 1열 고정 */
+
+  /* [모바일 전용 스트릭 잔디 row 정렬 - 찌러짐 원천 차단] */
+  .streak-grass-container {
+    display: flex !important;
+    flex-direction: row !important; /* 모바일에서 5개 노드가 무조건 수평 가로 1행으로 강제 고정! */
+    gap: 6px !important;
+    width: auto !important;
+    height: auto !important;
+    margin-top: 0 !important;
+    align-self: flex-end !important;
+  }
+
+  .streak-grass-node {
+    width: 14px !important;
+    height: 14px !important;
+    flex-shrink: 0 !important; /* 공간이 협소해도 절대 찌그러지지 않도록 축소율 0 선언 */
+  }
+
+  /* 스트릭 카드 하단 정렬 원복 (가로폭이 시원해졌으므로 수평 row로 완벽 정렬) */
+
+  /* 모바일용 스마트 학습 요약 칩 널널하게 갭 튜닝 */
+  .study-hub-box {
+    gap: 12px !important; /* 모바일에서 널널하게 간격 12px 확보 */
+    margin-top: 12px !important;
+  }
+
+  .study-hub-item {
+    padding: 12px 14px !important; /* 버튼 세로 패딩을 12px로 넓혀 손가락 터치 피드백 극대화 */
+    font-size: 0.82rem !important;
+  }
+
+  /* [7. 5대 업적 메달 홀 - 초슬림 수평 단정 배치] */
+  .achievement-medals-box {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 1vw !important;
+    padding: 2px !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+  
+  .achievement-medals-box > div {
+    flex: 1 !important;
+    min-width: auto !important;
+  }
+  
+  .achievement-medals-box > div span:first-child {
+    font-size: calc(0.95rem + 0.3vw) !important;
+  }
+  
+  .achievement-medals-box > div span:last-child {
+    font-size: calc(0.42rem + 0.1vw) !important;
+  }
+
+  /* [8. N1 아레나 카드 - 모바일 2컬럼 대학 퀵 메뉴 격자 대개조] */
+  .arena-cards-grid {
+    grid-template-columns: 1fr 1fr !important; /* 2컬럼 바둑판 대변환! */
+    gap: 3vw !important;
+  }
+  
+  .arena-cards-grid > div {
+    padding: 3.5vw !important;
+    min-height: 140px !important; /* 콤팩트 격자 높이 */
+    border-radius: 3vw !important;
+    justify-content: space-between !important;
+  }
+
+  /* 마지막 5번째 아레나 카드는 가로 100% 확장하여 안정적 그리드 균형 확보 */
+  .arena-cards-grid > div:nth-child(5) {
+    grid-column: 1 / 3 !important;
+    min-height: auto !important;
+  }
+
+  /* 아레나 내부 퀵 정렬 */
+  .arena-card-top {
+    margin-bottom: 8px !important;
+  }
+
+  .arena-card-emoji {
+    font-size: 1.8rem !important; /* 바둑판에 어울리는 아담한 크기 */
+  }
+
+  .arena-card-badge {
+    font-size: 0.65rem !important;
+    padding: 2px 6px !important;
+  }
+
+  .arena-cards-grid h4 {
+    font-size: 0.95rem !important; /* 2컬럼에서도 짤리지 않게 단정화 */
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+  }
+  
+  .arena-cards-grid p {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .arena-card-footer {
+    margin-top: 10px !important;
+    padding-top: 8px !important;
+    gap: 4px !important;
+    border-top: 1px solid rgba(255,255,255,0.04) !important;
+  }
+
+  .arena-card-footer-label {
+    display: none !important; /* 모바일 그리드 내부 공간확보를 위해 문구 은폐 */
+  }
+
+  .arena-cards-grid button {
+    width: 100% !important;
+    padding: 6px 12px !important;
+    font-size: 0.72rem !important;
+    border-radius: 100px !important;
+    justify-content: center !important;
+  }
+  
+  .arena-cards-grid h4 {
+    font-size: calc(1rem + 0.5vw) !important;
+  }
+  
+  .arena-cards-grid p {
+    font-size: calc(0.75rem + 0.2vw) !important;
+  }
+  
+  .arena-cards-grid button {
+    padding: 2.5vw 5vw !important;
+    font-size: calc(0.75rem + 0.2vw) !important;
+  }
+
+  /* [9. 퀴즈 실전 플레이 화면 - 가로폭에 자석처럼 붙는 뷰] */
+  .play-arena-grid {
+    grid-template-columns: 1fr !important;
+    gap: 4vw !important;
+    width: 100% !important;
+  }
+  
+  .play-arena-grid .glass-premium-card {
+    padding: 5vw !important;
+  }
+  
+  /* 상태바 텍스트 밀림 복구 */
+  .play-arena-grid div[style*="flexWrap: 'nowrap'"], 
+  .play-arena-grid span[style*="whiteSpace: 'nowrap'"] {
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    gap: 2vw !important;
+    line-height: 1.4 !important;
+  }
+  
+  .play-arena-grid span[style*="whiteSpace: 'nowrap'"] span {
+    font-size: calc(0.75rem + 0.2vw) !important;
+  }
+  
+  /* 한자 단어 크기 - 뷰포트 비율에 따라 완벽 비례 */
+  .play-arena-grid h3 {
+    font-size: calc(1.5rem + 2vw) !important;
+    margin-top: 3vw !important;
+    letter-spacing: 0.05em !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* 지문 텍스트 밸런스 */
+  .play-arena-grid p[style*="fontSize: '0.95rem'"] {
+    font-size: calc(0.85rem + 0.3vw) !important;
+    line-height: 1.4 !important;
+    margin-bottom: 2vw !important;
+  }
+  
+  /* 주관식 입력 폼 반응형 비례화 */
+  .play-arena-grid input[type="text"] {
+    padding: 3vw 4vw !important;
+    font-size: calc(0.8rem + 0.3vw) !important;
+    border-radius: 2vw !important;
+  }
+  
+  .play-arena-grid .glow-btn {
+    padding: 3vw 5vw !important;
+    font-size: calc(0.8rem + 0.2vw) !important;
+    border-radius: 2vw !important;
+  }
+
+  /* 사지선다 버튼 1열 유동화 */
+  .options-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2.5vw !important;
+  }
+  
+  .options-grid button {
+    font-size: calc(0.75rem + 0.2vw) !important;
+    padding: 2.5vw 3vw !important;
+    border-radius: 2vw !important;
+  }
+
+  /* [10. 캘리그래피 그림판 & 구글 OCR 뷰포트 맞춤] */
+  .play-arena-grid .premium-card {
+    padding: 4vw !important;
+    border-radius: 3vw !important;
+  }
+  
+  /* 모바일 그림판 가로폭 터짐 방지 - 부모 카드의 가로 82% 수준으로 유동 스케일링 */
+  .play-arena-grid div[style*="aspectRatio: '1'"] {
+    width: 82vw !important;
+    height: 82vw !important;
+    max-width: 340px !important;
+    max-height: 340px !important;
+    margin: 0 auto !important;
+  }
+  
+  .play-arena-grid h4 {
+    font-size: calc(0.88rem + 0.2vw) !important;
+  }
+  
+  /* 구글 실시간 추천 단어 버튼들 축소 */
+  .play-arena-grid button[style*="fontSize: '1rem'"] {
+    font-size: calc(0.82rem + 0.2vw) !important;
+    padding: 1.5vw 3.5vw !important;
+  }
+
+  /* [11. 🏆 워들 타일 초강력 리사이징 치트키 (8.2vw) ] */
+  .play-arena-grid div[style*="width: '42px'"], 
+  .play-arena-grid input[style*="width: '42px'"] {
+    width: 8.2vw !important;
+    height: 8.2vw !important;
+    max-width: 42px !important;
+    max-height: 42px !important;
+    font-size: calc(0.8rem + 0.3vw) !important;
+    border-width: 1.5px !important;
+    border-radius: 1vw !important;
+  }
+  
+  /* 결과 리포트 요약 1열화 */
+  .report-summary-grid {
+    grid-template-columns: 1fr !important;
+    gap: 3vw !important;
+    padding: 4vw !important;
+  }
+  
+  .report-summary-grid span {
+    font-size: calc(1.2rem + 1vw) !important;
+  }
+
+  /* [12. 난이도 조절 우아한 모달 팝업] */
+  .modal-premium-content {
+    padding: 6vw 4vw !important;
+    width: 90vw !important;
+    max-width: 340px !important;
+    border-radius: 4vw !important;
+  }
+  
+  .modal-premium-content h3 {
+    font-size: calc(1rem + 0.4vw) !important;
+  }
+  
+  .modal-premium-content p {
+    font-size: calc(0.75rem + 0.2vw) !important;
+    margin-bottom: 4vw !important;
+  }
+  
+  .modal-premium-content .difficulty-btn-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2vw !important;
+    margin-bottom: 5vw !important;
+  }
+  
+  .modal-premium-content .difficulty-btn-grid button {
+    padding: 3vw !important;
+    font-size: calc(0.75rem + 0.2vw) !important;
+    border-radius: 2vw !important;
+  }
+
+  /* [13. 단어장 및 오답노트 모바일 최적화] */
+  .vocabulary-grid {
+    grid-template-columns: 1fr !important;
+    gap: 3vw !important;
+  }
+  
+  .wrong-note-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 3vw !important;
+    padding: 4vw !important;
+    border-radius: 3vw !important;
+  }
+  
+  .wrong-info-container {
+    margin-right: 0 !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 0.875rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  .wrong-info-container h4 {
+    font-size: calc(1rem + 0.5vw) !important;
+  }
+  
+  .wrong-review-level {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    max-width: 60px !important;
+    max-height: 60px !important;
+  }
+
+  .wrong-review-meta {
+    width: auto !important;
+    min-width: 4.25rem !important;
+  }
+
+  .wrong-question-content {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    overflow-wrap: normal;
+  }
+
+  .wrong-word-row {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    flex-wrap: wrap !important;
+    row-gap: 0.25rem !important;
+  }
+
+  .wrong-word-row h4,
+  .wrong-word-row span {
+    max-width: 100%;
+    overflow-wrap: normal;
+  }
+  
+  .wrong-btn-actions {
+    flex-direction: row !important;
+    width: 100% !important;
+    gap: 2vw !important;
+  }
+  
+  .wrong-btn-actions button {
+    flex: 1 !important;
+    padding: 2.5vw !important;
+    font-size: calc(0.72rem + 0.2vw) !important;
+    justify-content: center !important;
+    border-radius: 2vw !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 초소형 모바일 기기 여백 긴급 조율 */
+  .container {
+    padding: 0 3vw !important;
+  }
+  
+  .glass-premium-card, .premium-card {
+    padding: 3vw !important;
+  }
+  
+  /* 시드 데이터 웰컴페이지 조율 */
+  div[style*="padding: '48px 32px'"] {
+    padding: 5vw 3vw !important;
+    border-radius: 4vw !important;
+  }
+  
+  div[style*="padding: '48px 32px'"] h2 {
+    font-size: calc(1rem + 0.3vw) !important;
+  }
+  
+  div[style*="padding: '48px 32px'"] p {
+    font-size: calc(0.72rem + 0.2vw) !important;
+    margin-bottom: 5vw !important;
+  }
+}
+
+.modal-premium-content {
+  padding: 3rem 3.75rem; /* PC 48px 60px 고정을 반응형 rem으로 우아하게 개편 */
+}
+
+/* All popup windows start centered; only their title areas drag on desktop. */
+[data-draggable-modal] { max-height: 90dvh; }
+.modal-premium-content[data-draggable-modal] { overflow-y: auto; }
+dialog[data-draggable-modal] { margin: auto; }
+@media (min-width: 769px) and (pointer: fine) {
+  [data-modal-drag-handle] { cursor: grab; user-select: none; touch-action: none; }
+  [data-modal-dragging] [data-modal-drag-handle] { cursor: grabbing; }
+  [data-modal-drag-handle] button, [data-modal-drag-handle] a { cursor: pointer; }
+}
+

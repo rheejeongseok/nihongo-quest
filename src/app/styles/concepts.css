@@ -1,0 +1,171 @@
+/* ========================================================
+   [N1 PREMIUM MULTI-CONCEPT SYSTEM]
+   5가지 시각적 컨셉 모드 전역 분기 및 텍스처 시스템
+   ======================================================== */
+
+/* --- 1. 레트로 8비트 모드 (retro) --- */
+:root[data-concept='retro'] {
+  --custom-radius: 0px !important;
+  --neon-glow: none !important;
+}
+
+/* 레트로 도트 바둑판 격자 배경 */
+
+/* 레트로 픽셀 아트 카드 & 단추 리포밍 */
+:root[data-concept='retro'] .glass-premium-card,
+:root[data-concept='retro'] .premium-card,
+:root[data-concept='retro'] .tools-dropdown,
+:root[data-concept='retro'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 4px solid var(--text-primary) !important;
+  box-shadow: 6px 6px 0px var(--text-primary) !important;
+  backdrop-filter: none !important;
+}
+
+:root[data-concept='retro'] button,
+:root[data-concept='retro'] .glow-btn,
+:root[data-concept='retro'] .outline-btn,
+:root[data-concept='retro'] .header-premium-btn,
+:root[data-concept='retro'] .drawer-nav-item,
+:root[data-concept='retro'] input {
+  border: 3px solid var(--text-primary) !important;
+  box-shadow: 3px 3px 0px var(--text-primary) !important;
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0px !important;
+  text-shadow: none !important;
+}
+
+:root[data-concept='retro'] button:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px var(--text-primary) !important;
+}
+
+
+/* --- 2. 교토 전통 헤리티지 모드 (heritage) --- */
+:root[data-concept='heritage'] {
+  --custom-radius: 12px !important;
+  --bg-primary: #fcf9f2 !important; /* 따스한 다도실 벽지색 */
+  --bg-secondary: #f4edd9 !important;
+  --text-primary: #3d2f26 !important; /* 깊은 먹빛 브라운 */
+  --text-secondary: #705f53 !important;
+  --accent-color: #a63f3f !important; /* 일본 단풍나무 적갈색 */
+  --accent-glow: rgba(166, 63, 63, 0.2) !important;
+  --card-bg: #fbfbfa !important;
+  --card-border: #e0d5be !important;
+  --neon-glow: none !important;
+  --glass-bg: rgba(251, 251, 250, 0.9) !important;
+}
+
+/* 교토 다도실의 은은한 미닫이 장지문 격자 배경 */
+
+/* 한지(Washi) 질감의 단아하고 우아한 전통 카드 보더 */
+:root[data-concept='heritage'] .glass-premium-card,
+:root[data-concept='heritage'] .premium-card,
+:root[data-concept='heritage'] .tools-dropdown,
+:root[data-concept='heritage'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 2px solid var(--accent-color) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 15px rgba(61, 47, 38, 0.06) !important;
+}
+
+:root[data-concept='heritage'] button,
+:root[data-concept='heritage'] .glow-btn,
+:root[data-concept='heritage'] .outline-btn,
+:root[data-concept='heritage'] .header-premium-btn,
+:root[data-concept='heritage'] .drawer-nav-item,
+:root[data-concept='heritage'] input {
+  border: 1.5px solid var(--text-secondary) !important;
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+:root[data-concept='heritage'] button:hover {
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+}
+
+
+/* --- 3. 추억의 분필 칠판 모드 (chalkboard) --- */
+:root[data-concept='chalkboard'] {
+  --custom-radius: 6px !important;
+  --bg-primary: #173322 !important; /* 깊은 무광 칠판 청록색 */
+  --bg-secondary: #0d2215 !important;
+  --text-primary: #f8f9fa !important; /* 선명한 백색 분필 텍스트 */
+  --text-secondary: #c2d5c6 !important;
+  --accent-color: #ffd43b !important; /* 강조용 옐로우 분필 텍스트 */
+  --accent-glow: rgba(255, 212, 59, 0.3) !important;
+  --card-bg: #1d3f2b !important;
+  --card-border: #8b5a2b !important; /* 중후한 원목 몰딩색 */
+  --neon-glow: 0 0 10px rgba(255, 255, 255, 0.08) !important;
+  --glass-bg: rgba(29, 63, 43, 0.95) !important;
+}
+
+/* 칠판에 남은 부드러운 분필 가루 질감 효과 */
+
+/* 원목 프레임으로 튼튼하게 짜인 칠판 액자 카드 */
+:root[data-concept='chalkboard'] .glass-premium-card,
+:root[data-concept='chalkboard'] .premium-card,
+:root[data-concept='chalkboard'] .tools-dropdown,
+:root[data-concept='chalkboard'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 4px solid var(--card-border) !important; /* 오크 원목 몰딩 구현 */
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4), 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 8px !important;
+}
+
+:root[data-concept='chalkboard'] button,
+:root[data-concept='chalkboard'] .glow-btn,
+:root[data-concept='chalkboard'] .outline-btn,
+:root[data-concept='chalkboard'] .header-premium-btn,
+:root[data-concept='chalkboard'] .drawer-nav-item,
+:root[data-concept='chalkboard'] input {
+  border: 1.5px solid var(--text-secondary) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  color: var(--text-primary) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+
+:root[data-concept='chalkboard'] button:hover {
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+}
+
+
+/* --- 4. 오가닉 미니멀리즘 페이퍼 모드 (eco) --- */
+:root[data-concept='eco'] {
+  --custom-radius: 2px !important;
+  --neon-glow: none !important;
+}
+
+/* 따뜻한 양장지 크라프트 텍스처 배경 */
+
+/* 킨포크식 실선 미니멀 카드 */
+:root[data-concept='eco'] .glass-premium-card,
+:root[data-concept='eco'] .premium-card,
+:root[data-concept='eco'] .tools-dropdown,
+:root[data-concept='eco'] .modal-premium-content {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--text-secondary) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+:root[data-concept='eco'] button,
+:root[data-concept='eco'] .glow-btn,
+:root[data-concept='eco'] .outline-btn,
+:root[data-concept='eco'] .header-premium-btn,
+:root[data-concept='eco'] .drawer-nav-item,
+:root[data-concept='eco'] input {
+  border: 1px solid var(--text-secondary) !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  text-shadow: none !important;
+  border-radius: 2px !important;
+}
+

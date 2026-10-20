@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import LearningBackupPanel from '@/app/components/LearningBackupPanel';
+import { useLearningBackup } from '@/hooks/useLearningBackup';
+import { getSyncHeaders } from '@/lib/clientProfile.mjs';
+import WordDetailModal from '@/app/components/WordDetailModal';
 import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import { getExampleSentence } from '@/utils/exampleSentences';
@@ -13,10 +16,7 @@ export default function BookmarksPage() {
   const { speak } = useJapaneseSpeech();
 
   // ⚡ 스마트 크로스 동기화 상태
-  const [backupCode, setBackupCode] = useState('');
-  const [inputCode, setInputCode] = useState('');
-  const [exporting, setExporting] = useState(false);
-  const [importing, setImporting] = useState(false);
+
   const [toastMessage, setToastMessage] = useState('');
   const [isSyncHubExpanded, setIsSyncHubExpanded] = useState(false); // 👈 접기 토글 상태 추가
 
@@ -63,7 +63,7 @@ export default function BookmarksPage() {
   const handleCardClick = () => {
     const nextFlipped = !cardFlipped;
     setCardFlipped(nextFlipped);
-    
+
     // 뒤집어서 뒷면(뜻/예문)이 보일 때 자동으로 TTS 음성 출력 연동
     if (nextFlipped && cardQueue[currentCardIndex]) {
       speak(cardQueue[currentCardIndex].word);
@@ -94,7 +94,7 @@ export default function BookmarksPage() {
   useEffect(() => {
     if (particles.length === 0) return;
     const timer = setInterval(() => {
-      setParticles(prev => 
+      setParticles(prev =>
         prev
           .map(p => ({
             ...p,
@@ -113,7 +113,7 @@ export default function BookmarksPage() {
   const handleMemorized = (e) => {
     e.stopPropagation();
     if (!cardQueue[currentCardIndex]) return;
-    
+
     // 마우스 클릭 위치 구해서 폭죽 터뜨리기
     const clientX = e.clientX;
     const clientY = e.clientY;
@@ -139,22 +139,12 @@ export default function BookmarksPage() {
     const currentWord = cardQueue[currentCardIndex];
     // 해당 단어를 큐 맨 뒤에 다시 이관하여 반복 훈련 처리
     setCardQueue(prev => [...prev, currentWord]);
-    
+
     // 카드 초기화 후 다음 카드로 진행
     setCardFlipped(false);
     setTimeout(() => {
       setCurrentCardIndex(prev => prev + 1);
     }, 250);
-  };
-
-  const getSyncHeaders = (extra = {}) => {
-    const username = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터';
-    const targetLevel = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_target_level') || 'N1') : 'N1';
-    return {
-      'x-nihongo-username': encodeURIComponent(username),
-      'x-nihongo-target-level': targetLevel,
-      ...extra
-    };
   };
 
   // 1. 단어장 단어 로드
@@ -180,7 +170,7 @@ export default function BookmarksPage() {
   // 2. 단어 삭제 처리
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`/api/bookmarks?id=${id}`, { 
+      const res = await fetch(`/api/bookmarks?id=${id}`, {
         method: 'DELETE',
         headers: getSyncHeaders()
       });
@@ -193,131 +183,14 @@ export default function BookmarksPage() {
     }
   };
 
-  // 📥 [EXPORT] 단어장 백업 코드 생성 및 클립보드 복사
-  const handleExportCode = async () => {
-    setExporting(true);
-    try {
-      const res = await fetch('/api/sync?type=bookmarks', {
-        headers: getSyncHeaders()
-      });
-      const data = await res.json();
-      if (data.success && data.backupCode) {
-        setBackupCode(data.backupCode);
-        
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(data.backupCode);
-          showToast("단어장 백업 코드가 복사되었습니다! 📋");
-        } else {
-          const textarea = document.createElement("textarea");
-          textarea.value = data.backupCode;
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand("copy");
-          document.body.removeChild(textarea);
-          showToast("단어장 백업 코드가 복사되었습니다! 📋");
-        }
-      } else {
-        showToast("백업 코드 생성 실패: " + (data.error || "데이터가 없습니다."));
-      }
-    } catch (e) {
-      showToast("백업 네트워크 에러: " + e.message);
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // 📤 [IMPORT] 붙여넣은 백업 코드로 단어장 스마트 병합
-  const handleImportCode = async () => {
-    if (!inputCode.trim()) {
-      showToast("주입할 단어장 백업 코드를 입력해 주세요!");
-      return;
-    }
-    setImporting(true);
-    try {
-      const res = await fetch('/api/sync?type=bookmarks', {
-        method: 'POST',
-        headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ backupCode: inputCode.trim() })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setInputCode('');
-        showToast(`🎉 단어장 병합 완료! 신규 단어 ${data.addedCount}개가 추가되었습니다!`);
-        window.location.reload();
-      } else {
-        showToast("주입 실패: " + data.error);
-      }
-    } catch (e) {
-      showToast("주입 네트워크 에러: " + e.message);
-    } finally {
-      setImporting(false);
-    }
-  };
-
-  // 📄 [FILE EXPORT] 단어장 JSON 파일 다운로드
-  const handleJsonExport = async () => {
-    try {
-      const res = await fetch('/api/sync?type=bookmarks', {
-        headers: getSyncHeaders()
-      });
-      const data = await res.json();
-      if (data.success && data.rawJson) {
-        const jsonStr = JSON.stringify(data.rawJson, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `nihongo_quest_vocabulary_backup_${new Date().toISOString().slice(0,10)}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast("단어장 JSON 파일이 다운로드되었습니다! 💾");
-      } else {
-        showToast("백업 파일 추출 실패");
-      }
-    } catch (e) {
-      showToast("파일 백업 에러: " + e.message);
-    }
-  };
-
-  // 📄 [FILE IMPORT] 단어장 JSON 파일 선택 주입
-  const handleJsonImport = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const rawJson = JSON.parse(event.target.result);
-        setImporting(true);
-        const res = await fetch('/api/sync?type=bookmarks', {
-          method: 'POST',
-          headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ rawJson })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`🎉 파일 병합 성공! 신규 단어 ${data.addedCount}개가 통합되었습니다!`);
-          window.location.reload();
-        } else {
-          showToast("파일 주입 실패: " + data.error);
-        }
-      } catch (parseErr) {
-        showToast("올바르지 않은 단어장 JSON 파일 형식입니다.");
-      } finally {
-        setImporting(false);
-      }
-    };
-    reader.readAsText(file);
-  };
-
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage('');
     }, 4000);
   };
+
+  const backup = useLearningBackup({ type: 'bookmarks', notify: message => showToast(message) });
 
   if (loading) {
     return (
@@ -329,44 +202,44 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '1280px', padding: '40px 24px' }}>
-      
+    <div className="container library-page vocabulary-page" style={{ maxWidth: '1280px', padding: '40px 24px' }}>
+
       {/* 뒤로가기 및 헤더 */}
-      <div style={{ 
-        marginBottom: '32px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        flexWrap: 'wrap', 
-        gap: '16px' 
+      <div style={{
+        marginBottom: '32px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '16px'
       }}>
         <div>
           <h1 style={{ fontWeight: '900', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            ⭐ 나의 일본어 단어장 (Vocabulary)
+            단어장
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '6px' }}>
-            퀴즈 도중 눈에 띈 어려운 단어들을 나만의 비밀 단어장에 모으고 소리내어 복습하는 공간
+            저장한 단어를 다시 읽고, 발음을 들으며 익혀 보세요.
           </p>
         </div>
-        
+
         {/* 🗂️ 3D 플래시 카드 암기 모드 토글 */}
         {bookmarks.length > 0 && (
-          <div className="flashcard-toggle-wrapper glass-premium-card" style={{ 
-            padding: '12px 20px', 
-            borderRadius: '16px', 
+          <div className="flashcard-toggle-wrapper glass-premium-card" style={{
+            padding: '12px 20px',
+            borderRadius: '16px',
             border: '1px solid var(--card-border)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px'
           }}>
             <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-              🗂️ 3D 플래시 카드 암기 모드
+              플래시카드로 복습
             </span>
             <label className="flashcard-switch">
-              <input 
-                type="checkbox" 
-                checked={isFlashCardMode} 
-                onChange={(e) => handleToggleFlashcardMode(e.target.checked)} 
+              <input
+                type="checkbox"
+                checked={isFlashCardMode}
+                onChange={(e) => handleToggleFlashcardMode(e.target.checked)}
               />
               <span className="flashcard-slider"></span>
             </label>
@@ -379,7 +252,7 @@ export default function BookmarksPage() {
            🗂️ 3D 플래시 카드 암기 모드 컨텐츠
            ========================================== */
         <div className="flashcard-mode-section fade-in" style={{ paddingBottom: '60px' }}>
-          
+
           {/* 1. 진행 스탯 바 */}
           <div className="flashcard-progress-container glass-premium-card" style={{ padding: '20px 24px', borderRadius: '16px', marginBottom: '24px' }}>
             <div className="flashcard-stat-text">
@@ -389,8 +262,8 @@ export default function BookmarksPage() {
               </span>
             </div>
             <div className="flashcard-progress-bar-bg">
-              <div 
-                className="flashcard-progress-bar-fill" 
+              <div
+                className="flashcard-progress-bar-fill"
                 style={{ width: `${sessionTotalCount > 0 ? (memorizedIds.length / sessionTotalCount) * 100 : 0}%` }}
               ></div>
             </div>
@@ -404,14 +277,14 @@ export default function BookmarksPage() {
             <div>
               {/* 3D 카드 영역 */}
               <div className="flashcard-container">
-                <div 
+                <div
                   className={`flashcard ${cardFlipped ? 'flipped' : ''}`}
                   onClick={handleCardClick}
                 >
                   {/* 앞면: 단어명 & 읽기 */}
                   <div className="flashcard-face flashcard-front">
                     <span className="flashcard-tag">{targetLevel === 'BEGINNER' ? 'BEGINNER VOCAB' : 'JLPT N1 VOCAB'}</span>
-                    
+
                     <div style={{ textAlign: 'center' }}>
                       <h2 className="flashcard-word">{cardQueue[currentCardIndex].word}</h2>
                       <p className="flashcard-reading">「{cardQueue[currentCardIndex].reading}」</p>
@@ -430,7 +303,7 @@ export default function BookmarksPage() {
 
                     <div style={{ width: '100%', textAlign: 'center', marginTop: '10px' }}>
                       <h3 className="flashcard-meaning">{cardQueue[currentCardIndex].meaning}</h3>
-                      <button 
+                      <button
                         onClick={() => speak(cardQueue[currentCardIndex].word)}
                         className="outline-btn"
                         style={{ padding: '6px 12px', fontSize: '0.8rem', margin: '8px auto 0 auto', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
@@ -442,7 +315,7 @@ export default function BookmarksPage() {
                     {/* 실전 예문 */}
                     <div className="flashcard-example-box">
                       <p className="flashcard-example-jp">
-                        {getExampleSentence(cardQueue[currentCardIndex].word, cardQueue[currentCardIndex].meaning).sentence}
+                        <ReadableText text={getExampleSentence(cardQueue[currentCardIndex].word, cardQueue[currentCardIndex].meaning).sentence} />
                       </p>
                       <p className="flashcard-example-kr">
                         {getExampleSentence(cardQueue[currentCardIndex].word, cardQueue[currentCardIndex].meaning).translation}
@@ -473,14 +346,14 @@ export default function BookmarksPage() {
 
               {/* 제어 버튼 영역 */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', maxWidth: '580px', margin: '0 auto' }}>
-                <button 
+                <button
                   onClick={handleConfused}
                   className="outline-btn"
-                  style={{ 
-                    flex: 1, 
-                    padding: '16px 24px', 
-                    borderRadius: '16px', 
-                    fontSize: '1rem', 
+                  style={{
+                    flex: 1,
+                    padding: '16px 24px',
+                    borderRadius: '16px',
+                    fontSize: '1rem',
                     fontWeight: '800',
                     color: '#ffb37e',
                     borderColor: 'rgba(255, 179, 126, 0.4)',
@@ -495,14 +368,14 @@ export default function BookmarksPage() {
                   🧡 아직 헷갈림 (순환 학습)
                 </button>
 
-                <button 
+                <button
                   onClick={handleMemorized}
                   className="glow-btn"
-                  style={{ 
-                    flex: 1, 
-                    padding: '16px 24px', 
-                    borderRadius: '16px', 
-                    fontSize: '1rem', 
+                  style={{
+                    flex: 1,
+                    padding: '16px 24px',
+                    borderRadius: '16px',
+                    fontSize: '1rem',
                     fontWeight: '800',
                     background: 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)',
                     boxShadow: '0 4px 20px rgba(46, 204, 113, 0.3)',
@@ -546,15 +419,15 @@ export default function BookmarksPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
-                  onClick={() => handleToggleFlashcardMode(true)} 
+                <button
+                  onClick={() => handleToggleFlashcardMode(true)}
                   className="glow-btn"
                   style={{ flex: 1.2, padding: '14px 24px', fontSize: '0.95rem' }}
                 >
                   🔄 다시 훈련하기
                 </button>
-                <button 
-                  onClick={() => setIsFlashCardMode(false)} 
+                <button
+                  onClick={() => setIsFlashCardMode(false)}
                   className="outline-btn"
                   style={{ flex: 1, padding: '14px 24px', fontSize: '0.95rem' }}
                 >
@@ -571,92 +444,7 @@ export default function BookmarksPage() {
            ========================================== */
         <>
           {/* ⚡ 단어장 전용 크로스 동기화 센터 */}
-          <div className="glass-premium-card rainbow-border sync-hub-premium-card" style={{ marginBottom: '32px' }}>
-            <div 
-              className={isSyncHubExpanded ? "sync-hub-header expanded" : "sync-hub-header"}
-              onClick={() => setIsSyncHubExpanded(!isSyncHubExpanded)}
-              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span className="sync-hub-icon">⭐</span>
-                <div className="sync-hub-title-box">
-                  <h3 className="sync-hub-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    단어장 데이터 동기화 센터
-                    <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '100px', background: isSyncHubExpanded ? 'rgba(46, 204, 113, 0.15)' : 'rgba(241, 196, 15, 0.15)', color: isSyncHubExpanded ? '#2ecc71' : '#f1c40f', fontWeight: '800' }}>
-                      {isSyncHubExpanded ? "펼침" : "접힘"}
-                    </span>
-                  </h3>
-                  <p className="sync-hub-desc" style={{ margin: '4px 0 0 0' }}>폰과 컴퓨터를 오가며 나만의 비밀 단어장 데이터를 추출하고 중복 없이 머지(Merge)하세요!</p>
-                </div>
-              </div>
-              <span style={{ fontSize: '0.9rem', transition: 'transform 0.3s ease', transform: isSyncHubExpanded ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--text-secondary)', paddingRight: '8px' }}>
-                ▼
-              </span>
-            </div>
-
-            {isSyncHubExpanded && (
-              <div className="sync-hub-grid" style={{ marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px', animation: 'fadeIn 0.3s ease' }}>
-                {/* 백업 */}
-                <div className="sync-hub-section export-section">
-                  <h4 className="sync-section-title">📤 단어장 백업 코드 추출</h4>
-                  <p className="sync-section-desc">현재 단어 데이터를 텍스트 코드로 압축 복사하거나 파일로 다운로드합니다.</p>
-                  <div className="sync-action-buttons">
-                    <button onClick={handleExportCode} disabled={exporting} className="glass-neon-btn export-code-btn">
-                      {exporting ? "⏳ 코드 생성 중..." : "📋 백업 코드 복사"}
-                    </button>
-                    <button onClick={handleJsonExport} className="outline-btn file-export-btn">
-                      💾 JSON 파일 저장
-                    </button>
-                  </div>
-                  {backupCode && (
-                    <div className="backup-code-preview fade-in">
-                      <span className="code-label">생성된 백업 코드:</span>
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={backupCode} 
-                        onClick={(e) => {
-                          e.target.select();
-                          if (navigator.clipboard) {
-                            navigator.clipboard.writeText(backupCode);
-                            showToast("코드가 다시 복사되었습니다! 📋");
-                          }
-                        }}
-                        className="backup-code-input"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* 주입 */}
-                <div className="sync-hub-section import-section">
-                  <h4 className="sync-section-title">📥 다른 기기 단어장 가져오기</h4>
-                  <p className="sync-section-desc">다른 기기에서 복사한 단어장 코드를 입력하거나 파일을 올려서 중복 없이 병합합니다.</p>
-                  <div className="import-inputs-wrapper">
-                    <div className="code-import-box">
-                      <input 
-                        type="text"
-                        placeholder="단어장 백업 코드를 붙여넣으세요..."
-                        value={inputCode}
-                        onChange={(e) => setInputCode(e.target.value)}
-                        className="sync-import-text-input"
-                      />
-                      <button onClick={handleImportCode} disabled={importing || !inputCode.trim()} className="glass-neon-btn import-code-action-btn">
-                        {importing ? "⏳ 병합 중..." : "⚡ 코드 주입"}
-                      </button>
-                    </div>
-                    <div className="file-import-box">
-                      <span className="file-import-label">JSON 백업 파일 복구:</span>
-                      <label className="file-upload-custom-btn">
-                        📁 파일 선택...
-                        <input type="file" accept=".json" onChange={handleJsonImport} style={{ display: 'none' }} />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <LearningBackupPanel type="bookmarks" backup={backup} expanded={isSyncHubExpanded} onToggle={() => setIsSyncHubExpanded(value => !value)} />
 
           {bookmarks.length === 0 ? (
             /* 단어장이 비어 있을 때의 웰컴 카드 */
@@ -673,7 +461,7 @@ export default function BookmarksPage() {
           ) : (
             /* 단어장 리스트 */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
+
               <div style={{ borderBottom: '1.5px solid var(--card-border)', paddingBottom: '12px', marginBottom: '8px' }}>
                 <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
                   저장된 소중한 영단어/일어단어: 총 {bookmarks.length}개
@@ -686,8 +474,8 @@ export default function BookmarksPage() {
                 gap: '16px'
               }}>
                 {bookmarks.map((item) => (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     className="premium-card wrong-note-card"
                     style={{
                       display: 'flex',
@@ -705,12 +493,12 @@ export default function BookmarksPage() {
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
                         {item.reading}
                       </span>
-                      
+
                       {/* 단어 본문 */}
                       <h4 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)' }}>
                         <ReadableText text={item.word} />
                       </h4>
-                      
+
                       {/* 단어 뜻 */}
                       <p style={{ fontSize: '0.85rem', color: 'var(--accent-color)', fontWeight: '700', marginTop: '6px' }}>
                         {item.meaning}
@@ -718,11 +506,11 @@ export default function BookmarksPage() {
                     </div>
 
                     {/* 제어 버튼 */}
-                    <div className="wrong-btn-actions" 
+                    <div className="wrong-btn-actions"
                       style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}
                       onClick={(e) => e.stopPropagation()} // 💡 모달 팝업 버블링 차단!
                     >
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation(); // 💡 버블링 차단!
                           speak(item.word);
@@ -744,7 +532,7 @@ export default function BookmarksPage() {
                         🔊 재생
                       </button>
 
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation(); // 💡 버블링 차단!
                           handleDelete(item.id);
@@ -782,141 +570,7 @@ export default function BookmarksPage() {
       )}
 
       {/* 🔮 [단어 디테일 예문 보기 프리미엄 모달] */}
-      {selectedWord && mounted && createPortal(
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div className="premium-card animate-scale modal-premium-content" style={{
-            maxWidth: '520px',
-            width: '90%',
-            border: '2px solid var(--accent-color)',
-            boxShadow: 'var(--neon-glow)',
-            textAlign: 'left',
-            padding: '36px',
-            position: 'relative'
-          }}>
-            {/* 상단 닫기 아이콘 */}
-            <button 
-              onClick={() => setSelectedWord(null)}
-              style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                fontSize: '1.2rem',
-                cursor: 'pointer',
-                fontWeight: '900'
-              }}
-            >
-              ✕
-            </button>
-
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '700', display: 'block', marginBottom: '8px' }}>
-              ⭐ 단어 상세 정보
-            </span>
-
-            {/* 일본어 표기 및 요미가나 */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
-              <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: 'var(--text-primary)', margin: 0 }}>
-                {selectedWord.word}
-              </h2>
-              <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', fontWeight: '700' }}>
-                [{selectedWord.reading}]
-              </span>
-            </div>
-
-            {/* 한글 뜻 */}
-            <div style={{ 
-              background: 'var(--bg-secondary)', 
-              padding: '10px 16px', 
-              borderRadius: '8px', 
-              borderLeft: '4px solid var(--accent-color)',
-              marginBottom: '24px' 
-            }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
-                한글 의미
-              </span>
-              <p style={{ fontSize: '1.1rem', color: 'var(--accent-color)', fontWeight: '800', margin: '4px 0 0 0' }}>
-                {selectedWord.meaning}
-              </p>
-            </div>
-
-            {/* 🍱 찰떡 매칭 예시 문장 영역 */}
-            <div style={{
-              background: 'rgba(255, 179, 126, 0.05)',
-              border: '1px solid rgba(255, 179, 126, 0.25)',
-              borderRadius: 'var(--custom-radius)',
-              padding: '20px',
-              marginBottom: '28px'
-            }}>
-              <span style={{ fontSize: '0.8rem', color: '#ffb37e', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                📝 학습용 실전 예시 문장
-              </span>
-              
-              {/* 일본어 예문 */}
-              <p style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: '700', 
-                color: 'var(--text-primary)', 
-                lineHeight: '1.6',
-                marginBottom: '10px',
-                wordBreak: 'keep-all'
-              }}>
-                {getExampleSentence(selectedWord.word, selectedWord.meaning).sentence}
-              </p>
-
-              {/* 한국어 번역 */}
-              <p style={{ 
-                fontSize: '0.9rem', 
-                fontWeight: '600', 
-                color: 'var(--text-secondary)', 
-                lineHeight: '1.5',
-                margin: 0
-              }}>
-                {getExampleSentence(selectedWord.word, selectedWord.meaning).translation}
-              </p>
-            </div>
-
-            {/* 하단 제어 버튼 모음 */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={() => speak(selectedWord.word)}
-                className="outline-btn"
-                style={{ padding: '12px 20px', fontSize: '0.9rem', flex: 1, display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
-              >
-                🔊 단어 듣기
-              </button>
-              
-              <button 
-                onClick={() => speak(getExampleSentence(selectedWord.word, selectedWord.meaning).sentence)}
-                className="glow-btn"
-                style={{ 
-                  padding: '12px 24px', 
-                  fontSize: '0.9rem', 
-                  flex: 1.2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  justifyContent: 'center',
-                  background: 'linear-gradient(135deg, var(--accent-color) 0%, #ff9494 100%)'
-                }}
-              >
-                📢 예문 전체 듣기
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {selectedWord && mounted && <WordDetailModal selectedWord={selectedWord} setSelectedWord={setSelectedWord} speak={speak} />}
 
       {/* 🎆 미세 폭죽 파티클 애니메이션 레이어 */}
       {particles.map(p => (

@@ -1,0 +1,382 @@
+/* ========================================================
+   6. POWERFUL RESPONSIVE UTILITY CLASSES (FOR INLINE REPLACEMENT)
+   ======================================================== */
+.flex-wrap-mobile {
+  flex-wrap: wrap !important;
+}
+
+.flex-col-mobile {
+  display: flex !important;
+}
+
+.white-space-normal {
+  white-space: normal !important;
+}
+
+.width-full-mobile {
+  width: 100% !important;
+}
+
+.word-break-all {
+  word-break: keep-all !important;
+}
+
+.text-center-mobile {
+  text-align: center !important;
+}
+
+@media (max-width: 768px) {
+  .flex-col-mobile {
+    flex-direction: column !important;
+  }
+  
+  .input-submit-group {
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+  }
+  
+  .input-submit-group input {
+    width: 100% !important;
+		flex:5 !important;
+  }
+  
+  .input-submit-group button {
+    flex:1 !important;
+    padding: 0.875rem 1.25rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+    justify-content: center !important;
+  }
+
+  .stage-info-container {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+  }
+  
+  .play-action-bar-top {
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+  }
+  
+  .play-action-bar-top .play-btn-group {
+    width: auto !important;
+    justify-content: flex-start !important;
+  }
+  
+  .play-action-bar-top .outline-btn {
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.75rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+  }
+  
+  /* 모달 레이아웃 강제 뷰포트 제한 */
+  .modal-premium-content {
+    padding: 6vw 5vw !important;
+    width: 92vw !important;
+    max-width: 90vw !important; /* 고정 px 파쇄, vw로 완전 대체 */
+    border-radius: 4vw !important;
+  }
+  
+  .difficulty-btn-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.625rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+  }
+  
+  /* 오답노트 & 단어장 카드 강제 뷰포트 내 흡수 */
+  .wrong-note-card {
+    padding: 1rem 1.25rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+  }
+  
+  .wrong-info-container {
+    margin-right: 0 !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 0.75rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+    align-items: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .wrong-review-meta {
+    min-width: 3.75rem !important;
+  }
+
+  .wrong-review-level {
+    width: 3.25rem !important;
+    height: 3.25rem !important;
+  }
+
+  .wrong-question-content,
+  .wrong-word-row {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+  }
+  
+  .wrong-btn-actions {
+    flex-direction: row !important;
+    width: 100% !important;
+    gap: 0.5rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+  }
+  
+  .wrong-btn-actions button {
+    flex: 1 !important;
+    padding: 0.625rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
+    font-size: 0.8rem !important;
+  }
+
+  /* 모바일(768px 이하) 환경에서 카드 호버시 미끄러지거나 들뜨는 3D 움직임 원천 배제 */
+  .premium-card:hover, .glass-premium-card:hover {
+    transform: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* [N1 PREMIUM NHK 뉴스 박스 모바일 최적화] */
+  .nhk-news-briefing-card {
+    padding: 4vw 4.5vw !important;
+    margin-top: 1.5rem !important; /* 24px → 1.5rem */
+    margin-bottom: 1.5rem !important;
+    border-radius: 3vw !important;
+  }
+
+  .nhk-news-header {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .nhk-news-header-title {
+    font-size: 1.05rem !important;
+  }
+
+  .nhk-news-header-desc {
+    font-size: 0.72rem !important;
+  }
+
+	.nhk-status-badge {
+		display:none;
+	}
+
+  .nhk-news-item-trigger {
+    padding: 12px 14px !important;
+  }
+
+  .nhk-news-item-title {
+    font-size: 0.85rem !important;
+  }
+
+  .nhk-news-meta-row {
+    padding-left: 22px !important;
+    gap: 8px !important;
+  }
+
+  .nhk-accordion-content {
+    padding: 14px 16px !important;
+  }
+
+  .nhk-news-raw-desc {
+    font-size: 0.78rem !important;
+    padding: 8px 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .nhk-news-analysis-box {
+    grid-template-columns: 1fr !important; /* 1열로 떨어지도록 강제화 */
+    gap: 14px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .nhk-words-grid {
+    grid-template-columns: 1fr !important; /* 단어도 1열 모바일화 */
+    gap: 8px !important;
+  }
+
+  .nhk-word-chip-wrapper {
+    padding: 10px 14px !important;
+		align-items:flex-start !important;
+  }
+
+  .nhk-translation-text {
+    font-size: 0.75rem !important;
+    padding: 8px 10px !important;
+  }
+
+  .nhk-raw-link-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.72rem !important;
+    padding: 6px 0 !important;
+  }
+
+  /* 모바일용 탭 버튼 스케일 압축 */
+  .nhk-news-tabs {
+    gap: 6px !important;
+    margin-bottom: 14px !important;
+    width: 100% !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    padding: 4px !important;
+    border-radius: 100px !important;
+    border: 1px solid var(--card-border) !important;
+  }
+
+  .nhk-tab-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 6px 0 !important;
+    font-size: 0.72rem !important;
+  }
+
+  .nhk-save-btn {
+    font-size: 0.65rem !important;
+    padding: 2px 8px !important;
+  }
+
+  .nhk-empty-saved-box {
+    padding: 30px 16px !important;
+  }
+
+  .nhk-empty-emoji {
+    font-size: 2.2rem !important;
+  }
+
+  .nhk-empty-title {
+    font-size: 0.9rem !important;
+  }
+
+  .nhk-empty-desc {
+    font-size: 0.75rem !important;
+    line-height: 1.45 !important;
+  }
+}
+
+/* 📥 뉴스 보관함 캡슐 탭 레이아웃 */
+.nhk-news-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 4px;
+  border-radius: 100px;
+  border: 1px solid var(--card-border);
+  width: fit-content;
+}
+
+.nhk-tab-btn {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.nhk-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nhk-tab-btn.active {
+  color: #ffffff;
+  background: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(177, 159, 251, 0.2);
+}
+
+.nhk-tab-count {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 1px 6px;
+  border-radius: 100px;
+  font-weight: 900;
+}
+
+.nhk-tab-btn.active .nhk-tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* 💾 매혹적인 저장 칩 버튼 */
+.nhk-save-btn {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nhk-save-btn:hover {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background: rgba(177, 159, 251, 0.04);
+}
+
+.nhk-save-btn.saved {
+  color: #ffffff;
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  box-shadow: 0 2px 8px rgba(177, 159, 251, 0.15);
+}
+
+.nhk-save-btn.saved:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  opacity: 0.9;
+}
+
+/* 📥 저장된 뉴스 비어있을 때의 럭셔리 일러스트 뷰 */
+.nhk-empty-saved-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.875rem; /* 40px 30px → rem */
+  text-align: center;
+  border: 1px dashed var(--card-border);
+  border-radius: 1rem; /* 16px → 1rem */
+  background: rgba(255, 255, 255, 0.005);
+  width: 100%;
+}
+
+.nhk-empty-emoji {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  animation: floatAni 3s ease-in-out infinite;
+}
+
+@keyframes floatAni {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.nhk-empty-title {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: var(--text-primary);
+  margin-bottom: 8px !important;
+}
+
+.nhk-empty-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  max-width: 480px;
+  line-height: 1.55;
+  margin: 0 !important;
+}
+

@@ -1,25 +1,29 @@
 'use client';
 
 import { use, useState, useEffect, useRef } from 'react';
+import SentenceAssembly from '@/app/components/SentenceAssembly';
+import QuestionOptions from '@/app/components/QuestionOptions';
+import { getSyncHeaders } from '@/lib/clientProfile.mjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import { showToast } from '@/lib/toast';
 import ReadableText from '@/app/ReadableText';
 import { evaluateQuizAnswer } from '@/lib/quizScoring.mjs';
+import { beginnerCourseForRoute } from '@/data/beginnerCourses.mjs';
 
 export default function PlayStagePage({ params }) {
   const { stageNumber: stageNumberParam } = use(params);
   const stageNumber = parseInt(stageNumberParam, 10);
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // 지원 트랙과 아레나 카테고리 파싱
   const jlptLevel = searchParams.get('jlptLevel') === 'BEGINNER' ? 'BEGINNER' : 'N1';
   const difficulty = searchParams.get('difficulty') || 'EASY';
   const category = searchParams.get('category') || '';
   const isBeginner = jlptLevel === 'BEGINNER';
-  const beginnerLevelLabel = { EASY: 'N5', MEDIUM: 'N4', HARD: 'N3' }[difficulty] || 'N5';
+  const beginnerLevelLabel = category === 'KANA' ? '문자 입문' : ({ EASY: '기초', MEDIUM: '기본 응용', HARD: '중급 입문' }[difficulty] || '기초');
   const difficultyLabel = { EASY: '쉬움', MEDIUM: '보통', HARD: '어려움' }[difficulty] || difficulty;
   const trackLabel = isBeginner ? `초보 ${beginnerLevelLabel}` : 'N1';
   const { speak } = useJapaneseSpeech();
@@ -29,18 +33,18 @@ export default function PlayStagePage({ params }) {
   const [stage, setStage] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  
+
   // 게임 진행 상태
-  const [selectedAns, setSelectedAns] = useState(null);
+
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [userScore, setUserScore] = useState(0);
   const [totalPointsEarned, setTotalPointsEarned] = useState(0);
-  
+
   // 워들 전용 상태
   const [wordleInput, setWordleInput] = useState([]);
-  const [wordleFeedback, setWordleFeedback] = useState([]);
+
   const [wordleAttempts, setWordleAttempts] = useState([]);
   const [wordleMaxAttempts] = useState(5);
   const [wordleFinished, setWordleFinished] = useState(false);
@@ -65,19 +69,17 @@ export default function PlayStagePage({ params }) {
   // ⚔️ 문장 조립판 상태
   const [assemblyPads, setAssemblyPads] = useState([]);
 
-  // 초보 실력 진단 전용 상태 (10분)
-  const [mockTimer, setMockTimer] = useState(600);
 
   // 🖌️ [구글 실시간 손글씨 해독 주관식그림판] 핵심 엔진 상태 및 Refs
   const [isDrawingOpen, setIsDrawingOpen] = useState(true);
   const [brushSize, setBrushSize] = useState(2);
   const [showOverlayGuide, setShowOverlayGuide] = useState(false);
-  
+
   // 주관식 정답 입력 필드 상태
   const [typedAnswer, setTypedAnswer] = useState('');
-  
+
   // 구글 획 데이터 큐 (Strokes: [[[x...], [y...], [time...]], ...])
-  const [ink, setInk] = useState([]); 
+  const [ink, setInk] = useState([]);
   const [candidates, setCandidates] = useState([]); // 구글이 해독한 추천 단어 5개
   const [recognizing, setRecognizing] = useState(false); // 해독 통신 로딩
 
@@ -85,9 +87,9 @@ export default function PlayStagePage({ params }) {
   const [comboCount, setComboCount] = useState(0);
   const [achievementToast, setAchievementToast] = useState(null); // { title, desc, icon }
   const [drawingSubmissions, setDrawingSubmissions] = useState(0); // 그림판을 통한 제출 누적 횟수
-  
+
   const canvasRef = useRef(null);
-  const confettiCanvasRef = useRef(null);
+
   const isDrawingRef = useRef(false);
   const strokeXRef = useRef([]);
   const strokeYRef = useRef([]);
@@ -116,137 +118,6 @@ export default function PlayStagePage({ params }) {
     };
   }, []);
 
-  // 📖 일본어 상용한자 및 카나 글자별 획수 가이드 사전
-  const strokeMap = {
-    '言': 7, '語': 14, '本': 5, '日': 4, '勉': 10, '強': 11, '学': 8, '習': 11,
-    '会': 6, '社': 7, '員': 10, '駅': 14, '乗': 9, '降': 10, '入': 2, '出': 5,
-    '国': 8, '人': 2, '中': 4, '英': 8, '書': 10, '読': 14, '聞': 14, '話': 13,
-    '対': 7, '策': 12, '緊': 15, '急': 9, '態': 14, '勢': 13, '険': 11, '避': 16,
-    '難': 18, '救': 11, '助': 7, '護': 20, '警': 19, '備': 12, '防': 7, '犯': 5,
-    '罪': 13, '捜': 10, '査': 9, '判': 7, '決': 7, '訟': 11, '訴': 12, '盟': 13,
-    '約': 9, '条': 7, '協': 8, '議': 20, '政': 9, '治': 8, '府': 8, '選': 15,
-    '挙': 10, '権': 15, '法': 8, '律': 9, '規': 11, '制': 8, '禁': 13, '企': 6,
-    '業': 13, '資': 13, '融': 16, '投': 7, '株': 10, '式': 6, '債': 13, '務': 11,
-    '財': 10, '税': 12, '率': 11, '控': 11, '除': 10, '申': 5, '告': 7, '納': 10,
-    '付': 5, '徴': 14, '収': 4, '歳': 13, '補': 12, '正': 5, '予': 4, '算': 14,
-    '審': 15, '可': 5, '否': 7, '能': 10, '不': 4, '限': 9, '界': 9, '超': 12,
-    '過': 12, '未': 5, '満': 12, '以': 5, '上': 3, '下': 3, '範': 15, '囲': 12,
-    '領': 14, '域': 11, '規': 11, '模': 14, '疇': 19, '概': 14, '念': 8, '理': 11,
-    '論': 15, '説': 14, '証': 12, '明': 8, '反': 4, '駁': 14, '辯': 21, '糾': 9,
-    '弾': 12, '非': 8, '責': 11, '任': 6, '義': 13, '免': 8, '特': 10, '優': 17,
-    '遇': 12, '差': 10, '別': 7, '排': 11, '他': 5, '包': 5, '括': 9, '網': 14,
-    '羅': 19, '要': 9, '詳': 13, '細': 11, '克': 7, '繊': 17, '粗': 11, '雑': 14,
-    '繁': 16, '簡': 18, '単': 9, '容': 10, '易': 8, '関': 14, '門': 8, '障': 14,
-    '壁': 16, '打': 5, '開': 12, '服': 8, '充': 6, '実': 8, '足': 7, '妥': 7,
-    '譲': 20, '歩': 8, '確': 15, '執': 11, '頑': 13, '固': 8, '偏': 11, '拘': 8,
-    '泥': 8, '着': 12, '愛': 13, '憎': 14, '恩': 10, '徳': 14, '操': 16, '守': 6,
-    '破': 10, '棄': 13, '束': 7, '誓': 14, '履': 15, '行': 6, '遅': 12, '延': 7,
-    '猶': 12, '期': 12, '終': 11, '了': 2, '完': 7, '結': 12, '途': 10, '挫': 10,
-    '折': 7, '断': 11, '諦': 16, '観': 18, '妄': 6, '想': 13, '幻': 4, '影': 15,
-    '像': 14, '虚': 11, '錯': 16, '覚': 12, '直': 8, '感': 13, '洞': 9, '察': 14,
-    '推': 11, '測': 12, '憶': 16, '疑': 14, '惑': 12, '信': 9, '保': 9, '担': 8,
-    '抵': 8, '当': 6, '弁': 5, '済': 11, '償': 17, '却': 7, '赦': 11, '刑': 6,
-    '釈': 11, '放': 8, '留': 10, '監': 15, '幽': 9, '閉': 11, '拉': 8, '致': 10,
-    '誘': 14, '拐': 8, '質': 15, '身': 7, '代': 5, '金': 8, '要': 9, '脅': 18,
-    '迫': 8, '威': 9, '嚇': 17, '求': 7, '懇': 17, '願': 19, '哀': 9, '嘆': 15,
-    '請': 15, '立': 5, '抗': 8, '異': 11, '服': 8, '起': 10, '訴': 12, '和': 8,
-    '解': 13, '調': 15, '停': 11, '仲': 6, '裁': 12, '司': 5, '力': 2, '分': 4,
-    '独': 9, '専': 9, '占': 5, '寡': 14, '競': 20, '争': 6, '共': 6, '存': 6,
-    '栄': 9, '繁': 16, '衰': 10, '退': 9, '没': 7, '落': 12, '滅': 13, '崩': 11,
-    '壊': 16, '再': 6, '建': 9, '復': 12, '興': 16, '振': 10, '隆': 11, '盛': 11,
-    '微': 13, '消': 10
-  };
-
-  // 실시간 획수 합산 유틸리티
-  const getJapaneseWordStrokes = (word) => {
-    if (!word) return 0;
-    // 태그가 붙어있는 경우 제거
-    const cleanWord = word.replace(/\[N(1|2)-(EASY|MEDIUM|HARD)\]\s*/g, '');
-    let total = 0;
-    for (let char of cleanWord) {
-      if (strokeMap[char]) {
-        total += strokeMap[char];
-      } else {
-        const code = char.charCodeAt(0);
-        // 히라가나 영역 (0x3040 ~ 0x309F)
-        if (code >= 0x3040 && code <= 0x309F) {
-          total += 3; // 히라가나 평균 3획
-        } else if (code >= 0x30A0 && code <= 0x30FF) {
-          total += 2; // 가타카나 평균 2획
-        } else {
-          total += 4; // 한글/기타 기본 4획
-        }
-      }
-    }
-    return total;
-  };
-
-  // 🎉 [초경량 클라이언트 Confetti 꽃가루 파티클 엔진]
-  const triggerConfetti = () => {
-    const canvas = confettiCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const colors = ['#ff5e7e', '#ff9f43', '#1dd1a1', '#54a0ff', '#feca57', '#9b5de5'];
-    const particles = [];
-
-    for (let i = 0; i < 100; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - canvas.height,
-        r: Math.random() * 6 + 4,
-        d: Math.random() * canvas.height,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        tilt: Math.random() * 10 - 5,
-        tiltAngleIncremental: Math.random() * 0.07 + 0.02,
-        tiltAngle: 0
-      });
-    }
-
-    let animationId;
-    const startTime = Date.now();
-
-    function drawConfetti() {
-      if (Date.now() - startTime > 3000) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        cancelAnimationFrame(animationId);
-        return;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      particles.forEach((p, index) => {
-        p.tiltAngle += p.tiltAngleIncremental;
-        p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
-        p.x += Math.sin(p.tiltAngle);
-        p.tilt = Math.sin(p.tiltAngle - index / 3) * 15;
-
-        ctx.beginPath();
-        ctx.lineWidth = p.r;
-        ctx.strokeStyle = p.color;
-        ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-        ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
-        ctx.stroke();
-      });
-
-      particles.forEach(p => {
-        if (p.y > canvas.height) {
-          p.x = Math.random() * canvas.width;
-          p.y = -20;
-          p.tilt = Math.random() * 10 - 5;
-        }
-      });
-
-      animationId = requestAnimationFrame(drawConfetti);
-    }
-
-    drawConfetti();
-  };
-
   // 🏆 [로컬 스토리지 보존형 업적 잠금 해제 시스템]
   const unlockAchievement = (id, title, desc, icon) => {
     try {
@@ -274,6 +145,13 @@ export default function PlayStagePage({ params }) {
       router.replace('/mock-exam');
       return;
     }
+    if (isBeginner) {
+      const course = beginnerCourseForRoute(stageNumber, category);
+      if (course && course.stageNumber !== stageNumber) {
+        router.replace(`/play/${course.stageNumber}?jlptLevel=BEGINNER&category=${course.category}&difficulty=${difficulty}`);
+        return;
+      }
+    }
     async function loadData() {
       setLoading(true);
       try {
@@ -285,7 +163,7 @@ export default function PlayStagePage({ params }) {
         if (data.success) {
           setStage(data.stage);
           setQuizzes(data.quizzes);
-          
+
           if (data.quizzes[0]?.quizType === 'WORDLE') {
             initWordleTiles(data.quizzes[0].japaneseWord.length);
           }
@@ -306,24 +184,10 @@ export default function PlayStagePage({ params }) {
   // 2. 타이머 작동
   useEffect(() => {
     if (loading || gameCompleted || submitted) return;
-    
+
     timerRef.current = setInterval(() => {
       setTimeTaken(prev => prev + 1);
-      
-      // 초보 실력 진단 역카운트다운
-      if (stageNumber === 6) {
-        setMockTimer(prev => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            // 초보 실력 진단의 제한 시간 만료
-            setGameCompleted(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }
-      
-      // 타임어택 상태일 때 매 초마다 시간 차감
+
       if (isTimeAttack) {
         setTimeRemaining(prev => {
           if (prev <= 1) {
@@ -343,7 +207,7 @@ export default function PlayStagePage({ params }) {
   // 워들 입력 타일 초기화
   const initWordleTiles = (length) => {
     setWordleInput(Array(length).fill(''));
-    setWordleFeedback(Array(length).fill(''));
+
     setWordleAttempts([]);
     setWordleFinished(false);
   };
@@ -355,15 +219,15 @@ export default function PlayStagePage({ params }) {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    
+
     const isTouch = e.touches && e.touches.length > 0;
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
-    
+
     // 캔버스 내부 픽셀 해상도와 브라우저상 물리 렌더링 크기 간의 배율 보정
     const scaleX = rect.width > 0 ? (canvas.width / rect.width) : 1;
     const scaleY = rect.height > 0 ? (canvas.height / rect.height) : 1;
-    
+
     return {
       x: Math.round((clientX - rect.left) * scaleX),
       y: Math.round((clientY - rect.top) * scaleY)
@@ -374,7 +238,7 @@ export default function PlayStagePage({ params }) {
     // preventDefault는 passive:false DOM 리스너에서만 호출 - React 합성이벤트(passive)에서는 경고 발생
     isDrawingRef.current = true;
     const pos = getMousePos(e);
-    
+
     strokeXRef.current = [pos.x];
     strokeYRef.current = [pos.y];
     startTimeRef.current = Date.now();
@@ -394,44 +258,44 @@ export default function PlayStagePage({ params }) {
     const prevX = strokeXRef.current[strokeXRef.current.length - 1];
     const prevY = strokeYRef.current[strokeYRef.current.length - 1];
     const prevTime = startTimeRef.current + strokeTimeRef.current[strokeTimeRef.current.length - 1];
-    
+
     const dx = pos.x - prevX;
     const dy = pos.y - prevY;
     const dist = Math.sqrt(dx * dx + dy * dy);
     const timeDiff = Math.max(1, Date.now() - prevTime);
     const speed = dist / timeDiff; // 속도 (px/ms)
-    
+
     // 속도가 빠를 때는 가늘어지고, 느릴 때는 벼루에 먹물이 번지듯 묵직하게 두꺼워짐
     const minWidth = Math.max(1.5, brushSize - 3.5);
     const maxWidth = brushSize + 4.5;
     const targetWidth = Math.max(minWidth, maxWidth - speed * 3.5);
-    
+
     // 부드러운 굵기 전이 (Lerp)
     ctx.lineWidth = ctx.lineWidth ? (ctx.lineWidth * 0.55 + targetWidth * 0.45) : targetWidth;
-    
-    ctx.strokeStyle = 'var(--text-primary)'; 
+
+    ctx.strokeStyle = 'var(--text-primary)';
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.globalAlpha = 0.85;
 
     ctx.beginPath();
-    
+
     // 2차 베지에 곡선을 이용해 꺾임 부분을 부드럽게 보정
     if (strokeXRef.current.length > 1) {
       const prevPrevX = strokeXRef.current[strokeXRef.current.length - 2];
       const prevPrevY = strokeYRef.current[strokeYRef.current.length - 2];
-      
+
       // 중간 지점을 향해 2차 베지에 제어점(prevX, prevY)을 두고 그림
       const midX = (prevX + pos.x) / 2;
       const midY = (prevY + pos.y) / 2;
-      
+
       ctx.moveTo(prevPrevX, prevPrevY);
       ctx.quadraticCurveTo(prevX, prevY, midX, midY);
     } else {
       ctx.moveTo(prevX, prevY);
       ctx.lineTo(pos.x, pos.y);
     }
-    
+
     ctx.stroke();
 
     // 획 좌표 및 시간 누적
@@ -488,7 +352,7 @@ export default function PlayStagePage({ params }) {
       });
 
       const data = await response.json();
-      
+
       if (data && data[0] === 'SUCCESS') {
         const parsedCandidates = data[1][0][1]; // 구글이 해독에 성공한 문자 후보 배열
         setCandidates(parsedCandidates.slice(0, 5)); // 상위 5개 후보 노출
@@ -536,16 +400,6 @@ export default function PlayStagePage({ params }) {
     }
   }, [currentIndex, currentQuiz, speak, isBeginner]);
 
-  const getSyncHeaders = (extra = {}) => {
-    const username = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_username') || '니혼고마스터') : '니혼고마스터';
-    const targetLevel = typeof window !== 'undefined' ? (localStorage.getItem('nihongo_quest_target_level') || 'N1') : 'N1';
-    return {
-      'x-nihongo-username': encodeURIComponent(username),
-      'x-nihongo-target-level': targetLevel,
-      ...extra
-    };
-  };
-
   // 단어 북마크 등록
   const handleAddBookmark = async () => {
     if (!currentQuiz || bookmarking) return;
@@ -579,7 +433,7 @@ export default function PlayStagePage({ params }) {
     // 공백을 다듬고 영단어/한자/일어가 완벽하게 일치하는지 비교
     const isCorrectAns = evaluateQuizAnswer(finalAns, currentQuiz);
     setIsCorrect(isCorrectAns);
-    setSelectedAns(finalAns);
+
 
     let finalPoints = 0;
     let nextCombo = comboCount;
@@ -587,10 +441,8 @@ export default function PlayStagePage({ params }) {
     if (isCorrectAns) {
       nextCombo = comboCount + 1;
       setComboCount(nextCombo);
-      
-      // 꽃가루 팡파르 발사!
-      triggerConfetti();
 
+      // 꽃가루 팡파르 발사!
       // [업적 체크] 연속 5콤보 달성 시
       if (nextCombo >= 5) {
         unlockAchievement('combo_master', '🔥 콤보의 신화', '연속 5문제 정답 콤보 달성!', '🔥');
@@ -620,20 +472,20 @@ export default function PlayStagePage({ params }) {
         })
       });
       const data = await res.json();
-      
+
       if (data.success) {
         const verifiedCorrect = data.isCorrect;
         setIsCorrect(verifiedCorrect);
         let baseEarn = data.pointsEarned;
         if (jlptLevel === 'N1') baseEarn += 10; // N1 보너스 +10pts
-        
+
         // 콤보 포인트 배수 가중치 적용 (콤보당 +10% 보너스 포인트 지급)
         const comboBonus = verifiedCorrect ? Math.round(baseEarn * (nextCombo * 0.1)) : 0;
-        
+
         // ⏱️ 타임어택 속도 보너스 포인트 계산 (남은시간 * 1.5배, 정답일 때만 적용)
         const speedBonus = (isTimeAttack && verifiedCorrect) ? Math.round(timeRemaining * 1.5) : 0;
         setSpeedBonusEarned(speedBonus);
-        
+
         finalPoints = baseEarn + comboBonus + speedBonus;
 
         setPointsEarned(finalPoints);
@@ -653,7 +505,7 @@ export default function PlayStagePage({ params }) {
     if (currentIndex + 1 === quizzes.length) {
       // 1. 첫 클리어 업적
       unlockAchievement('first_clear', '🐣 첫걸음마', '아무 퀴즈나 1회 클리어하기', '🐣');
-      
+
       // 2. 무결점 클리어 업적 (만점)
       const currentFinalScore = userScore + (isCorrectAns ? 1 : 0);
       if (currentFinalScore === quizzes.length) {
@@ -687,7 +539,7 @@ export default function PlayStagePage({ params }) {
   // 워들 정답 제출
   const handleWordleSubmit = async () => {
     if (wordleFinished) return;
-    
+
     const userGuess = wordleInput.join('');
     if (userGuess.length < currentQuiz.japaneseWord.length) {
       showToast("글자 수에 맞춰 칸을 다 채워주세요!", 'error');
@@ -736,10 +588,8 @@ export default function PlayStagePage({ params }) {
       if (isMatch) {
         nextCombo = comboCount + 1;
         setComboCount(nextCombo);
-        
-        // 꽃가루 팡파르 발사!
-        triggerConfetti();
 
+        // 꽃가루 팡파르 발사!
         // 5연속 콤보 신화 업적 체크
         if (nextCombo >= 5) {
           unlockAchievement('combo_master', '🔥 콤보의 신화', '연속 5문제 정답 콤보 달성!', '🔥');
@@ -765,7 +615,7 @@ export default function PlayStagePage({ params }) {
           setIsCorrect(verifiedCorrect);
           let baseEarn = data.pointsEarned;
           if (jlptLevel === 'N1') baseEarn += 10;
-          
+
           // 콤보 포인트 배수 가중치 적용 (콤보당 +10% 보너스 포인트 지급)
           const comboBonus = verifiedCorrect ? Math.round(baseEarn * (nextCombo * 0.1)) : 0;
           finalPoints = baseEarn + comboBonus;
@@ -782,7 +632,7 @@ export default function PlayStagePage({ params }) {
       if (currentIndex + 1 === quizzes.length) {
         // 1. 첫 클리어 업적
         unlockAchievement('first_clear', '🐣 첫걸음마', '아무 퀴즈나 1회 클리어하기', '🐣');
-        
+
         // 2. 무결점 클리어 업적 (만점)
         const currentFinalScore = userScore + (isMatch ? 1 : 0);
         if (currentFinalScore === quizzes.length) {
@@ -808,8 +658,8 @@ export default function PlayStagePage({ params }) {
     if (currentIndex + 1 < quizzes.length) {
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
-      
-      setSelectedAns(null);
+
+
       setSubmitted(false);
       setIsCorrect(false);
       setPointsEarned(0);
@@ -829,13 +679,13 @@ export default function PlayStagePage({ params }) {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const xc = x / rect.width - 0.5;
     const yc = y / rect.height - 0.5;
-    
+
     const rotateX = yc * -1; // 플레이 몰입 방해를 막기 위해 아주 미세한 6도 틸팅
     const rotateY = xc * 1;
-    
+
     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.006)`;
     card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
     card.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
@@ -858,24 +708,16 @@ export default function PlayStagePage({ params }) {
   const hasDrawingFeature = stage && stage.category === 'CHARACTERS';
 
   return (
-    <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', position: 'relative' }}>
-      
-      {/* 🌌 뒷편에서 몽환적으로 일렁이는 오로라 백그라운드 구체 오버레이 */}
-      <div className="aurora-bg">
-        <div className="aurora-blob aurora-blob-1" />
-        <div className="aurora-blob aurora-blob-2" />
-        <div className="aurora-blob aurora-blob-3" />
-      </div>
-      
-      {/* 1. 상단 진행 상태바 */}
+    <div className="container practice-page" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', position: 'relative' }}>
+{/* 1. 상단 진행 상태바 */}
       {!gameCompleted && (
         <div style={{ marginBottom: '32px' }}>
           <div className="stage-info-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span className="white-space-normal" style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
               <span>{stage.title}</span>
-              
+
               {/* JLPT 급수 배지 */}
-              <span style={{
+              <span className="practice-level-badge" style={{
                 fontSize: '0.75rem',
                 fontWeight: '900',
                 background: isBeginner ? '#2ecc7122' : '#1a4d8022',
@@ -923,7 +765,7 @@ export default function PlayStagePage({ params }) {
           </div>
 
           <div style={{ width: '100%', height: '8px', background: 'var(--bg-secondary)', borderRadius: '100px', overflow: 'hidden' }}>
-            <div 
+            <div
               style={{
                 width: `${((currentIndex + 1) / quizzes.length) * 100}%`,
                 height: '100%',
@@ -936,13 +778,13 @@ export default function PlayStagePage({ params }) {
 
           {/* ⏱️ 타임어택 서바이벌 토글 스위치 (6코스 모의고사일 때는 감춤) */}
           {stageNumber !== 6 && (
-            <div className="time-attack-control-card" style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginTop: '16px', 
-              padding: '12px 18px', 
-              background: 'rgba(255, 255, 255, 0.02)', 
+            <div className="time-attack-control-card" style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: '16px',
+              padding: '12px 18px',
+              background: 'rgba(255, 255, 255, 0.02)',
               borderRadius: '12px',
               border: '1px solid var(--card-border)',
               transition: 'all 0.3s'
@@ -951,9 +793,9 @@ export default function PlayStagePage({ params }) {
                 ⏱️ 타임어택 서바이벌 모드 (제한시간 20초)
               </span>
               <label className="switch-custom" style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px' }}>
-                <input 
-                  type="checkbox" 
-                  checked={isTimeAttack} 
+                <input
+                  type="checkbox"
+                  checked={isTimeAttack}
                   onChange={(e) => setIsTimeAttack(e.target.checked)}
                   disabled={submitted}
                   style={{ opacity: 0, width: 0, height: 0 }}
@@ -994,34 +836,13 @@ export default function PlayStagePage({ params }) {
             </div>
           )}
 
-          {/* 초보 실력 진단 역카운트다운 타이머 */}
-          {stageNumber === 6 && !submitted && (
-            <div style={{ 
-              marginTop: '14px', 
-              padding: '12px 18px', 
-              background: 'rgba(255, 94, 126, 0.05)', 
-              borderRadius: '12px', 
-              border: '1.5px solid #ff5e7e', 
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              animation: 'pulse 2s infinite' 
-            }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#ff5e7e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ⏱️ 초보 실력 진단 제한시간
-              </span>
-              <span style={{ fontSize: '1.05rem', fontWeight: '950', color: '#ff5e7e', fontFamily: 'monospace' }}>
-                {String(Math.floor(mockTimer / 60)).padStart(2, '0')}:{String(mockTimer % 60).padStart(2, '0')}
-              </span>
-            </div>
-          )}
         </div>
       )}
 
       {gameCompleted ? (
         /* ==================== [결과 리포트 UI] ==================== */
-        <div className="glass-premium-card rainbow-border" 
-          onMouseMove={handleMouseMove} 
+        <div className="glass-premium-card rainbow-border"
+          onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{ padding: '48px 36px', textAlign: 'center', maxWidth: '650px', margin: '0 auto', background: 'rgba(255,255,255,0.04)' }}
         >
@@ -1056,61 +877,6 @@ export default function PlayStagePage({ params }) {
             </div>
           </div>
 
-          {/* 초보 실력 진단 결과 */}
-          {stageNumber === 6 && (
-            <div style={{
-              marginTop: '24px',
-              padding: '24px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              borderRadius: '12px',
-              border: '1.5px solid var(--accent-color)',
-              textAlign: 'left',
-              marginBottom: '30px'
-            }}>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: '950', color: 'var(--accent-color)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📝 초보 종합 실력 진단 결과 리포트
-              </h4>
-              
-              {(() => {
-                let gradeTitle = '';
-                let gradeDesc = '';
-                let gradeColor = '';
-                
-                const topThreshold = 9;
-                const passThreshold = 6;
-
-                if (userScore >= topThreshold) {
-                  gradeTitle = '🏆 기초 실력 우수 (READY-UP)';
-                  gradeDesc = `${beginnerLevelLabel} 기초 문자·어휘·문법·청해를 고르게 익혔습니다. 다음 난이도에도 충분히 도전할 수 있습니다!`;
-                  gradeColor = '#1dd1a1';
-                } else if (userScore >= passThreshold) {
-                  gradeTitle = '📈 기초 성장권 (ON-TRACK)';
-                  gradeDesc = '기본기는 잘 잡혀 있습니다. 틀린 문자와 단어를 오답노트로 한 번 더 복습하면 다음 단계가 훨씬 수월해집니다.';
-                  gradeColor = 'var(--accent-color)';
-                } else {
-                  gradeTitle = '🌱 기초 복습 권장 (KEEP-GROWING)';
-                  gradeDesc = '처음부터 잘할 필요는 없습니다. 문자 아레나부터 천천히 반복하고 틀린 문제를 오답노트에서 다시 만나보세요.';
-                  gradeColor = '#ff6b6b';
-                }
-                
-                return (
-                  <div>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '950', color: gradeColor, display: 'block', marginBottom: '8px' }}>
-                      판정 등급: {gradeTitle}
-                    </span>
-                    <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.6', fontWeight: '600' }}>
-                      {gradeDesc}
-                    </p>
-                    
-                    <div style={{ marginTop: '16px', background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
-                      ⏱️ <strong>남은 제한시간</strong>: {Math.max(0, Math.floor(mockTimer / 60))}분 {mockTimer % 60}초 남김
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
           <Link href="/" className="glass-neon-btn" style={{
             padding: '16px 40px',
             fontSize: '1.05rem',
@@ -1126,28 +892,28 @@ export default function PlayStagePage({ params }) {
         <div className={`play-arena-grid ${isDrawingOpen && hasDrawingFeature ? 'drawing-active' : ''}`} style={{
           transition: 'all 0.4s ease'
         }}>
-          
+
           {/* [좌측 판넬]: 핵심 퀴즈 및 주관식 입력/제출지 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            
-            <div className="glass-premium-card rainbow-border" 
-              // onMouseMove={handleMouseMove} 
+
+            <div className="glass-premium-card rainbow-border"
+              // onMouseMove={handleMouseMove}
               // onMouseLeave={handleMouseLeave}
               style={{ padding: '36px', display: 'flex', flexDirection: 'column', gap: '20px', background: 'rgba(255,255,255,0.04)' }}
             >
-              
+
               <div className="play-action-bar-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                 <div className="play-btn-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button 
+                  <button
                     onClick={() => speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1)}
-                    disabled={!submitted && (!isBeginner || ['WORDLE', 'ASSEMBLY'].includes(currentQuiz.quizType)) && currentQuiz.quizType !== 'LISTENING'}
+                    disabled={!submitted && currentQuiz.quizType !== 'LISTENING'}
                     className="outline-btn"
                     style={{ padding: '6px 12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
                     🔊<span className="pc-only">발음 듣기</span><span className="mobile-only">듣기</span>
                   </button>
                   {hasDrawingFeature && (
-                    <button 
+                    <button
                       onClick={() => setIsDrawingOpen(!isDrawingOpen)}
                       className="outline-btn"
                       style={{
@@ -1195,7 +961,7 @@ export default function PlayStagePage({ params }) {
                     .replace(/\s*\((정답|정답은|정답인)?\s*:\s*[^)]+\)/g, '')
                     .replace(/\s*\[(정답|정답은|정답인)?\s*:\s*[^\]]+\]/g, '')} />
                 </p>
-                
+
                 {currentQuiz.quizType === 'READING' && (
                   <section className="reading-passage" aria-label="독해 지문" lang="ja">
                     <ReadableText text={currentQuiz.japaneseWord} />
@@ -1203,25 +969,9 @@ export default function PlayStagePage({ params }) {
                 )}
                  {!['LISTENING', 'READING'].includes(currentQuiz.quizType) && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                    
+
                     {/* 붓글씨 기능이 활성화된 스테이지에서만 획수 가이드 배지 노출 */}
-                    {/* {hasDrawingFeature && (
-                      <span style={{
-                        fontSize: '0.75rem',
-                        fontWeight: '850',
-                        background: 'rgba(84, 160, 255, 0.12)',
-                        color: '#54a0ff',
-                        padding: '4px 12px',
-                        borderRadius: '100px',
-                        border: '1.5px solid rgba(84, 160, 255, 0.25)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        userSelect: 'none'
-                      }}>
-                        📖 한자 획수 가이드: <strong>{getJapaneseWordStrokes(currentQuiz.japaneseWord)}획</strong>
-                      </span>
-                    )} */}
+
 
                     {/* 정답 단어(japaneseWord) 스포일러 격리 차단 로직 */}
                     {submitted ? (
@@ -1252,7 +1002,7 @@ export default function PlayStagePage({ params }) {
                 {/* 청해 파동 아레나 */}
                 {currentQuiz.quizType === 'LISTENING' && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '10px 0' }}>
-                    <button 
+                    <button
                       onClick={() => speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1)}
                       style={{
                         width: '100px',
@@ -1280,124 +1030,7 @@ export default function PlayStagePage({ params }) {
 
               {/* ==================== [⚔️ 문장 조립 퀴즈 전용 드래그앤드롭 슬롯] ==================== */}
               {currentQuiz.quizType === 'ASSEMBLY' ? (
-                <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  
-                  {/* 조립 보드 */}
-                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-                    ⛓️ {isBeginner ? '초보 문장 조립 보드' : 'N1 문장 조립 보드'} (조립판의 단어를 클릭하면 취소할 수 있습니다)
-                  </span>
-                  <div style={{
-                    minHeight: '74px',
-                    background: 'var(--bg-secondary)',
-                    border: '2.5px dashed var(--accent-color)',
-                    borderRadius: 'var(--custom-radius)',
-                    padding: '16px 20px',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
-                  }}>
-                    {assemblyPads.length === 0 ? (
-                      <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                        아래의 단어 조각 카드를 순서대로 탭하여 {isBeginner ? '기초' : '경어'} 문장을 완성하세요.
-                      </span>
-                    ) : (
-                      assemblyPads.map((origIdx, wIdx) => (
-                        <button
-                          key={wIdx}
-                          onClick={() => {
-                            if (submitted) return;
-                            setAssemblyPads(prev => prev.filter((_, idx) => idx !== wIdx));
-                          }}
-                          disabled={submitted}
-                          className="glow-btn animate-scale"
-                          style={{
-                            padding: '8px 16px',
-                            fontSize: '0.95rem',
-                            background: 'linear-gradient(135deg, var(--accent-color) 0%, #9b5de5 100%)',
-                            color: 'white',
-                            border: 'none',
-                            cursor: 'pointer',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 10px rgba(155, 93, 229, 0.2)'
-                          }}
-                        >
-                          {currentQuiz.options?.[origIdx]} <span style={{ marginLeft: '4px', opacity: 0.7 }}>✕</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-
-                  {/* 단어 조각 풀 */}
-                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-                    🃏 사용 가능한 단어 조각 카드 (클릭 시 조립판에 찰칵 결합!)
-                  </span>
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                    justifyContent: 'center',
-                    padding: '12px 0'
-                  }}>
-                    {currentQuiz.options?.map((word, oIdx) => {
-                      const isSelected = assemblyPads.includes(oIdx);
-                      if (isSelected) return null;
-                      
-                      return (
-                        <button
-                          key={oIdx}
-                          onClick={() => {
-                            if (submitted) return;
-                            setAssemblyPads(prev => [...prev, oIdx]);
-                          }}
-                          disabled={submitted}
-                          className="outline-btn hover-glow animate-scale"
-                          style={{
-                            padding: '10px 18px',
-                            fontSize: '0.95rem',
-                            fontWeight: '850',
-                            cursor: 'pointer',
-                            borderRadius: '8px',
-                            background: 'var(--card-bg)',
-                            border: '2px solid var(--card-border)',
-                            color: 'var(--text-primary)'
-                          }}
-                        >
-                          {word}
-                        </button>
-                      );
-                    })}
-                    {assemblyPads.length === (currentQuiz.options?.length || 0) && (
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                        모든 카드가 조립판에 결합되었습니다!
-                      </span>
-                    )}
-                  </div>
-
-                  {/* 제출 액션 버튼 */}
-                  {!submitted && (
-                    <button
-                      onClick={() => {
-                        const assembledSentence = assemblyPads.map(idx => currentQuiz.options?.[idx]).join('');
-                        handleSubmission(assembledSentence);
-                      }}
-                      disabled={assemblyPads.length === 0}
-                      className="glow-btn"
-                      style={{
-                        padding: '14px 28px',
-                        fontSize: '1rem',
-                        alignSelf: 'center',
-                        width: '100%',
-                        maxWidth: '300px'
-                      }}
-                    >
-                      조합 검증 및 채점 제출 ⚔️
-                    </button>
-                  )}
-
-                </div>
+                <SentenceAssembly currentQuiz={currentQuiz} isBeginner={isBeginner} assemblyPads={assemblyPads} setAssemblyPads={setAssemblyPads} submitted={submitted} handleSubmission={handleSubmission} />
               ) : (
                 /* ==================== [기존 붓글씨 그림판 기반 주관식 제출 통합지] ==================== */
                 <>
@@ -1431,7 +1064,7 @@ export default function PlayStagePage({ params }) {
                           outline: 'none'
                         }}
                       />
-                      
+
                       <button
                         onClick={() => handleSubmission(typedAnswer)}
                         disabled={submitted || !typedAnswer}
@@ -1455,30 +1088,7 @@ export default function PlayStagePage({ params }) {
                       <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
                         {isBeginner ? '💡 참고용 객관식 보기' : '답안 선택'}
                       </span>
-                      <div className="options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                        {currentQuiz.options?.map((option, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setTypedAnswer(option);
-                              handleSubmission(option);
-                            }}
-                            disabled={submitted}
-                            className="outline-btn"
-                            style={{
-                              padding: '10px 14px',
-                              fontSize: '0.8rem',
-                              textAlign: 'left',
-                              whiteSpace: 'normal',
-                              wordBreak: 'keep-all',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            {idx + 1}. <ReadableText text={option} />
-                          </button>
-                        ))}
-                      </div>
+                      <QuestionOptions currentQuiz={currentQuiz} submitted={submitted} setTypedAnswer={setTypedAnswer} handleSubmission={handleSubmission} />
                     </div>
                   )}
                 </>
@@ -1490,7 +1100,7 @@ export default function PlayStagePage({ params }) {
                   <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block' }}>
                     🧩 워들 퀴즈 전용 입력판 (칸별 글자 힌트 대입)
                   </span>
-                  
+
                   {wordleAttempts.map((attempt, attemptIdx) => (
                     <div key={attemptIdx} style={{ display: 'flex', gap: '6px' }}>
                       {attempt.guess.split('').map((char, charIdx) => {
@@ -1546,7 +1156,7 @@ export default function PlayStagePage({ params }) {
                   )}
 
                   {!submitted && (
-                    <button 
+                    <button
                       onClick={handleWordleSubmit}
                       className="glow-btn"
                       style={{ padding: '10px 24px', fontSize: '0.85rem' }}
@@ -1561,8 +1171,8 @@ export default function PlayStagePage({ params }) {
 
             {/* 정오답 피드백 */}
             {submitted && (
-              <div 
-                className="premium-card" 
+              <div
+                className="premium-card question-feedback"
                 style={{
                   padding: '20px 28px',
                   background: isCorrect ? 'rgba(85, 124, 85, 0.08)' : 'rgba(255, 107, 107, 0.08)',
@@ -1601,7 +1211,7 @@ export default function PlayStagePage({ params }) {
                   )}
                 </div>
 
-                <button 
+                <button
                   onClick={handleNextQuiz}
                   className="glow-btn"
                   style={{ padding: '12px 24px' }}
@@ -1657,7 +1267,7 @@ export default function PlayStagePage({ params }) {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                
+
                 {/* 정답 반투명 가이드라인 워터마크 */}
                 {showOverlayGuide && currentQuiz.quizType !== 'LISTENING' && (
                   <div style={{
@@ -1666,7 +1276,7 @@ export default function PlayStagePage({ params }) {
                     fontWeight: '900',
                     fontFamily: '"Noto Sans JP", sans-serif',
                     color: 'var(--text-primary)',
-                    opacity: 0.13, 
+                    opacity: 0.13,
                     pointerEvents: 'none',
                     userSelect: 'none',
                     textAlign: 'center',
@@ -1709,10 +1319,10 @@ export default function PlayStagePage({ params }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1, marginRight: '16px' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>두께</span>
-                  <input 
-                    type="range" 
-                    min={2} max={16} 
-                    value={brushSize} 
+                  <input
+                    type="range"
+                    min={2} max={16}
+                    value={brushSize}
                     onChange={(e) => setBrushSize(parseInt(e.target.value))}
                     style={{ width: '100%', accentColor: 'var(--accent-color)' }}
                   />
@@ -1748,7 +1358,7 @@ export default function PlayStagePage({ params }) {
                     </button>
                   )}
 
-                  <button 
+                  <button
                     onClick={() => clearCanvas(false)}
                     className="outline-btn"
                     style={{ padding: '6px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
@@ -1769,7 +1379,7 @@ export default function PlayStagePage({ params }) {
                 <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
                   {recognizing ? '⏳ 인공지능이 손글씨 해독 중...' : '🧠 구글 실시간 해독 추천 (클릭 시 입력 및 자동 지우기):'}
                 </span>
-                
+
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', minHeight: '34px', alignItems: 'center' }}>
                   {candidates.length === 0 ? (
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic', paddingLeft: '4px' }}>
@@ -1812,21 +1422,6 @@ export default function PlayStagePage({ params }) {
 
         </div>
       )}
-
-      {/* 🎉 [3.8.5 프리미엄 꽃가루 confetti 캔버스] */}
-      <canvas 
-        ref={confettiCanvasRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',  /* 100vw → 100% (vw는 fixed 요소에서 스크롤바 너비 포함하여 가로 스크롤 유발) */
-          height: '100%',
-          pointerEvents: 'none',
-          zIndex: 99999
-        }}
-      />
-
       {/* 🏆 [3.8.5 프리미엄 우주선 슬라이딩 업적 잠금 해제 알림 토스트] */}
       {achievementToast && (
         <div style={{

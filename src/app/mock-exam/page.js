@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import ReadableText from '@/app/ReadableText';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
+import { getSyncHeaders } from '@/lib/clientProfile.mjs';
 
 const storageKey = 'nihongo-n1-exam-v1';
 const initial = { phase: 'intro', questions: [], answers: {}, index: 0, deadline: 0, token: '' };
@@ -43,11 +44,9 @@ export default function MockExamPage() {
     window.speechSynthesis?.cancel();
     try {
       const action = exam.phase === 'intro' ? 'start' : exam.phase === 'first' ? 'listening' : 'finish';
-      const response = await fetch('/api/mock-exam', { method: 'POST', headers: {
-        'Content-Type': 'application/json',
-        'x-nihongo-username': encodeURIComponent(localStorage.getItem('nihongo_quest_username') || '니혼고마스터'),
-        'x-nihongo-target-level': 'N1'
-      }, body: JSON.stringify({ action, token: exam.token, answers: exam.answers }) });
+      const response = await fetch('/api/mock-exam', { method: 'POST', headers: getSyncHeaders({
+        'Content-Type': 'application/json', 'x-nihongo-target-level': 'N1'
+      }), body: JSON.stringify({ action, token: exam.token, answers: exam.answers }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || '요청에 실패했습니다.');
       if (action === 'finish') setExam(previous => ({ ...previous, phase: 'results', results: data.results }));

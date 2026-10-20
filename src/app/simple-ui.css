@@ -1,0 +1,121 @@
+﻿/* One quiet visual language across practice, review, library and dialogs.
+   Keep functional transforms (flashcards), status colors and input gestures. */
+body.simple-ui {
+  --custom-radius: 12px;
+  --neon-glow: none;
+  --accent-glow: transparent;
+  --glass-bg: var(--card-bg);
+  --card-border: color-mix(in srgb, var(--text-primary) 14%, transparent);
+  background-image: none !important;
+  line-height: 1.7;
+}
+:root body.simple-ui :is(.premium-card,.glass-premium-card,.sync-hub-premium-card,.flashcard-face) {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root body.simple-ui :is(.premium-card,.glass-premium-card):not(.question-feedback) {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--card-border) !important;
+}
+:root body.simple-ui :is(.premium-card,.glass-premium-card):not(.flashcard) { transform: none !important; }
+:root body.simple-ui :is(.rainbow-border,.glass-premium-card,.premium-card)::before,
+:root body.simple-ui :is(.rainbow-border,.glass-premium-card,.premium-card)::after { display: none !important; }
+:root body.simple-ui :is(.glow-btn,.glass-neon-btn,.outline-btn,.header-premium-btn) {
+  border-radius: 9px !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+  font-weight: 700 !important;
+  transition: background-color .15s, border-color .15s, opacity .15s;
+}
+:root body.simple-ui :is(.glow-btn,.glass-neon-btn) {
+  background: var(--accent-color) !important;
+  color: var(--button-on-accent, #fff) !important;
+  border: 1px solid var(--accent-color) !important;
+}
+:root body.simple-ui :is(.glow-btn,.glass-neon-btn,.outline-btn)::before,
+:root body.simple-ui :is(.glow-btn,.glass-neon-btn,.outline-btn)::after { display: none !important; }
+:root body.simple-ui :is(.glow-btn,.glass-neon-btn):hover:not(:disabled) { opacity: .88; }
+:root body.simple-ui button:disabled { cursor: default; }
+:root body.simple-ui :is(.glow-btn,.glass-neon-btn):disabled { opacity: .5; }
+:root body.simple-ui :is(h1,h2,h3,h4) { text-shadow: none !important; background-image: none !important; -webkit-text-fill-color: currentColor; font-weight: 750; }
+:root body.simple-ui :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),textarea,select) {
+  border-radius: 8px !important; box-shadow: none !important;
+}
+:root body.simple-ui :is(button,a,input,textarea,select,summary):focus-visible { outline: 2px solid var(--accent-color) !important; outline-offset: 3px; }
+:root body.simple-ui :is(.library-page,.practice-page) { max-width: 1160px !important; padding-top: 32px !important; padding-bottom: 80px !important; }
+:root body.simple-ui .library-page h1 { font-size: 1.85rem !important; font-weight: 800 !important; margin-top: 0 !important; }
+:root body.simple-ui .library-page > div:first-child p { font-size: .85rem !important; line-height: 1.8 !important; }
+:root body.simple-ui .sync-hub-premium-card { padding: 18px 20px !important; margin-bottom: 24px !important; }
+:root body.simple-ui .sync-hub-header { gap: 12px; }
+:root body.simple-ui .sync-hub-icon { display: none; }
+:root body.simple-ui .sync-hub-title { font-size: .9rem !important; font-weight: 750 !important; }
+:root body.simple-ui .sync-hub-desc { font-size: .75rem !important; line-height: 1.7 !important; }
+:root body.simple-ui :is(.backup-code-preview,.sync-hub-section,.flashcard-example-box) { border-radius: 9px; background: var(--bg-secondary); box-shadow: none; }
+:root body.simple-ui .wrong-note-card { padding: 20px !important; }
+:root body.simple-ui .wrong-question-content { font-size: .9rem; }
+:root body.simple-ui .wrong-question-content p { line-height: 1.85 !important; }
+:root body.simple-ui .wrong-review-level { width: 48px !important; height: 48px !important; border-radius: 10px !important; border-width: 1px !important; background: var(--bg-secondary) !important; color: var(--text-secondary) !important; }
+:root body.simple-ui .vocabulary-grid .wrong-note-card h3 { font-size: 1.35rem !important; }
+:root body.simple-ui .flashcard-face { background: var(--card-bg) !important; border: 1px solid var(--card-border) !important; }
+:root body.simple-ui .flashcard-back { overflow-y: auto; overflow-x: hidden; }
+:root body.simple-ui .flashcard-example-box { min-width: 0; width: 100%; }
+:root body.simple-ui .flashcard-example-jp { white-space: normal; font-size: .95rem; line-height: 1.9; }
+:root body.simple-ui .flashcard-word { font-size: clamp(2rem,6vw,3rem); text-shadow: none; }
+:root body.simple-ui .flashcard-tag { border-radius: 6px; background: var(--bg-secondary) !important; color: var(--text-secondary) !important; border: 1px solid var(--card-border) !important; }
+:root body.simple-ui .flashcard-progress-bar-fill { background: var(--accent-color) !important; box-shadow: none !important; }
+:root body.simple-ui .stage-info-container { gap: 12px; flex-wrap: wrap; }
+:root body.simple-ui .stage-info-container > span { flex-wrap: wrap; }
+:root body.simple-ui .stage-info-container span[style*="border-radius"] { border-radius: 6px !important; box-shadow: none !important; animation: none !important; }
+:root body.simple-ui .practice-level-badge { background: var(--bg-secondary) !important; color: var(--accent-color) !important; border: 1px solid var(--card-border) !important; }
+:root body.simple-ui .stage-info-container span[style*="linear-gradient"] { background: var(--bg-secondary) !important; color: var(--accent-color) !important; }
+:root body.simple-ui .time-attack-control-card { background: var(--bg-secondary) !important; border: 1px solid var(--card-border) !important; border-radius: 10px !important; box-shadow: none !important; }
+:root body.simple-ui .play-arena-grid { gap: 20px !important; }
+:root body.simple-ui .play-arena-grid > div > .glass-premium-card { padding: 24px !important; }
+:root body.simple-ui .options-grid .outline-btn { min-height: 48px; padding: 14px 16px !important; border-width: 1px !important; }
+:root body.simple-ui .reading-passage { border-radius: 10px; border: 1px solid var(--card-border); line-height: 1.95; }
+:root body.simple-ui .question-feedback { border-width: 1px !important; margin-top: 20px; gap: 16px; flex-wrap: wrap; }
+:root body.simple-ui .exam-intro { max-width: 800px; margin: 28px auto; }
+:root body.simple-ui .exam-question { padding: 28px; }
+:root body.simple-ui .exam-question-nav button { border-radius: 7px; min-height: 40px; }
+:root body.simple-ui .exam-options button { border-width: 1px; min-height: 48px; }
+:root body.simple-ui .exam-options [aria-pressed=true] { outline: 2px solid var(--accent-color); outline-offset: -2px; }
+:root body.simple-ui [data-draggable-modal] { border-radius: 14px !important; box-shadow: 0 16px 48px rgba(0,0,0,.16) !important; }
+:root body.simple-ui .modal-premium-content { padding: 28px !important; }
+:root body.simple-ui :is(.news-detail-modal,.calligraphy-modal-window) { background: var(--card-bg); border: 1px solid var(--card-border); }
+:root body.simple-ui :is(.news-detail-modal-header,.calligraphy-modal-header) { padding: 20px 24px; border-bottom: 1px solid var(--card-border); }
+:root body.simple-ui .calligraphy-modal-header h3 { font-size: 1rem !important; }
+:root body.simple-ui :is(.sync-toast-message-floating,.toast-container) { box-shadow: 0 6px 24px rgba(0,0,0,.12) !important; border-radius: 10px; }
+:root body.simple-ui :is(.pulse-ani,.pulse-dot,.flashcard-hint-text) { animation: none !important; }
+:root body.simple-ui [style*="animation: pulse"], .simple-ui [style*="animation: float"] { animation: none !important; }
+:root body.simple-ui canvas[style*="position: fixed"] { display: none; }
+:root body.simple-ui .pwa-install-button { box-shadow: none !important; background: var(--card-bg) !important; color: var(--text-primary) !important; border: 1px solid var(--card-border) !important; }
+:root:is([data-theme=cyber],[data-theme=neon-dream],[data-theme=nordic-frost]) .simple-ui { --button-on-accent: #10252b; }
+@media (max-width: 768px) {
+  :root body.simple-ui :is(.library-page,.practice-page) { padding: 24px 16px 88px !important; }
+  :root body.simple-ui .library-page h1 { font-size: 1.5rem !important; }
+  :root body.simple-ui :is(.library-page,.practice-page) > div:first-child { margin-bottom: 24px !important; }
+  :root body.simple-ui .sync-hub-premium-card { padding: 14px !important; }
+  :root body.simple-ui .wrong-note-card { padding: 16px !important; gap: 14px; }
+  :root body.simple-ui .wrong-info-container { gap: 12px !important; margin-right: 0 !important; min-width: 0; }
+  :root body.simple-ui .wrong-question-content { min-width: 0; }
+  :root body.simple-ui .wrong-word-row { flex-wrap: wrap; }
+  :root body.simple-ui .wrong-word-row h4 { font-size: 1.25rem !important; }
+  :root body.simple-ui .wrong-btn-actions { flex-wrap: wrap; gap: 8px !important; }
+  :root body.simple-ui .wrong-btn-actions button { min-height: 40px; }
+  :root body.simple-ui .vocabulary-grid { grid-template-columns: minmax(0,1fr) !important; gap: 12px !important; }
+  :root body.simple-ui .play-arena-grid > div > .glass-premium-card { padding: 18px !important; }
+  :root body.simple-ui .options-grid .outline-btn { padding: 12px !important; }
+  :root body.simple-ui .modal-premium-content { width: calc(100% - 24px) !important; padding: 20px !important; }
+  :root body.simple-ui .exam-page { padding: 24px 16px 80px; }
+  :root body.simple-ui .exam-question { padding: 18px !important; }
+  :root body.simple-ui .exam-summary { grid-template-columns: minmax(0,1fr); }
+  :root body.simple-ui .exam-toolbar { gap: 8px; font-size: .8rem; }
+  :root body.simple-ui :is(.news-detail-modal-header,.calligraphy-modal-header) { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body.simple-ui .flashcard { transition: none; }
+}
+

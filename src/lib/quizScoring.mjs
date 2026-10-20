@@ -8,7 +8,7 @@ export function evaluateQuizAnswer(selectedAnswer, quiz) {
   const submitted = normalizeQuizAnswer(selectedAnswer);
   if (!submitted) return false;
 
-  const answers = (quiz?.jlptLevel === 'N1' || quiz?.id?.startsWith('n1-q3-')) && ['MULTIPLE_CHOICE', 'LISTENING', 'READING'].includes(quiz?.quizType)
+  const answers = (quiz?.jlptLevel === 'N1' || quiz?.id?.startsWith('n1-q3-') || quiz?.id?.startsWith('beginner-20261019-')) && ['MULTIPLE_CHOICE', 'LISTENING', 'READING'].includes(quiz?.quizType)
     ? [quiz?.correctAnswer]
     : [quiz?.correctAnswer, quiz?.japaneseWord];
   return answers

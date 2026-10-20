@@ -1,0 +1,152 @@
+@import url('https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css');
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&family=Outfit:wght@300;400;600;800&family=Quicksand:wght@400;500;600;700;900&display=swap');
+
+/* PC/모바일 반응형 분리 유틸 */
+.mobile-only {
+  display: none !important;
+}
+.pc-only {
+  display: flex !important;
+}
+
+/* ========================================================
+   1. DESIGN SYSTEM - 4 VARIANT EMOTIONS (THEMES)
+   ======================================================== */
+
+/* [Theme 1] 모던 젠 (Modern Zen) - Kyoto's Harmonious Vibe (Default) */
+:root, :root[data-theme='zen'] {
+  --bg-primary: #fbf9f5;
+  --bg-secondary: #f4eee1;
+  --text-primary: #2d382e;
+  --text-secondary: #5d6d5f;
+  --accent-color: #486b48; /* 가독성을 위해 살짝 묵직해진 대나무 녹빛 */
+  --accent-hover: #345234;
+  --accent-glow: rgba(72, 107, 72, 0.3);
+  --card-bg: #ffffff;
+  --card-border: rgba(72, 107, 72, 0.15);
+  --neon-glow: 0 4px 20px rgba(72, 107, 72, 0.08);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 16px;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+}
+
+/* [Theme 2] 사이버 도쿄 (Cyberpunk Tokyo) - Neon Midnight Vibe */
+:root[data-theme='cyber'] {
+  --bg-primary: #08090d;
+  --bg-secondary: #12131c;
+  --text-primary: #ffffff;
+  --text-secondary: #9da5cc; /* 본문 판독성 향상을 위해 더 부드럽고 밝아진 서브 텍스트 */
+  --accent-color: #00d8e6; /* 눈부심을 정밀 억제한 일렉트릭 청록 */
+  --accent-hover: #ff007f; /* 네온 핑크 */
+  --accent-glow: rgba(0, 216, 230, 0.4);
+  --card-bg: #161724;
+  --card-border: rgba(0, 240, 255, 0.22);
+  --neon-glow: 0 0 20px rgba(0, 240, 255, 0.35), 0 0 40px rgba(255, 0, 127, 0.2);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 8px;
+  --glass-bg: rgba(22, 23, 36, 0.85);
+}
+
+/* [Theme 3] 귀여운 미니멀 (Kawaii Minimal) - Sweet Coral Vibe */
+:root[data-theme='kawaii'] {
+  --bg-primary: #fff5f5;
+  --bg-secondary: #ffe8e8;
+  --text-primary: #5c4343;
+  --text-secondary: #9e8585;
+  --accent-color: #d56363; /* 흰색/핑크 배경 위에 칼날처럼 선명히 읽히는 딥 코랄 로즈 */
+  --accent-hover: #bd4d4d;
+  --accent-glow: rgba(213, 99, 99, 0.35);
+  --card-bg: #ffffff;
+  --card-border: rgba(255, 148, 148, 0.2);
+  --neon-glow: 0 8px 24px rgba(255, 148, 148, 0.15);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 28px;
+  --glass-bg: rgba(255, 255, 255, 0.9);
+}
+
+/* [Theme 4] 클래식 스터디 (Classic Academic) - Craft Grid Paper Vibe */
+:root[data-theme='academic'] {
+  --bg-primary: #faf6eb;
+  --bg-secondary: #f0e6cf;
+  --text-primary: #1b263b;
+  --text-secondary: #506275;
+  --accent-color: #1e4620; /* 칠판 올리브 그린 */
+  --accent-hover: #b89158;
+  --accent-glow: rgba(30, 70, 32, 0.2);
+  --card-bg: #fdfcf7;
+  --card-border: #d7caaa;
+  --neon-glow: none;
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 4px;
+  --glass-bg: rgba(253, 252, 247, 0.9);
+  --academic-grid: radial-gradient(rgba(215, 202, 170, 0.3) 1px, transparent 1px);
+}
+
+/* [Theme 5] 네온 드림 (Neon Dream) - Cyberpunk Vaporwave Pearl Vibe */
+:root[data-theme='neon-dream'] {
+  --bg-primary: #0a0b16;
+  --bg-secondary: #131527;
+  --text-primary: #ffffff;
+  --text-secondary: #a2a8d3;
+  --accent-color: #00d59a; /* 본문 텍스트 눈부심을 억제한 민트 에메랄드 */
+  --accent-hover: #ff007f;
+  --accent-glow: rgba(0, 213, 154, 0.4);
+  --card-bg: rgba(26, 28, 52, 0.7); /* 불투명도를 높여 카드가 더 단정히 분리되게 조율 */
+  --card-border: rgba(0, 255, 185, 0.25);
+  --neon-glow: 0 0 15px rgba(0, 255, 185, 0.35), 0 0 30px rgba(255, 0, 127, 0.2);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 12px;
+  --glass-bg: rgba(20, 22, 46, 0.9);
+}
+
+/* [Theme 6] 오로라 숲 (Nordic Frost) - Aurora Arctic Glacier Vibe */
+:root[data-theme='nordic-frost'] {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #121b2d;
+  --text-primary: #e6f1ff;
+  --text-secondary: #8892b0;
+  --accent-color: #00c0cb; /* 눈부심을 방지하고 가독성을 보장하는 딥 아쿠아 마린 */
+  --accent-hover: #00a4b0;
+  --accent-glow: rgba(0, 192, 203, 0.35);
+  --card-bg: rgba(18, 30, 49, 0.8);
+  --card-border: rgba(0, 242, 254, 0.2);
+  --neon-glow: 0 0 15px rgba(0, 242, 254, 0.3);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 20px;
+  --glass-bg: rgba(18, 30, 49, 0.9);
+}
+
+/* [Theme 7] 벨벳 로즈 (Velvet Rose) - Royal Burgundy Gothic Mystery */
+:root[data-theme='velvet-rose'] {
+  --bg-primary: #12090e;
+  --bg-secondary: #22121b;
+  --text-primary: #fff0f5;
+  --text-secondary: #c299a9;
+  --accent-color: #e25372; /* 벨벳 카펫과 조화를 이루는 눈이 편한 로즈 벨벳 */
+  --accent-hover: #ff6b8b;
+  --accent-glow: rgba(226, 83, 114, 0.3);
+  --card-bg: rgba(44, 21, 33, 0.7);
+  --card-border: rgba(255, 107, 139, 0.25);
+  --neon-glow: 0 4px 20px rgba(255, 107, 139, 0.2);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 10px;
+  --glass-bg: rgba(44, 21, 33, 0.9);
+}
+
+/* [Theme 8] 샤인 사하라 (Golden Sand) - Luxury Sahara Oasis Vibe */
+:root[data-theme='golden-sand'] {
+  --bg-primary: #faf6f0;
+  --bg-secondary: #f3eae0;
+  --text-primary: #3d3122;
+  --text-secondary: #8c765c;
+  --accent-color: #ac8415; /* 아이보리 모래사장 배경 위에서 칠흑처럼 선명해진 앤티크 브론즈 골드 */
+  --accent-hover: #8f6d0f;
+  --accent-glow: rgba(172, 132, 21, 0.3);
+  --card-bg: #ffffff;
+  --card-border: rgba(172, 132, 21, 0.25);
+  --neon-glow: 0 6px 20px rgba(172, 132, 21, 0.12);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 18px;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+}
+
