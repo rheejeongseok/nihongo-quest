@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getOrCreateRequestUser } from '@/lib/requestUser';
-import { evaluateQuizAnswer, normalizeTimeTaken } from '@/lib/quizScoring.mjs';
+import { ASSEMBLY_STAR_MODE, evaluateQuizAnswer, getN1Assembly, normalizeTimeTaken } from '@/lib/quizScoring.mjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +57,13 @@ export async function POST(request) {
     }
 
     // 클라이언트가 보낸 isCorrect 값은 신뢰하지 않고 DB 정답으로 직접 판정한다.
-    const isCorrect = evaluateQuizAnswer(selectedAnswer, quiz);
+    const wantsStarAnswer = body.answerMode === ASSEMBLY_STAR_MODE;
+    const assemblyBoard = wantsStarAnswer ? getN1Assembly(quiz) : undefined;
+    if (wantsStarAnswer && !assemblyBoard) {
+      return NextResponse.json({ success: false, error: '별표 선택 문항이 아닙니다.' }, { status: 400 });
+    }
+    const correctAnswer = assemblyBoard ? assemblyBoard.options[assemblyBoard.starSlot] : quiz.correctAnswer;
+    const isCorrect = evaluateQuizAnswer(selectedAnswer, { ...quiz, correctAnswer, assemblyBoard });
     const timeTaken = normalizeTimeTaken(body.timeTaken);
     const diffPoints = { EASY: 10, MEDIUM: 15, HARD: 20 };
     const pointsEarned = isCorrect ? (diffPoints[quiz.stage.difficulty] || 10) : 0;
@@ -120,7 +126,7 @@ export async function POST(request) {
       success: true,
       isCorrect,
       pointsEarned,
-      correctAnswer: quiz.correctAnswer,
+      correctAnswer,
       hint: quiz.hint
     });
   } catch (error) {

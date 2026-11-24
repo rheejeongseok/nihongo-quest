@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useRef } from 'react';
 import SentenceAssembly from '@/app/components/SentenceAssembly';
+import N1SentenceAssembly from '@/app/components/N1SentenceAssembly';
 import QuestionOptions from '@/app/components/QuestionOptions';
 import { getSyncHeaders } from '@/lib/clientProfile.mjs';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -9,7 +10,7 @@ import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import { showToast } from '@/lib/toast';
 import ReadableText from '@/app/ReadableText';
-import { evaluateQuizAnswer } from '@/lib/quizScoring.mjs';
+import { ASSEMBLY_STAR_MODE, evaluateQuizAnswer } from '@/lib/quizScoring.mjs';
 import { beginnerCourseForRoute } from '@/data/beginnerCourses.mjs';
 
 export default function PlayStagePage({ params }) {
@@ -213,6 +214,7 @@ export default function PlayStagePage({ params }) {
   };
 
   const currentQuiz = quizzes[currentIndex];
+  const assemblyBoard = currentQuiz?.assemblyBoard;
 
   // 3. 🖌️ [구글 손글씨 판별기 코어 드로잉 핸들러]
   const getMousePos = (e) => {
@@ -468,7 +470,8 @@ export default function PlayStagePage({ params }) {
         body: JSON.stringify({
           quizId: currentQuiz.id,
           timeTaken,
-          selectedAnswer: finalAns
+          selectedAnswer: finalAns,
+          answerMode: assemblyBoard ? ASSEMBLY_STAR_MODE : undefined
         })
       });
       const data = await res.json();
@@ -954,7 +957,7 @@ export default function PlayStagePage({ params }) {
               </div>
 
               {/* 퀴즈 질문 */}
-              <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              {!assemblyBoard && <div style={{ textAlign: 'center', padding: '12px 0' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '700', marginBottom: '12px', whiteSpace: 'pre-line' }}>
                   <ReadableText text={currentQuiz.questionText
                     .replace(/\[(?:N[12](?:-(?:EASY|MEDIUM|HARD|ASSEMBLY))?|BEGINNER-(?:EASY|MEDIUM|HARD))\]\s*/g, '')
@@ -1026,10 +1029,11 @@ export default function PlayStagePage({ params }) {
                     </span>
                   </div>
                 )}
-              </div>
+              </div>}
 
-              {/* ==================== [⚔️ 문장 조립 퀴즈 전용 드래그앤드롭 슬롯] ==================== */}
-              {currentQuiz.quizType === 'ASSEMBLY' ? (
+              {assemblyBoard ? (
+                <N1SentenceAssembly key={currentQuiz.id} board={assemblyBoard} submitted={submitted} onSubmit={handleSubmission} />
+              ) : currentQuiz.quizType === 'ASSEMBLY' ? (
                 <SentenceAssembly currentQuiz={currentQuiz} isBeginner={isBeginner} assemblyPads={assemblyPads} setAssemblyPads={setAssemblyPads} submitted={submitted} handleSubmission={handleSubmission} />
               ) : (
                 /* ==================== [기존 붓글씨 그림판 기반 주관식 제출 통합지] ==================== */
@@ -1201,12 +1205,17 @@ export default function PlayStagePage({ params }) {
                     요미가나(발음): <strong style={{ color: 'var(--text-primary)' }}>{currentQuiz.pronunciation}</strong>
                   </p>}
                   <p style={{ marginTop: '4px', fontSize: '0.85rem', color: 'var(--accent-color)', fontWeight: '700' }}>
-                    정답: <strong style={{ textDecoration: 'underline' }}><ReadableText text={currentQuiz.correctAnswer} /></strong>
+                    {assemblyBoard ? '★ 정답: ' : '정답: '}<strong style={{ textDecoration: 'underline' }}><ReadableText text={currentQuiz.correctAnswer} /></strong>
                     {isBeginner && <> 또는 <strong><ReadableText text={currentQuiz.japaneseWord} /></strong></>}
                   </p>
+                  {assemblyBoard && (
+                    <p style={{ marginTop: '4px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                      완성 문장: <ReadableText text={currentQuiz.japaneseWord} />
+                    </p>
+                  )}
                   {currentQuiz.hint && (
                     <p style={{ marginTop: '4px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      💡 설명: <ReadableText text={currentQuiz.hint} />
+                      💡 설명: <ReadableText text={assemblyBoard ? currentQuiz.hint.replace(/\r?\n완성문:.*$/u, '') : currentQuiz.hint} />
                     </p>
                   )}
                 </div>

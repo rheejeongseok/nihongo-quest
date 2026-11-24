@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getN1Arena } from '@/lib/n1Arena.mjs';
 import { getBeginnerArena } from '@/lib/beginnerArena.mjs';
+import { getN1Assembly } from '@/lib/quizScoring.mjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,11 +24,18 @@ function prepareQuizForClient(quiz) {
     if (!Array.isArray(values) || values.length === 0) return quiz;
 
     if (quiz.quizType === 'ASSEMBLY') {
-      return {
-        ...quiz,
-        options: shuffleArray(values),
-        wrongAnswers: undefined
-      };
+      const assembly = getN1Assembly(quiz, values);
+      if (assembly) {
+        const options = shuffleArray(assembly.options);
+        return {
+          ...quiz,
+          correctAnswer: assembly.options[assembly.starSlot],
+          options,
+          wrongAnswers: undefined,
+          assemblyBoard: { ...assembly, options }
+        };
+      }
+      return { ...quiz, options: shuffleArray(values), wrongAnswers: undefined };
     }
 
     return {
