@@ -1,5 +1,6 @@
 import { NEWS_POOL } from "@/data/newsFallback.mjs";
 import prisma from "@/lib/prisma";
+import { collectRssNews } from "@/lib/rssNews.mjs";
 
 
 
@@ -363,8 +364,6 @@ async function translateWithDeepL(texts) {
 const NEWS_CACHE_TTL_MS = 15 * 60 * 1000;
 const NEWS_POOL_SIZE = 100;
 const NEWS_DISPLAY_COUNT = 10;
-const NEWS_MAX_PAGES = 40;
-const NEWS_PAGE_BATCH_SIZE = 5;
 const NEWS_REFRESH_LEASE_MS = 10 * 60 * 1000;
 const NEWS_REFRESH_STATE_ID = "japan-daily";
 let cachedNewsPayload = null;
@@ -382,92 +381,13 @@ function getKoreanDateKey(date = new Date()) {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
-function toNewsRecord(item, batchDate) {
-  if (!item?.uuid || typeof item.title !== "string" || typeof item.url !== "string") return null;
-
-  const parsedDate = item.published_at ? new Date(item.published_at) : null;
-  return {
-    id: item.uuid,
-    title: item.title.trim(),
-    description: (item.description || item.snippet || item.title).trim(),
-    link: item.url,
-    imageUrl: item.image_url || null,
-    pubDate: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null,
-    sourceName: item.source || "일본 뉴스",
-    batchDate
-  };
-}
-
-async function fetchTheNewsApiPage(page, batchDate) {
-  const apiToken = process.env.THE_NEWS_API_TOKEN;
-  if (!apiToken) {
-    throw new Error("THE_NEWS_API_TOKEN이 설정되지 않았습니다");
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-  try {
-    const params = new URLSearchParams({
-      api_token: apiToken,
-      locale: "jp",
-      language: "ja",
-      limit: "3",
-      page: String(page)
-    });
-    const response = await fetch(`https://api.thenewsapi.com/v1/news/top?${params}`, {
-      signal: controller.signal,
-      headers: { "Accept": "application/json" },
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`The News API 응답 불량: ${response.status} ${errorBody.slice(0, 200)}`);
-    }
-
-    const payload = await response.json();
-    return Array.isArray(payload.data)
-      ? payload.data.map(item => toNewsRecord(item, batchDate)).filter(Boolean)
-      : [];
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
+// 하루치 뉴스 풀: NHK 분야별 RSS(+모자라면 Google 뉴스 RSS)에서 키 없이 모읍니다.
 async function fetchDailyNewsPool(batchDate) {
-  const uniqueArticles = new Map();
-  const seenLinks = new Set();
-
-  for (let firstPage = 1; firstPage <= NEWS_MAX_PAGES && uniqueArticles.size < NEWS_POOL_SIZE; firstPage += NEWS_PAGE_BATCH_SIZE) {
-    const pages = Array.from(
-      { length: Math.min(NEWS_PAGE_BATCH_SIZE, NEWS_MAX_PAGES - firstPage + 1) },
-      (_, index) => firstPage + index
-    );
-    const results = await Promise.allSettled(
-      pages.map(page => fetchTheNewsApiPage(page, batchDate))
-    );
-
-    for (const result of results) {
-      if (result.status === "rejected") {
-        console.warn("[The News API] 페이지 수집 실패:", result.reason?.message || result.reason);
-        continue;
-      }
-      for (const article of result.value) {
-        if (!article.title || !article.link || uniqueArticles.has(article.id) || seenLinks.has(article.link)) continue;
-        uniqueArticles.set(article.id, article);
-        seenLinks.add(article.link);
-      }
-    }
+  const articles = await collectRssNews(batchDate, NEWS_POOL_SIZE);
+  if (articles.length < NEWS_POOL_SIZE) {
+    throw new Error(`일일 뉴스가 ${articles.length}건만 수집되어 기존 데이터를 유지합니다`);
   }
-
-  if (uniqueArticles.size < NEWS_POOL_SIZE) {
-    throw new Error(`일일 뉴스가 ${uniqueArticles.size}건만 수집되어 기존 데이터를 유지합니다`);
-  }
-
-  return [...uniqueArticles.values()]
-    .sort((a, b) => (b.pubDate?.getTime() || 0) - (a.pubDate?.getTime() || 0))
-    .slice(0, NEWS_POOL_SIZE);
+  return articles;
 }
 
 async function acquireDailyRefresh(dateKey) {
@@ -621,7 +541,7 @@ async function loadNhkRssNews() {
   const timeoutId = setTimeout(() => controller.abort(), 2000);
 
   try {
-    const response = await fetch("https://www3.nhk.or.jp/rss/news/cat0.xml", {
+    const response = await fetch("https://news.web.nhk/n-data/conf/na/rss/cat0.xml", {
       signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -648,13 +568,13 @@ async function loadFreshNewsPayload() {
     const enrichedNews = await selectAndEnrichNews(pool.articles);
     return {
       success: true,
-      source: pool.stale ? "the-news-api-stale" : "the-news-api",
+      source: pool.stale ? "daily-rss-stale" : "daily-rss",
       poolDate: pool.dateKey,
       poolSize: pool.articles.length,
       news: enrichedNews
     };
   } catch (error) {
-    console.warn("[The News API] 일일 뉴스 풀 로드 실패, NHK RSS로 전환:", error.message);
+    console.warn("[일본 뉴스 RSS] 일일 뉴스 풀 로드 실패, NHK 종합 RSS로 전환:", error.message);
   }
 
   try {

@@ -440,14 +440,14 @@ export default function ClientDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className={`nhk-status-badge ${targetLevel === 'BEGINNER' || newsSource === 'the-news-api' ? 'realtime' : 'fallback'}`}>
+            <span className={`nhk-status-badge ${targetLevel === 'BEGINNER' || newsSource === 'daily-rss' ? 'realtime' : 'fallback'}`}>
               {newsLoading
                 ? '불러오는 중'
                 : targetLevel === 'BEGINNER'
                   ? '회화 5편'
-                  : newsSource === 'the-news-api'
+                  : newsSource === 'daily-rss'
                     ? `오늘의 뉴스 ${nhkNews.length}편`
-                    : newsSource === 'the-news-api-stale'
+                    : newsSource === 'daily-rss-stale'
                       ? `보관 뉴스 ${nhkNews.length}편`
                     : newsSource === 'nhk-rss-fallback'
                       ? `NHK ${nhkNews.length}편`
