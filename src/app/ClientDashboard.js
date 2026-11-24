@@ -550,20 +550,11 @@ export default function ClientDashboard() {
                       >
                         <header data-modal-drag-handle className="news-detail-modal-header">
                           <div className="news-detail-modal-heading">
-                            <span className="news-detail-modal-eyebrow">
-                              {targetLevel === 'BEGINNER' ? '🌸 일상 회화 학습' : `📰 ${item.sourceName || '일본 뉴스'}`}
-                            </span>
+                            <p className="nm-meta">
+                              {targetLevel === 'BEGINNER' ? '일상 회화' : (item.sourceName || '일본 뉴스')}
+                              {item.pubDate && <> · {new Date(item.pubDate).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</>}
+                            </p>
                             <h2 id={`news-modal-title-${idx}`}><ReadableText text={item.title} /></h2>
-                            <div className="news-detail-modal-meta">
-                              <span>
-                                {item.pubDate ? new Date(item.pubDate).toLocaleDateString('ko-KR', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                }) : '최신 시사'}
-                              </span>
-                              <span>{targetLevel === 'BEGINNER' ? '초보 일상회화' : 'N1 사회시사'}</span>
-                            </div>
                           </div>
                           <button
                             ref={newsModalCloseRef}
@@ -576,230 +567,185 @@ export default function ClientDashboard() {
                           </button>
                         </header>
 
-                        <div className="news-detail-modal-body nhk-accordion-content fade-in">
-                          {targetLevel !== 'BEGINNER' && (
-                            <p className="news-detail-modal-notice">
-                              API가 제공하는 일본어 기사 지문입니다. 전체 내용은 아래 원문 링크에서 확인할 수 있어요.
-                            </p>
+                        <div className="news-detail-modal-body">
+                          {/* 원문과 한국어 번역을 위아래로 */}
+                          <section className="nm-reading">
+                            <div className="nm-row">
+                              <span className="nm-label">{targetLevel === 'BEGINNER' ? '회화' : '원문'}</span>
+                              <button type="button" className="nm-chip-btn" onClick={() => speak(item.description)}>🔊 듣기</button>
+                            </div>
+                            <p className="nm-ja" lang="ja"><ReadableText text={item.description} /></p>
+                            <div className="nm-ko">
+                              <span className="nm-label">한국어</span>
+                              <p>{item.translation || '번역을 아직 불러오지 못했어요. 잠시 후 다시 열어 보세요.'}</p>
+                            </div>
+                          </section>
+
+                          {item.n1Words?.length > 0 && (
+                            <section className="nm-section">
+                              <span className="nm-label">{targetLevel === 'BEGINNER' ? '필수 어휘' : '핵심 어휘'}</span>
+                              <ul className="nm-words">
+                                {item.n1Words.map((wordObj, wIdx) => (
+                                  <li key={wIdx}>
+                                    <b lang="ja">{wordObj.word}</b>
+                                    <span className="nm-reading-text" lang="ja">{wordObj.reading}</span>
+                                    <span className="nm-meaning">{wordObj.meaning}</span>
+                                    <button
+                                      type="button"
+                                      className={`nm-chip-btn${harvestedWords[wordObj.word] ? ' is-done' : ''}`}
+                                      onClick={() => handleHarvestWord(wordObj)}
+                                      disabled={harvestedWords[wordObj.word] || harvestingWord === wordObj.word}
+                                    >
+                                      {harvestedWords[wordObj.word] ? '✓ 저장됨' : harvestingWord === wordObj.word ? '저장 중' : '+ 단어장'}
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            </section>
                           )}
-                      <p className="nhk-news-raw-desc">
-                        <strong>{targetLevel === 'BEGINNER' ? '[회화 지문]' : '[일본어 원문]'}</strong><br />
-                        <ReadableText text={item.description} />
-                      </p>
 
-                      {/* 딕테이션 버튼 그룹 */}
-                      <div style={{ display: 'flex', gap: '10px', marginTop: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                        <button
-                          onClick={() => speak(item.description)}
-                          className="outline-btn"
-                          style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-                        >
-                          🔊 전체 지문 발음 청취 (TTS)
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            if (dictatingNews === idx) {
-                              setDictatingNews(null);
-                            } else {
-                              setDictatingNews(idx);
-                              setDictationInputs({});
-                              setDictationChecked(false);
-                              setDictationCorrects({});
-                            }
-                          }}
-                          className="outline-btn"
-                          style={{
-                            padding: '6px 12px',
-                            fontSize: '0.8rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            borderColor: dictatingNews === idx ? 'var(--accent-color)' : 'var(--card-border)',
-                            color: dictatingNews === idx ? 'var(--accent-color)' : 'var(--text-primary)',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          🎧 {targetLevel === 'BEGINNER' ? '기초 회화' : 'N1 뉴스'} 딕테이션 {dictatingNews === idx ? '종료' : '훈련 시작'}
-                        </button>
-                      </div>
-
-                      {/* 딕테이션 훈련 슬롯 활성화 */}
-                      {dictatingNews === idx && (
-                        <div className="fade-in" style={{
-                          background: 'rgba(255,255,255,0.02)',
-                          border: '1.5px dashed var(--card-border)',
-                          padding: '20px',
-                          borderRadius: '12px',
-                          marginBottom: '18px'
-                        }}>
-                          <h5 style={{ fontWeight: '900', fontSize: '0.9rem', marginBottom: '8px', color: 'var(--accent-color)' }}>
-                            ✍️ {targetLevel === 'BEGINNER' ? '왕초보 일상 회화' : 'N1 실시간 뉴스'} 받아쓰기
-                          </h5>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.6' }}>
-                            아래 지문을 귀로 잘 청취하고, 빈칸에 들어갈 기초 단어를 맞춰 적어 보세요!
-                          </p>
-
-                          {/* 빈칸 변환 원문 렌더링 */}
-                          <div style={{
-                            background: 'var(--bg-secondary)',
-                            padding: '14px 18px',
-                            borderRadius: '8px',
-                            fontSize: '0.95rem',
-                            color: 'var(--text-primary)',
-                            lineHeight: '1.8',
-                            marginBottom: '16px',
-                            borderLeft: '4px solid var(--accent-color)'
-                          }}>
-                            {(() => {
-                              let text = item.description;
-                              item.n1Words.forEach((wordObj, wIdx) => {
-                                text = text.replaceAll(wordObj.word, `[ 빈칸 ${wIdx + 1} ]`);
-                              });
-                              return text;
-                            })()}
-                          </div>
-
-                          {/* 주관식 빈칸 기입 란 */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {item.n1Words.map((wordObj, wIdx) => {
-                              const isInputCorrect = dictationCorrects[wIdx];
-                              return (
-                                <div key={wIdx} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-                                    [빈칸 {wIdx + 1}] 힌트: {wordObj.meaning} [{wordObj.reading}]
-                                  </span>
-                                  <input
-                                    type="text"
-                                    placeholder="한자 또는 히라가나..."
-                                    disabled={dictationChecked}
-                                    value={dictationInputs[wIdx] || ''}
-                                    onChange={(e) => setDictationInputs(prev => ({ ...prev, [wIdx]: e.target.value }))}
-                                    style={{
-                                      padding: '6px 12px',
-                                      fontSize: '0.85rem',
-                                      border: `2px solid ${dictationChecked ? (isInputCorrect ? 'var(--accent-color)' : '#ff6b6b') : 'var(--card-border)'}`,
-                                      borderRadius: '6px',
-                                      background: 'var(--card-bg)',
-                                      color: 'var(--text-primary)',
-                                      outline: 'none',
-                                      flexGrow: 1,
-                                      maxWidth: '220px'
-                                    }}
-                                  />
-                                  {dictationChecked && (
-                                    <span style={{
-                                      fontSize: '0.8rem',
-                                      fontWeight: '800',
-                                      color: isInputCorrect ? 'var(--accent-color)' : '#ff6b6b'
-                                    }}>
-                                      {isInputCorrect ? '✓ 정답!' : `✗ 오답 (정답: ${wordObj.word})`}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* 채점 및 제출 단추 */}
-                          {!dictationChecked ? (
+                          {item.n1Words?.length > 0 && (
                             <button
-                              onClick={() => handleDictationSubmit(item)}
-                              className="glow-btn"
-                              style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
-                            >
-                              🔍 딕테이션 채점 및 제출
-                            </button>
-                          ) : (
-                            <button
+                              type="button"
+                              className={`nm-toggle${dictatingNews === idx ? ' is-open' : ''}`}
+                              aria-expanded={dictatingNews === idx}
                               onClick={() => {
-                                setDictationChecked(false);
-                                setDictationInputs({});
-                                setDictationCorrects({});
+                                if (dictatingNews === idx) {
+                                  setDictatingNews(null);
+                                } else {
+                                  setDictatingNews(idx);
+                                  setDictationInputs({});
+                                  setDictationChecked(false);
+                                  setDictationCorrects({});
+                                }
                               }}
-                              className="outline-btn"
-                              style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
                             >
-                              🔄 다시 훈련하기
+                              <span>🎧 받아쓰기 연습</span>
+                              <span aria-hidden="true">{dictatingNews === idx ? '－' : '＋'}</span>
                             </button>
                           )}
-                        </div>
-                      )}
 
-                      <div className="nhk-news-analysis-box">
-                        {/* 1. 핵심 어휘집 */}
-                        <div className="nhk-analysis-subsect">
-                          <h5 className="nhk-subsect-title">🌸 {targetLevel === 'BEGINNER' ? '왕초보 필수 어휘' : 'N1 필수 시사 어휘'}</h5>
-                          <div className="nhk-words-grid">
-                            {item.n1Words && item.n1Words.length > 0 ? (
-                              item.n1Words.map((wordObj, wIdx) => (
-                                <div key={wIdx} className="nhk-word-chip-wrapper" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', width: '100%' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span className="nhk-word-badge">{wordObj.word}</span>
-                                    <div className="nhk-word-details">
-                                      <span className="nhk-word-reading">[{wordObj.reading}]</span>
-                                      <span className="nhk-word-meaning">{wordObj.meaning}</span>
+                          {/* 딕테이션 훈련 슬롯 활성화 */}
+                          {dictatingNews === idx && (
+                            <div className="fade-in" style={{
+                              background: 'rgba(255,255,255,0.02)',
+                              border: '1.5px dashed var(--card-border)',
+                              padding: '20px',
+                              borderRadius: '12px',
+                              marginBottom: '18px'
+                            }}>
+                              <h5 style={{ fontWeight: '900', fontSize: '0.9rem', marginBottom: '8px', color: 'var(--accent-color)' }}>
+                                ✍️ {targetLevel === 'BEGINNER' ? '왕초보 일상 회화' : 'N1 실시간 뉴스'} 받아쓰기
+                              </h5>
+                              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.6' }}>
+                                아래 지문을 귀로 잘 청취하고, 빈칸에 들어갈 기초 단어를 맞춰 적어 보세요!
+                              </p>
+
+                              {/* 빈칸 변환 원문 렌더링 */}
+                              <div style={{
+                                background: 'var(--bg-secondary)',
+                                padding: '14px 18px',
+                                borderRadius: '8px',
+                                fontSize: '0.95rem',
+                                color: 'var(--text-primary)',
+                                lineHeight: '1.8',
+                                marginBottom: '16px',
+                                borderLeft: '4px solid var(--accent-color)'
+                              }}>
+                                {(() => {
+                                  let text = item.description;
+                                  item.n1Words.forEach((wordObj, wIdx) => {
+                                    text = text.replaceAll(wordObj.word, `[ 빈칸 ${wIdx + 1} ]`);
+                                  });
+                                  return text;
+                                })()}
+                              </div>
+
+                              {/* 주관식 빈칸 기입 란 */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {item.n1Words.map((wordObj, wIdx) => {
+                                  const isInputCorrect = dictationCorrects[wIdx];
+                                  return (
+                                    <div key={wIdx} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                                        [빈칸 {wIdx + 1}] 힌트: {wordObj.meaning} [{wordObj.reading}]
+                                      </span>
+                                      <input
+                                        type="text"
+                                        placeholder="한자 또는 히라가나..."
+                                        disabled={dictationChecked}
+                                        value={dictationInputs[wIdx] || ''}
+                                        onChange={(e) => setDictationInputs(prev => ({ ...prev, [wIdx]: e.target.value }))}
+                                        style={{
+                                          padding: '6px 12px',
+                                          fontSize: '0.85rem',
+                                          border: `2px solid ${dictationChecked ? (isInputCorrect ? 'var(--accent-color)' : '#ff6b6b') : 'var(--card-border)'}`,
+                                          borderRadius: '6px',
+                                          background: 'var(--card-bg)',
+                                          color: 'var(--text-primary)',
+                                          outline: 'none',
+                                          flexGrow: 1,
+                                          maxWidth: '220px'
+                                        }}
+                                      />
+                                      {dictationChecked && (
+                                        <span style={{
+                                          fontSize: '0.8rem',
+                                          fontWeight: '800',
+                                          color: isInputCorrect ? 'var(--accent-color)' : '#ff6b6b'
+                                        }}>
+                                          {isInputCorrect ? '✓ 정답!' : `✗ 오답 (정답: ${wordObj.word})`}
+                                        </span>
+                                      )}
                                     </div>
-                                  </div>
+                                  );
+                                })}
+                              </div>
 
-                                  {/* 🌾 단어 즉시 수확 뱃지 */}
-                                  <button
-                                    onClick={() => handleHarvestWord(wordObj)}
-                                    disabled={harvestedWords[wordObj.word] || harvestingWord === wordObj.word}
-                                    style={{
-                                      padding: '4px 8px',
-                                      fontSize: '0.75rem',
-                                      borderRadius: '100px',
-                                      border: '1.5px solid var(--card-border)',
-                                      cursor: 'pointer',
-                                      background: harvestedWords[wordObj.word] ? 'rgba(29, 209, 161, 0.1)' : 'rgba(84, 160, 255, 0.05)',
-                                      color: harvestedWords[wordObj.word] ? '#1dd1a1' : 'var(--text-secondary)',
-                                      borderColor: harvestedWords[wordObj.word] ? '#1dd1a1' : 'var(--card-border)',
-                                      fontWeight: '800',
-                                      whiteSpace: 'nowrap',
-                                      transition: 'all 0.2s'
-                                    }}
-                                  >
-                                    {harvestedWords[wordObj.word] ? '수확 완료! ✅' : harvestingWord === wordObj.word ? '🌾...' : '🌾 수확'}
-                                  </button>
-                                </div>
-                              ))
-                            ) : (
-                              <p className="nhk-no-words">기출 어휘 분석 중...</p>
-                            )}
-                          </div>
+                              {/* 채점 및 제출 단추 */}
+                              {!dictationChecked ? (
+                                <button
+                                  onClick={() => handleDictationSubmit(item)}
+                                  className="glow-btn"
+                                  style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
+                                >
+                                  🔍 딕테이션 채점 및 제출
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setDictationChecked(false);
+                                    setDictationInputs({});
+                                    setDictationCorrects({});
+                                  }}
+                                  className="outline-btn"
+                                  style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
+                                >
+                                  🔄 다시 훈련하기
+                                </button>
+                              )}
+                            </div>
+                          )}
+
                         </div>
 
-                        {/* 2. 번역 가이드 */}
-                        <div className="nhk-analysis-subsect translation-subsect">
-                          <h5 className="nhk-subsect-title">📓 한국어 번역 가이드</h5>
-                          <p className="nhk-translation-text">{item.translation}</p>
-                        </div>
-                      </div>
-
-                      {/* 하단 단독 원문 앵커 링크 */}
-                      <div className="nhk-item-footer">
-                        {nhkNews.length > 1 && (
-                          <div className="news-detail-modal-navigation" aria-label="다른 뉴스 보기">
-                            <button type="button" className="outline-btn" onClick={() => moveNewsModal(-1)}>
-                              ← 이전 뉴스
-                            </button>
-                            <span>{idx + 1} / {nhkNews.length}</span>
-                            <button type="button" className="outline-btn" onClick={() => moveNewsModal(1)}>
-                              다음 뉴스 →
-                            </button>
-                          </div>
-                        )}
-                        <a
-                          href={targetLevel === 'BEGINNER' ? 'https://ja.dict.naver.com/#/main' : item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="nhk-raw-link-btn"
-                        >
-                          {targetLevel === 'BEGINNER' ? '네이버 일본어 사전 바로가기 🔗' : '기사 원문 보기 🔗'}
-                        </a>
-                      </div>
-                        </div>
+                        <footer className="nm-footer">
+                          {nhkNews.length > 1 ? (
+                            <div className="nm-nav" aria-label="다른 뉴스 보기">
+                              <button type="button" className="nm-chip-btn" onClick={() => moveNewsModal(-1)} aria-label="이전 뉴스">←</button>
+                              <span>{idx + 1} / {nhkNews.length}</span>
+                              <button type="button" className="nm-chip-btn" onClick={() => moveNewsModal(1)} aria-label="다음 뉴스">→</button>
+                            </div>
+                          ) : <span />}
+                          <a
+                            href={targetLevel === 'BEGINNER' ? 'https://ja.dict.naver.com/#/main' : item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="nm-link"
+                          >
+                            {targetLevel === 'BEGINNER' ? '일본어 사전 ↗' : '기사 원문 ↗'}
+                          </a>
+                        </footer>
                       </section>
                     </div>,
                     document.body

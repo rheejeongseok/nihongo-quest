@@ -302,11 +302,8 @@ async function enrichNewsWithN1Learning(newsList) {
     }
     n1Words = n1Words.slice(0, 5);
 
-    // ④ 번역: DeepL 성공 시 한국어 번역, 실패 시 원문 안내
-    const koTranslation = translations[idx];
-    const translation = koTranslation
-      ? `📡 DeepL 실시간 번역\n\n${koTranslation}`
-      : `📡 실시간 일본 뉴스 원문입니다. 위 N1 어휘를 힌트 삼아 직접 읽어보세요!\n\n[원문 지문]\n${item.description}`;
+    // ④ 번역: DeepL 번역문만 저장합니다. 실패하면 null로 두어 다음 요청 때 다시 번역을 시도합니다.
+    const translation = translations[idx] || null;
 
     return {
       ...item,
@@ -506,9 +503,15 @@ function normalizeStoredArticle(article) {
     imageUrl: article.imageUrl,
     pubDate: article.pubDate?.toISOString?.() || article.pubDate || "",
     sourceName: article.sourceName,
-    translation: article.translation,
+    translation: cleanTranslation(article.translation),
     n1Words: Array.isArray(article.n1Words) ? article.n1Words : null
   };
+}
+
+// 예전에 저장된 번역 문구 정리: 앞머리 안내를 떼고, 번역 실패 안내문은 '번역 없음(null)'으로 봅니다.
+function cleanTranslation(text) {
+  if (!text || text.startsWith("📡 실시간 일본 뉴스 원문")) return null;
+  return text.replace(/^📡 DeepL 실시간 번역\s*/, "").trim() || null;
 }
 
 async function selectAndEnrichNews(articles) {
