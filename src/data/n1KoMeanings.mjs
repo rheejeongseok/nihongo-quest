@@ -143,3 +143,12 @@ export function koMeaning(word) {
   if (!meaning) throw new Error(`Missing Korean meaning: ${word}`);
   return meaning;
 }
+
+export function n1WordMeaningHint(word) {
+  return `「${word}」의 뜻은 ‘${koMeaning(word)}’입니다.`;
+}
+
+export function n1ReadingHint(word, reading, note = '') {
+  const explanation = `「${word}」의 읽기는 「${reading}」입니다. 뜻은 ‘${koMeaning(word)}’입니다.`;
+  return note ? `${explanation} ${note}` : explanation;
+}
