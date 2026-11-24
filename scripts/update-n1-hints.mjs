@@ -8,13 +8,15 @@ import { buildN1Quizzes } from '../src/data/n1QualityQuizzes.mjs';
 import { buildN1Exam } from '../src/data/n1Exam.mjs';
 import { buildN1Expansion } from '../src/data/n1Expansion20261019.mjs';
 import { buildN1ExpansionBatch2 } from '../src/data/n1ExpansionBatch2.mjs';
+import { buildN1ExpansionBatch3 } from '../src/data/n1ExpansionBatch3.mjs';
+import { buildN1ExpansionBatch4 } from '../src/data/n1ExpansionBatch4.mjs';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 const apply = process.argv.includes('--apply');
 const prisma = new PrismaClient();
 try {
   const ids = Object.fromEntries((await prisma.stage.findMany()).map(stage => [stage.stageNumber, stage.id]));
-  const quizzes = [...buildN1Quizzes(ids), ...buildN1Expansion(ids), ...buildN1ExpansionBatch2(ids), ...buildN1Exam(ids)];
+  const quizzes = [...buildN1Quizzes(ids), ...buildN1Expansion(ids), ...buildN1ExpansionBatch2(ids), ...buildN1ExpansionBatch3(ids), ...buildN1ExpansionBatch4(ids), ...buildN1Exam(ids)];
   const hints = new Map(quizzes.map(quiz => [quiz.id, quiz.hint]));
   const existing = await prisma.quiz.findMany({ where: { id: { in: [...hints.keys()] } }, select: { id: true, hint: true } });
   const changed = existing.filter(quiz => quiz.hint !== hints.get(quiz.id));

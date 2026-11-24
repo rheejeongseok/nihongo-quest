@@ -68,11 +68,11 @@ test('실제 생성 데이터로 두 트랙의 7개 아레나 × 3개 난이도 
   const seeded = await seed({});
   assert.equal(seeded.status, 200);
   assert.equal(seeded.body.success, true);
-  assert.equal(seeded.body.totalQuizzesSeeded, 1696);
+  assert.equal(seeded.body.totalQuizzesSeeded, 2496);
   const second = await seed({});
   assert.equal(second.body.created, 0);
   assert.equal(second.body.updated, 0);
-  assert.equal(second.body.unchanged, 1696);
+  assert.equal(second.body.unchanged, 2496);
   const get = loadHandler('src/app/api/stages/[stageNumber]/route.js', 'GET');
   const prepareQuiz = loadHandler('src/app/api/stages/[stageNumber]/route.js', 'prepareQuizForClient');
   await t.test('N1 배열 문항의 길이에 맞춰 빈칸 수와 앞뒤 문맥을 정한다', () => {
@@ -191,7 +191,7 @@ test('현재 문제만 갱신하고 과거 문제 ID·기록 연결은 보존한
   const result = await syncLearningData(prisma, { overwrite: true });
   assert.equal(result.updated, 1);
   assert.equal(result.created, 0);
-  assert.equal(result.unchanged, 1695);
+  assert.equal(result.unchanged, 2495);
   assert.equal(current.id, referencedId);
   assert.equal(JSON.parse(current.wrongAnswers).length, 3);
   assert.equal(quizzes.find(quiz => quiz.id === legacy.id), legacy);
