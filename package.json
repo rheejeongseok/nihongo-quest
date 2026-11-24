@@ -11,7 +11,8 @@
     "db:seed": "node scripts/seed-learning.mjs",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "db:hints": "node scripts/update-n1-hints.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
