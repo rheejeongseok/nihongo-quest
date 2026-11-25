@@ -150,3 +150,23 @@
   --glass-bg: rgba(255, 255, 255, 0.85);
 }
 
+
+/* [Theme 9] 마이독 (my doc) - my doc 로고의 초록·파랑·빨강 */
+:root[data-theme='mydoc'] {
+  --brand-green: #2f5d50;
+  --brand-blue: #0a7fc2;
+  --brand-red: #d6455d;
+  --bg-primary: #f3f2ee;
+  --bg-secondary: #eae8e2;
+  --text-primary: #111111;
+  --text-secondary: #6b6962;
+  --accent-color: #2f5d50;
+  --accent-hover: #0a7fc2;
+  --accent-glow: rgba(47, 93, 80, 0.25);
+  --card-bg: #fbfaf7;
+  --card-border: #dcd9d1;
+  --neon-glow: 0 6px 20px rgba(47, 93, 80, 0.1);
+  --custom-font: 'Quicksand', 'NanumSquareRound', 'M PLUS Rounded 1c', -apple-system, sans-serif;
+  --custom-radius: 16px;
+  --glass-bg: rgba(251, 250, 247, 0.9);
+}

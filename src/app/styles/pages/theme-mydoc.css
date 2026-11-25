@@ -1,0 +1,25 @@
+/* 마이독 테마의 세 색 포인트. 색 변수는 themes.css의 [data-theme='mydoc']에 있습니다. */
+:root[data-theme='mydoc'] {
+  --mydoc-band: linear-gradient(90deg, var(--brand-green) 0 33.34%, var(--brand-blue) 33.34% 66.67%, var(--brand-red) 66.67% 100%);
+}
+
+/* 헤더 아래 세 색 띠 */
+:root[data-theme='mydoc'] .site-header { border-bottom: 0; background: var(--mydoc-band) bottom / 100% 3px no-repeat, var(--bg-primary); }
+:root[data-theme='mydoc'] .site-header .logo-text { color: var(--brand-green); }
+
+/* 작은 영문 제목은 파랑, 섹션 제목 앞에 세 색 막대 */
+:root[data-theme='mydoc'] :is(.home-eyebrow, .section-eyebrow) { color: var(--brand-blue); }
+:root[data-theme='mydoc'] .library-page h1::before {
+  content: ''; flex: none; width: 12px; height: .9em; border-radius: 2px;
+  background: linear-gradient(180deg, var(--brand-green) 0 33.34%, var(--brand-blue) 33.34% 66.67%, var(--brand-red) 66.67% 100%);
+  transform: skewY(-14deg);
+}
+:root[data-theme='mydoc'] .library-page h1 { color: var(--brand-green); }
+
+/* 보조 버튼은 마우스를 올리면 파랑 */
+:root[data-theme='mydoc'] .outline-btn:hover:not(:disabled) { border-color: var(--brand-blue); color: var(--brand-blue); }
+
+/* 오답·경고 표시는 빨강 */
+:root[data-theme='mydoc'] .wrong-review-level { border-color: var(--brand-red); }
+:root[data-theme='mydoc'] .ebbinghaus-today { background: var(--brand-red); }
+:root[data-theme='mydoc'] .vocab-btn.delete { border-color: color-mix(in srgb, var(--brand-red) 30%, transparent); background: color-mix(in srgb, var(--brand-red) 8%, transparent); color: var(--brand-red); }

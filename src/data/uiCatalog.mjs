@@ -14,7 +14,8 @@ export const THEMES = [
   { id: 'neon-dream', name: '네온드림 (Neon)', emoji: '🛸', color: '#00ffb9' },
   { id: 'nordic-frost', name: '오로라 (Frost)', emoji: '❄️', color: '#00f2fe' },
   { id: 'velvet-rose', name: '벨벳로즈 (Rose)', emoji: '🌹', color: '#ff6b8b' },
-  { id: 'golden-sand', name: '샤인사하라 (Gold)', emoji: '🌟', color: '#d4af37' }
+  { id: 'golden-sand', name: '샤인사하라 (Gold)', emoji: '🌟', color: '#d4af37' },
+  { id: 'mydoc', name: '마이독 (my doc)', emoji: '🗂️', color: '#2f5d50' }
 ];
 
 export const CONCEPTS = [
