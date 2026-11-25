@@ -1,0 +1,58 @@
+/* 오답노트 (/wrong-notes) — 예전에 인라인 스타일, responsive.css, utilities.css, simple-ui.css에 흩어져 있던 규칙을 모은 것 */
+.review-page { max-width: 1160px; padding: 32px 24px 80px; }
+
+/* 전체 / 에빙하우스 복습 대상 탭 */
+.ebbinghaus-tab-bar { display: flex; gap: 12px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--card-border); }
+.review-page .ebbinghaus-tab { padding: 10px 20px; font-size: .9rem; border-color: var(--card-border); color: var(--text-secondary); background: transparent; cursor: pointer; }
+.review-page .ebbinghaus-tab:last-child { position: relative; }
+.review-page .ebbinghaus-tab.active { border-color: var(--accent-color); color: var(--accent-color); background: rgba(84, 160, 255, .05); }
+.ebbinghaus-today { position: absolute; top: -6px; right: -6px; padding: 2px 6px; border-radius: 100px; background: #ff6b6b; color: #fff; font-size: .7rem; font-weight: 900; }
+
+/* 오답이 없을 때 */
+.review-empty { padding: 60px 40px; text-align: center; }
+.review-empty-icon { display: block; margin-bottom: 16px; font-size: 4.5rem; }
+.review-empty h2 { margin-bottom: 8px; font-size: 1.4rem; font-weight: 800; }
+.review-empty p { margin-bottom: 24px; color: var(--text-secondary); font-size: .9rem; }
+.review-empty-link { padding: 12px 30px; text-decoration: none; }
+
+/* 목록 */
+.wrong-list { display: flex; flex-direction: column; gap: 20px; }
+.wrong-list-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1.5px solid var(--card-border); }
+.wrong-list-count { color: var(--text-secondary); font-size: .9rem; font-weight: 800; }
+.wrong-list-hint { color: var(--text-secondary); font-size: .8rem; font-weight: 700; }
+
+/* 오답 카드 */
+.review-page .wrong-note-card { display: flex; justify-content: space-between; align-items: center; padding: 20px; }
+.wrong-info-container { display: flex; flex-grow: 1; align-items: flex-start; gap: 24px; margin-right: 24px; }
+.wrong-review-meta { display: flex; flex-direction: column; flex-shrink: 0; align-items: center; gap: 6px; }
+.wrong-review-level {
+  display: flex; flex-direction: column; flex-shrink: 0; align-items: center; justify-content: center;
+  width: 48px; height: 48px; border: 1px solid #ff6b6b; border-radius: 10px;
+  background: var(--bg-secondary); color: var(--text-secondary); font-size: .75rem; font-weight: 800;
+}
+.wrong-review-level-num { margin-top: -3px; font-size: 1.2rem; font-weight: 950; }
+.wrong-review-state { padding: 2px 8px; border: 1px solid; border-radius: 100px; font-size: .7rem; }
+.wrong-review-state.due { color: #1dd1a1; font-weight: 900; background: rgba(29, 209, 161, .1); border-color: rgba(29, 209, 161, .2); }
+.wrong-review-state.wait { color: #ff9f43; font-weight: 800; background: rgba(255, 159, 67, .1); border-color: rgba(255, 159, 67, .2); }
+.wrong-question-content { font-size: .9rem; line-height: 1.8; }
+.wrong-question-origin { display: block; margin-bottom: 4px; color: var(--text-secondary); font-size: .8rem; font-weight: 700; }
+.wrong-word-row { display: flex; align-items: baseline; gap: 10px; margin-top: 6px; }
+.review-page .wrong-word-row .wrong-word { color: var(--text-primary); font-size: 1.6rem; font-weight: 900; }
+.wrong-word-reading { color: var(--text-secondary); font-size: .9rem; font-weight: 600; }
+.wrong-answer { margin-top: 10px; color: var(--accent-color); font-size: .85rem; font-weight: 700; }
+.wrong-btn-actions { display: flex; flex-direction: column; flex-shrink: 0; gap: 8px; }
+.wrong-btn-actions button { justify-content: center; padding: 8px 16px; font-size: .8rem; }
+.wrong-btn-actions .outline-btn { display: flex; align-items: center; gap: 6px; }
+
+@media (max-width: 768px) {
+  .review-page { padding: 24px 16px 88px; }
+  .review-page .wrong-note-card { flex-direction: column; align-items: stretch; gap: 1rem; padding: 16px; }
+  .wrong-info-container { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 12px; width: 100%; min-width: 0; margin-right: 0; }
+  .wrong-review-meta { width: auto; min-width: 60px; }
+  .wrong-question-content { width: auto; height: auto; min-width: 0; }
+  .wrong-word-row { flex-wrap: wrap; row-gap: 4px; width: auto; height: auto; min-width: 0; }
+  .review-page .wrong-word-row .wrong-word { font-size: 1.25rem; }
+  .wrong-word-row h4, .wrong-word-row span { max-width: 100%; }
+  .wrong-btn-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+  .wrong-btn-actions button { flex: 1; min-height: 40px; padding: 10px; }
+}

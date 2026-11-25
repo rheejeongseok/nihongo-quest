@@ -1,0 +1,70 @@
+/* 단어장 (/bookmarks) — 예전 인라인 스타일과 responsive.css, utilities.css, simple-ui.css의 단어장 규칙을 모은 것 */
+.vocabulary-page { max-width: 1160px; padding: 32px 24px 80px; }
+.vocab-intro { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+.vocab-intro h1 { gap: 12px; }
+
+/* 플래시카드 모드 스위치 */
+.vocabulary-page .flashcard-toggle-wrapper { display: flex; align-items: center; gap: 12px; padding: 12px 20px; }
+.flashcard-toggle-label { color: var(--text-primary); font-size: .9rem; font-weight: 800; }
+
+/* 단어 목록 */
+.vocab-list { display: flex; flex-direction: column; gap: 16px; }
+.vocab-list-head { margin-bottom: 8px; padding-bottom: 12px; border-bottom: 1.5px solid var(--card-border); }
+.vocab-list-head span { color: var(--text-secondary); font-size: .9rem; font-weight: 800; }
+.vocabulary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.vocabulary-page .vocab-card { display: flex; justify-content: space-between; align-items: center; min-height: 110px; padding: 20px; cursor: pointer; transition: all .2s ease; }
+.vocab-reading { display: block; margin-bottom: 4px; color: var(--text-secondary); font-size: .8rem; font-weight: 700; }
+.vocabulary-page .vocab-card .vocab-word { color: var(--text-primary); font-size: 1.5rem; font-weight: 900; }
+.vocab-meaning { margin-top: 6px; color: var(--accent-color); font-size: .85rem; font-weight: 700; }
+.vocab-actions { display: flex; flex-direction: column; flex-shrink: 0; gap: 6px; }
+.vocab-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px;
+  border: 1px solid var(--card-border); border-radius: var(--custom-radius);
+  background: var(--bg-secondary); color: var(--text-primary); font-size: .75rem; font-weight: 700; cursor: pointer;
+}
+.vocab-btn.delete { display: block; align-items: normal; gap: normal; border-color: rgba(255, 107, 107, .2); background: rgba(255, 107, 107, .08); color: #ff6b6b; }
+
+/* 플래시카드 모드 */
+.flashcard-mode-section { padding-bottom: 60px; }
+.vocabulary-page .flashcard-progress-container { margin-bottom: 24px; padding: 20px 24px; }
+.flashcard-stat-done { color: var(--accent-color); }
+.flashcard-progress-note { margin: 8px 0 0; color: var(--text-secondary); font-size: .8rem; text-align: center; }
+.flashcard-front-body { text-align: center; }
+.flashcard-back-body { width: 100%; margin-top: 10px; text-align: center; }
+.vocabulary-page .flashcard-tag.meaning { border-color: rgba(255, 179, 126, .3); background: rgba(255, 179, 126, .1); color: #ffb37e; }
+.vocabulary-page .flashcard-speak { display: inline-flex; align-items: center; gap: 6px; margin: 8px auto 0; padding: 6px 12px; font-size: .8rem; }
+.flashcard-example-speak { margin-top: 6px; border: 0; background: none; color: var(--accent-color); font-size: .75rem; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.flashcard-hint-text.flip-back { animation: none; cursor: pointer; }
+.flashcard-actions { display: flex; justify-content: center; gap: 16px; max-width: 580px; margin: 0 auto; }
+.flashcard-actions button { display: flex; flex: 1; align-items: center; justify-content: center; gap: 8px; padding: 16px 24px; border-radius: 16px; font-size: 1rem; font-weight: 800; }
+.vocabulary-page .flashcard-confused { border-color: rgba(255, 179, 126, .4); background: rgba(255, 179, 126, .05); color: #ffb37e; box-shadow: 0 4px 15px rgba(255, 179, 126, .1); }
+.vocabulary-page .flashcard-memorized { border: 0; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #fff; box-shadow: 0 4px 20px rgba(46, 204, 113, .3); }
+
+/* 한 바퀴를 다 외웠을 때 */
+.flashcard-done { max-width: 580px; margin: 40px auto; padding: 60px 40px; text-align: center; }
+.flashcard-done-icon { display: block; margin-bottom: 20px; font-size: 4.5rem; animation: bounceSlow 2s infinite; }
+.flashcard-done h2 { margin-bottom: 12px; color: var(--accent-color); font-size: 1.8rem; font-weight: 900; }
+.flashcard-done > p { margin-bottom: 24px; color: var(--text-primary); font-size: 1.05rem; font-weight: 700; }
+.flashcard-report { margin-bottom: 32px; padding: 20px; text-align: left; }
+.flashcard-report h4 { margin: 0 0 12px; color: var(--text-secondary); font-size: .95rem; font-weight: 800; }
+.flashcard-report-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: .9rem; }
+.flashcard-report-row b { font-weight: 700; }
+.flashcard-report-row b.confused { color: #ffb37e; }
+.flashcard-report-row.total { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--card-border); }
+.flashcard-report-row.total b { font-weight: 800; }
+.flashcard-report-row b.success { color: #2ecc71; }
+.flashcard-done-actions { display: flex; gap: 12px; }
+.flashcard-done-actions button { flex: 1; padding: 14px 24px; font-size: .95rem; }
+.flashcard-done-actions .retry { flex: 1.2; }
+
+/* 폭죽 파티클(위치·크기는 인라인 값) */
+.burst-particle { position: fixed; z-index: 99999; font-size: 1.5rem; pointer-events: none; transition: opacity .05s ease-out; }
+
+@media (max-width: 768px) {
+  .vocabulary-page { padding: 24px 16px 88px; }
+  .vocabulary-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .vocabulary-page :is(.flashcard-toggle-wrapper, .flashcard-progress-container) { padding: 3vw; }
+  .vocabulary-page .vocab-card { flex-direction: column; align-items: stretch; gap: 1rem; padding: 16px; }
+  .vocab-actions { flex-direction: row; flex-wrap: wrap; width: 100%; gap: 8px; }
+  .vocab-btn, .vocab-btn.delete { flex: 1; justify-content: center; min-height: 40px; padding: 10px; border-radius: 2vw; font-size: .8rem; }
+}

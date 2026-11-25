@@ -1,0 +1,11 @@
+/* 오프라인 안내 (/offline) */
+.offline-page { display: grid; place-items: center; min-height: 70vh; padding: 32px 20px; }
+.offline-card { max-width: 520px; padding: 40px 28px; text-align: center; }
+.offline-icon { display: block; margin-bottom: 16px; font-size: 4rem; }
+.offline-card h1 { margin-bottom: 12px; }
+.offline-card p { margin-bottom: 24px; color: var(--text-secondary); line-height: 1.7; }
+.offline-retry { display: inline-block; padding: 12px 24px; text-decoration: none; }
+
+@media (max-width: 768px) {
+  .offline-card { padding: 3vw; }
+}

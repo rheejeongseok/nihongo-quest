@@ -1,0 +1,5 @@
+/* 화면별 스타일. 공통 스타일(globals.css, simple-ui.css) 다음에 불러와서 !important 없이도 적용되게 합니다. */
+@import "./styles/pages/common.css";
+@import "./styles/pages/wrong-notes.css";
+@import "./styles/pages/bookmarks.css";
+@import "./styles/pages/offline.css";

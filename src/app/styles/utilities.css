@@ -85,50 +85,6 @@
   }
   
   /* 오답노트 & 단어장 카드 강제 뷰포트 내 흡수 */
-  .wrong-note-card {
-    padding: 1rem 1.25rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 1rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
-  }
-  
-  .wrong-info-container {
-    margin-right: 0 !important;
-    display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) !important;
-    gap: 0.75rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
-    align-items: start !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .wrong-review-meta {
-    min-width: 3.75rem !important;
-  }
-
-  .wrong-review-level {
-    width: 3.25rem !important;
-    height: 3.25rem !important;
-  }
-
-  .wrong-question-content,
-  .wrong-word-row {
-    width: auto !important;
-    height: auto !important;
-    min-width: 0 !important;
-  }
-  
-  .wrong-btn-actions {
-    flex-direction: row !important;
-    width: 100% !important;
-    gap: 0.5rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
-  }
-  
-  .wrong-btn-actions button {
-    flex: 1 !important;
-    padding: 0.625rem !important; /* 고정 px 파쇄, rem으로 완전 대체 */
-    font-size: 0.8rem !important;
-  }
 
   /* 모바일(768px 이하) 환경에서 카드 호버시 미끄러지거나 들뜨는 3D 움직임 원천 배제 */
   .premium-card:hover, .glass-premium-card:hover {

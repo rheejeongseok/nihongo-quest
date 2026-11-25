@@ -54,11 +54,6 @@ body.simple-ui {
 :root body.simple-ui .sync-hub-title { font-size: .9rem !important; font-weight: 750 !important; }
 :root body.simple-ui .sync-hub-desc { font-size: .75rem !important; line-height: 1.7 !important; }
 :root body.simple-ui :is(.backup-code-preview,.sync-hub-section,.flashcard-example-box) { border-radius: 9px; background: var(--bg-secondary); box-shadow: none; }
-:root body.simple-ui .wrong-note-card { padding: 20px !important; }
-:root body.simple-ui .wrong-question-content { font-size: .9rem; }
-:root body.simple-ui .wrong-question-content p { line-height: 1.85 !important; }
-:root body.simple-ui .wrong-review-level { width: 48px !important; height: 48px !important; border-radius: 10px !important; border-width: 1px !important; background: var(--bg-secondary) !important; color: var(--text-secondary) !important; }
-:root body.simple-ui .vocabulary-grid .wrong-note-card h3 { font-size: 1.35rem !important; }
 :root body.simple-ui .flashcard-face { background: var(--card-bg) !important; border: 1px solid var(--card-border) !important; }
 :root body.simple-ui .flashcard-back { overflow-y: auto; overflow-x: hidden; }
 :root body.simple-ui .flashcard-example-box { min-width: 0; width: 100%; }
@@ -98,14 +93,6 @@ body.simple-ui {
   :root body.simple-ui .library-page h1 { font-size: 1.5rem !important; }
   :root body.simple-ui :is(.library-page,.practice-page) > div:first-child { margin-bottom: 24px !important; }
   :root body.simple-ui .sync-hub-premium-card { padding: 14px !important; }
-  :root body.simple-ui .wrong-note-card { padding: 16px !important; gap: 14px; }
-  :root body.simple-ui .wrong-info-container { gap: 12px !important; margin-right: 0 !important; min-width: 0; }
-  :root body.simple-ui .wrong-question-content { min-width: 0; }
-  :root body.simple-ui .wrong-word-row { flex-wrap: wrap; }
-  :root body.simple-ui .wrong-word-row h4 { font-size: 1.25rem !important; }
-  :root body.simple-ui .wrong-btn-actions { flex-wrap: wrap; gap: 8px !important; }
-  :root body.simple-ui .wrong-btn-actions button { min-height: 40px; }
-  :root body.simple-ui .vocabulary-grid { grid-template-columns: minmax(0,1fr) !important; gap: 12px !important; }
   :root body.simple-ui .play-arena-grid > div > .glass-premium-card { padding: 18px !important; }
   :root body.simple-ui .options-grid .outline-btn { padding: 12px !important; }
   :root body.simple-ui .modal-premium-content { width: calc(100% - 24px) !important; padding: 20px !important; }

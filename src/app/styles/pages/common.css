@@ -1,0 +1,16 @@
+/* 여러 화면이 함께 쓰는 페이지 부품 */
+
+/* 데이터를 불러오는 동안 가운데에 보이는 안내 */
+.page-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 76px); }
+.page-loading-icon { font-size: 3rem; animation: pulse 1.5s infinite; }
+.page-loading h3 { margin-top: 16px; font-weight: 800; }
+
+/* 화면 맨 위 제목 + 설명 */
+.page-intro { margin-bottom: 32px; }
+.page-intro h1 { display: flex; align-items: center; gap: 10px; }
+.page-intro p { margin-top: 6px; color: var(--text-secondary); }
+
+/* 모의고사 안내 카드: 모바일에서는 카드 기본 여백(3vw) */
+@media (max-width: 768px) {
+  .exam-intro { padding: 3vw; }
+}

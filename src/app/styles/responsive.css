@@ -132,7 +132,7 @@ html, body {
   }
 
   .glass-premium-card, .premium-card {
-    padding: 4vw !important; /* 고정 px 대신 뷰포트 비례 패딩 */
+    padding: 3vw; /* 카드 기본 여백. 화면별 CSS가 필요하면 덮어씀 */
     min-height: auto !important;
     border-radius: 3vw !important;
     width: 100% !important;
@@ -683,89 +683,12 @@ html, body {
   }
 
   /* [13. 단어장 및 오답노트 모바일 최적화] */
-  .vocabulary-grid {
-    grid-template-columns: 1fr !important;
-    gap: 3vw !important;
-  }
-  
-  .wrong-note-card {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 3vw !important;
-    padding: 4vw !important;
-    border-radius: 3vw !important;
-  }
-  
-  .wrong-info-container {
-    margin-right: 0 !important;
-    display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) !important;
-    align-items: start !important;
-    gap: 0.875rem !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-  
-  .wrong-info-container h4 {
-    font-size: calc(1rem + 0.5vw) !important;
-  }
-  
-  .wrong-review-level {
-    width: 3.5rem !important;
-    height: 3.5rem !important;
-    max-width: 60px !important;
-    max-height: 60px !important;
-  }
-
-  .wrong-review-meta {
-    width: auto !important;
-    min-width: 4.25rem !important;
-  }
-
-  .wrong-question-content {
-    width: auto !important;
-    height: auto !important;
-    min-width: 0 !important;
-    overflow-wrap: normal;
-  }
-
-  .wrong-word-row {
-    width: auto !important;
-    height: auto !important;
-    min-width: 0 !important;
-    flex-wrap: wrap !important;
-    row-gap: 0.25rem !important;
-  }
-
-  .wrong-word-row h4,
-  .wrong-word-row span {
-    max-width: 100%;
-    overflow-wrap: normal;
-  }
-  
-  .wrong-btn-actions {
-    flex-direction: row !important;
-    width: 100% !important;
-    gap: 2vw !important;
-  }
-  
-  .wrong-btn-actions button {
-    flex: 1 !important;
-    padding: 2.5vw !important;
-    font-size: calc(0.72rem + 0.2vw) !important;
-    justify-content: center !important;
-    border-radius: 2vw !important;
-  }
 }
 
 @media (max-width: 480px) {
   /* 초소형 모바일 기기 여백 긴급 조율 */
   .container {
     padding: 0 3vw !important;
-  }
-  
-  .glass-premium-card, .premium-card {
-    padding: 3vw !important;
   }
   
   /* 시드 데이터 웰컴페이지 조율 */

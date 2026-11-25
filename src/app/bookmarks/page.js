@@ -194,45 +194,31 @@ export default function BookmarksPage() {
 
   if (loading) {
     return (
-      <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 76px)' }}>
-        <span style={{ fontSize: '3rem', animation: 'pulse 1.5s infinite' }}>⭐</span>
-        <h3 style={{ marginTop: '16px', fontWeight: '800' }}>단어장을 열고 정렬하는 중...</h3>
+      <div className="container page-loading">
+        <span className="page-loading-icon">⭐</span>
+        <h3>단어장을 열고 정렬하는 중...</h3>
       </div>
     );
   }
 
   return (
-    <div className="container library-page vocabulary-page" style={{ maxWidth: '1280px', padding: '40px 24px' }}>
+    <div className="container library-page vocabulary-page">
 
       {/* 뒤로가기 및 헤더 */}
-      <div style={{
-        marginBottom: '32px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '16px'
-      }}>
+      <div className="page-intro vocab-intro">
         <div>
-          <h1 style={{ fontWeight: '900', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h1>
             단어장
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '6px' }}>
+          <p>
             저장한 단어를 다시 읽고, 발음을 들으며 익혀 보세요.
           </p>
         </div>
 
         {/* 🗂️ 3D 플래시 카드 암기 모드 토글 */}
         {bookmarks.length > 0 && (
-          <div className="flashcard-toggle-wrapper glass-premium-card" style={{
-            padding: '12px 20px',
-            borderRadius: '16px',
-            border: '1px solid var(--card-border)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+          <div className="flashcard-toggle-wrapper glass-premium-card">
+            <span className="flashcard-toggle-label">
               플래시카드로 복습
             </span>
             <label className="flashcard-switch">
@@ -251,13 +237,13 @@ export default function BookmarksPage() {
         /* ==========================================
            🗂️ 3D 플래시 카드 암기 모드 컨텐츠
            ========================================== */
-        <div className="flashcard-mode-section fade-in" style={{ paddingBottom: '60px' }}>
+        <div className="flashcard-mode-section fade-in">
 
           {/* 1. 진행 스탯 바 */}
-          <div className="flashcard-progress-container glass-premium-card" style={{ padding: '20px 24px', borderRadius: '16px', marginBottom: '24px' }}>
+          <div className="flashcard-progress-container glass-premium-card">
             <div className="flashcard-stat-text">
               <span>🚀 {targetLevel === 'BEGINNER' ? '기초 단어' : 'JLPT N1 단어'} 완벽 소탕 진행중</span>
-              <span style={{ color: 'var(--accent-color)' }}>
+              <span className="flashcard-stat-done">
                 {memorizedIds.length} / {sessionTotalCount} 개 암기 완료 ({sessionTotalCount > 0 ? Math.round((memorizedIds.length / sessionTotalCount) * 100) : 0}%)
               </span>
             </div>
@@ -267,7 +253,7 @@ export default function BookmarksPage() {
                 style={{ width: `${sessionTotalCount > 0 ? (memorizedIds.length / sessionTotalCount) * 100 : 0}%` }}
               ></div>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '8px 0 0 0', textAlign: 'center' }}>
+            <p className="flashcard-progress-note">
               완벽히 외운 단어는 영구 제외되며, 헷갈리는 단어는 큐의 맨 뒤로 이동해 무한 순환합니다.
             </p>
           </div>
@@ -285,7 +271,7 @@ export default function BookmarksPage() {
                   <div className="flashcard-face flashcard-front">
                     <span className="flashcard-tag">{targetLevel === 'BEGINNER' ? 'BEGINNER VOCAB' : 'JLPT N1 VOCAB'}</span>
 
-                    <div style={{ textAlign: 'center' }}>
+                    <div className="flashcard-front-body">
                       <h2 className="flashcard-word">{cardQueue[currentCardIndex].word}</h2>
                       <p className="flashcard-reading">「{cardQueue[currentCardIndex].reading}」</p>
                     </div>
@@ -297,16 +283,15 @@ export default function BookmarksPage() {
 
                   {/* 뒷면: 한글 뜻 & 문장 예문 */}
                   <div className="flashcard-face flashcard-back" onClick={(e) => e.stopPropagation()}>
-                    <span className="flashcard-tag" style={{ color: '#ffb37e', borderColor: 'rgba(255,179,126,0.3)', background: 'rgba(255,179,126,0.1)' }}>
+                    <span className="flashcard-tag meaning">
                       MEANING & EXAMPLE
                     </span>
 
-                    <div style={{ width: '100%', textAlign: 'center', marginTop: '10px' }}>
+                    <div className="flashcard-back-body">
                       <h3 className="flashcard-meaning">{cardQueue[currentCardIndex].meaning}</h3>
                       <button
                         onClick={() => speak(cardQueue[currentCardIndex].word)}
-                        className="outline-btn"
-                        style={{ padding: '6px 12px', fontSize: '0.8rem', margin: '8px auto 0 auto', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        className="outline-btn flashcard-speak"
                       >
                         🔊 발음 재생
                       </button>
@@ -322,22 +307,13 @@ export default function BookmarksPage() {
                       </p>
                       <button
                         onClick={() => speak(getExampleSentence(cardQueue[currentCardIndex].word, cardQueue[currentCardIndex].meaning).sentence)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--accent-color)',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          fontWeight: '700',
-                          marginTop: '6px',
-                          textDecoration: 'underline'
-                        }}
+                        className="flashcard-example-speak"
                       >
                         🔊 예문 듣기
                       </button>
                     </div>
 
-                    <div className="flashcard-hint-text" style={{ animation: 'none', cursor: 'pointer' }} onClick={handleCardClick}>
+                    <div className="flashcard-hint-text flip-back" onClick={handleCardClick}>
                       <span>👈 카드를 다시 뒤집기</span>
                     </div>
                   </div>
@@ -345,47 +321,17 @@ export default function BookmarksPage() {
               </div>
 
               {/* 제어 버튼 영역 */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', maxWidth: '580px', margin: '0 auto' }}>
+              <div className="flashcard-actions">
                 <button
                   onClick={handleConfused}
-                  className="outline-btn"
-                  style={{
-                    flex: 1,
-                    padding: '16px 24px',
-                    borderRadius: '16px',
-                    fontSize: '1rem',
-                    fontWeight: '800',
-                    color: '#ffb37e',
-                    borderColor: 'rgba(255, 179, 126, 0.4)',
-                    background: 'rgba(255, 179, 126, 0.05)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 15px rgba(255, 179, 126, 0.1)'
-                  }}
+                  className="outline-btn flashcard-confused"
                 >
                   🧡 아직 헷갈림 (순환 학습)
                 </button>
 
                 <button
                   onClick={handleMemorized}
-                  className="glow-btn"
-                  style={{
-                    flex: 1,
-                    padding: '16px 24px',
-                    borderRadius: '16px',
-                    fontSize: '1rem',
-                    fontWeight: '800',
-                    background: 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)',
-                    boxShadow: '0 4px 20px rgba(46, 204, 113, 0.3)',
-                    border: 'none',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
+                  className="glow-btn flashcard-memorized"
                 >
                   💚 완벽히 외웠음 (큐 제거)
                 </button>
@@ -393,43 +339,41 @@ export default function BookmarksPage() {
             </div>
           ) : (
             /* 훈련 종료 세션 */
-            <div className="premium-card fade-in" style={{ padding: '60px 40px', textAlign: 'center', maxWidth: '580px', margin: '40px auto' }}>
-              <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '20px', animation: 'bounceSlow 2s infinite' }}>🏆</span>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '12px', color: 'var(--accent-color)' }}>
+            <div className="premium-card fade-in flashcard-done">
+              <span className="flashcard-done-icon">🏆</span>
+              <h2>
                 단어장 완벽 소탕 완료!
               </h2>
-              <p style={{ color: 'var(--text-primary)', fontSize: '1.05rem', fontWeight: '700', marginBottom: '24px' }}>
+              <p>
                 축하합니다! 현재 단어장에 등록된 모든 단어를 완벽히 암기하셨습니다.
               </p>
 
-              <div className="glass-premium-card" style={{ padding: '20px', borderRadius: '16px', marginBottom: '32px', textAlign: 'left' }}>
-                <h4 style={{ margin: '0 0 12px 0', fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-secondary)' }}>📊 학습 세션 레포트</h4>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '8px' }}>
+              <div className="glass-premium-card flashcard-report">
+                <h4>📊 학습 세션 레포트</h4>
+                <div className="flashcard-report-row">
                   <span>고유 단어 수</span>
-                  <span style={{ fontWeight: '700' }}>{sessionTotalCount} 개</span>
+                  <b>{sessionTotalCount} 개</b>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '8px' }}>
+                <div className="flashcard-report-row">
                   <span>헷갈림 극복 추가 훈련</span>
-                  <span style={{ fontWeight: '700', color: '#ffb37e' }}>{cardQueue.length - sessionTotalCount} 회</span>
+                  <b className="confused">{cardQueue.length - sessionTotalCount} 회</b>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', borderTop: '1px solid var(--card-border)', paddingTop: '10px', marginTop: '10px' }}>
-                  <span style={{ fontWeight: '800' }}>최종 암기 성공률</span>
-                  <span style={{ fontWeight: '800', color: '#2ecc71' }}>100% (만점 보장)</span>
+                <div className="flashcard-report-row total">
+                  <b>최종 암기 성공률</b>
+                  <b className="success">100% (만점 보장)</b>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="flashcard-done-actions">
                 <button
                   onClick={() => handleToggleFlashcardMode(true)}
-                  className="glow-btn"
-                  style={{ flex: 1.2, padding: '14px 24px', fontSize: '0.95rem' }}
+                  className="glow-btn retry"
                 >
                   🔄 다시 훈련하기
                 </button>
                 <button
                   onClick={() => setIsFlashCardMode(false)}
                   className="outline-btn"
-                  style={{ flex: 1, padding: '14px 24px', fontSize: '0.95rem' }}
                 >
                   📖 단어 리스트로 가기
                 </button>
@@ -448,66 +392,52 @@ export default function BookmarksPage() {
 
           {bookmarks.length === 0 ? (
             /* 단어장이 비어 있을 때의 웰컴 카드 */
-            <div className="premium-card" style={{ padding: '60px 40px', textAlign: 'center' }}>
-              <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '16px' }}>📖</span>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '8px' }}>단어장이 비어 있습니다!</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
+            <div className="premium-card review-empty">
+              <span className="review-empty-icon">📖</span>
+              <h2>단어장이 비어 있습니다!</h2>
+              <p>
                 퀴즈 플레이 도중 마음에 드는 단어나 헷갈리는 문자를 보면 <strong>[나의 단어장 추가]</strong>를 꾹 눌러보세요.
               </p>
-              <Link href="/" className="glow-btn" style={{ padding: '12px 30px', textDecoration: 'none' }}>
+              <Link href="/" className="glow-btn review-empty-link">
                 퀴즈 풀고 단어 수집하러 가기 ➔
               </Link>
             </div>
           ) : (
             /* 단어장 리스트 */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="vocab-list">
 
-              <div style={{ borderBottom: '1.5px solid var(--card-border)', paddingBottom: '12px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+              <div className="vocab-list-head">
+                <span>
                   저장된 소중한 영단어/일어단어: 총 {bookmarks.length}개
                 </span>
               </div>
 
-              <div className="vocabulary-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                gap: '16px'
-              }}>
+              <div className="vocabulary-grid">
                 {bookmarks.map((item) => (
                   <div
                     key={item.id}
-                    className="premium-card wrong-note-card"
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '20px 24px',
-                      minHeight: '110px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className="premium-card vocab-card"
                     onClick={() => setSelectedWord(item)}
                   >
                     <div>
                       {/* 단어의 요미가나 표기 */}
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                      <span className="vocab-reading">
                         {item.reading}
                       </span>
 
                       {/* 단어 본문 */}
-                      <h4 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)' }}>
+                      <h4 className="vocab-word">
                         <ReadableText text={item.word} />
                       </h4>
 
                       {/* 단어 뜻 */}
-                      <p style={{ fontSize: '0.85rem', color: 'var(--accent-color)', fontWeight: '700', marginTop: '6px' }}>
+                      <p className="vocab-meaning">
                         {item.meaning}
                       </p>
                     </div>
 
                     {/* 제어 버튼 */}
-                    <div className="wrong-btn-actions"
-                      style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}
+                    <div className="vocab-actions"
                       onClick={(e) => e.stopPropagation()} // 💡 모달 팝업 버블링 차단!
                     >
                       <button
@@ -515,19 +445,7 @@ export default function BookmarksPage() {
                           e.stopPropagation(); // 💡 버블링 차단!
                           speak(item.word);
                         }}
-                        style={{
-                          padding: '6px 12px',
-                          fontSize: '0.75rem',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--card-border)',
-                          color: 'var(--text-primary)',
-                          borderRadius: 'var(--custom-radius)',
-                          cursor: 'pointer',
-                          fontWeight: '700',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
+                        className="vocab-btn"
                       >
                         🔊 재생
                       </button>
@@ -537,16 +455,7 @@ export default function BookmarksPage() {
                           e.stopPropagation(); // 💡 버블링 차단!
                           handleDelete(item.id);
                         }}
-                        style={{
-                          padding: '6px 12px',
-                          fontSize: '0.75rem',
-                          background: 'rgba(255, 107, 107, 0.08)',
-                          border: '1px solid rgba(255, 107, 107, 0.2)',
-                          color: '#ff6b6b',
-                          borderRadius: 'var(--custom-radius)',
-                          cursor: 'pointer',
-                          fontWeight: '700'
-                        }}
+                        className="vocab-btn delete"
                       >
                         🗑️ 제거
                       </button>
@@ -576,17 +485,8 @@ export default function BookmarksPage() {
       {particles.map(p => (
         <span
           key={p.id}
-          style={{
-            position: 'fixed',
-            left: `${p.x}px`,
-            top: `${p.y}px`,
-            fontSize: '1.5rem',
-            pointerEvents: 'none',
-            transform: `translate(-50%, -50%) scale(${p.scale})`,
-            opacity: p.alpha,
-            zIndex: 99999,
-            transition: 'opacity 0.05s ease-out'
-          }}
+          className="burst-particle"
+          style={{ left: p.x, top: p.y, transform: `translate(-50%, -50%) scale(${p.scale})`, opacity: p.alpha }}
         >
           {p.emoji}
         </span>

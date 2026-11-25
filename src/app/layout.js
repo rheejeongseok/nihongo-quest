@@ -2,6 +2,7 @@ import "./globals.css";
 import "./dashboard.css";
 import "./header.css";
 import "./simple-ui.css";
+import "./pages.css";
 
 export const metadata = {
   title: "NihongoQuest | 일본어 공부 퀴즈 아레나",

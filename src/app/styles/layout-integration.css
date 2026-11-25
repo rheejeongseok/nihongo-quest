@@ -158,7 +158,6 @@
 .nhk-news-raw-desc { line-height: 1.95 !important; letter-spacing: 0.015em; }
 .play-arena-grid :is(p, .options-grid button) { line-height: 1.85 !important; }
 .play-arena-grid .options-grid button { min-width: 0; gap: 8px; text-overflow: clip !important; }
-.wrong-question-content { line-height: 1.8; }
 @media (min-width: 769px) {
   .dashboard-overview { margin-bottom: 16px; }
   .arena-section-container { margin-top: 16px; }
