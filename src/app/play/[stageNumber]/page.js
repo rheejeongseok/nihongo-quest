@@ -3,13 +3,18 @@
 import { use, useState, useEffect, useRef } from 'react';
 import SentenceAssembly from '@/app/components/SentenceAssembly';
 import N1SentenceAssembly from '@/app/components/N1SentenceAssembly';
-import QuestionOptions from '@/app/components/QuestionOptions';
 import { getSyncHeaders } from '@/lib/clientProfile.mjs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useJapaneseSpeech } from '@/hooks/useJapaneseSpeech';
 import { showToast } from '@/lib/toast';
-import ReadableText from '@/app/ReadableText';
+import PlayProgress from '@/app/components/play/PlayProgress';
+import PlayResult from '@/app/components/play/PlayResult';
+import QuestionPrompt from '@/app/components/play/QuestionPrompt';
+import AnswerInput from '@/app/components/play/AnswerInput';
+import WordleBoard from '@/app/components/play/WordleBoard';
+import AnswerFeedback from '@/app/components/play/AnswerFeedback';
+import DrawingPanel from '@/app/components/play/DrawingPanel';
+import AchievementToast from '@/app/components/play/AchievementToast';
 import { ASSEMBLY_STAR_MODE, evaluateQuizAnswer } from '@/lib/quizScoring.mjs';
 import { beginnerCourseForRoute } from '@/data/beginnerCourses.mjs';
 
@@ -701,778 +706,140 @@ export default function PlayStagePage({ params }) {
 
   if (loading) {
     return (
-      <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 76px)' }}>
-        <span style={{ fontSize: '3rem', animation: 'pulse 1.5s infinite' }}>🌸</span>
-        <h3 style={{ marginTop: '16px', fontWeight: '800' }}>퀴즈를 아름답게 섞어오는 중...</h3>
+      <div className="container page-loading">
+        <span className="page-loading-icon">🌸</span>
+        <h3>퀴즈를 아름답게 섞어오는 중...</h3>
       </div>
     );
   }
 
   const hasDrawingFeature = stage && stage.category === 'CHARACTERS';
+  const listen = () => speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1);
+  const isBookmarked = !!bookmarkedList[currentQuiz?.japaneseWord];
+  // 손글씨 추천 글자를 고르면 입력칸에 붙이고, 읽어 주고, 그림판을 비웁니다.
+  const pickCandidate = char => {
+    setTypedAnswer(prev => prev + char);
+    speak(char);
+    clearCanvas(false);
+  };
 
   return (
-    <div className="container practice-page" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', position: 'relative' }}>
-{/* 1. 상단 진행 상태바 */}
+    <div className="container practice-page">
       {!gameCompleted && (
-        <div style={{ marginBottom: '32px' }}>
-          <div className="stage-info-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span className="white-space-normal" style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-              <span>{stage.title}</span>
-
-              {/* JLPT 급수 배지 */}
-              <span className="practice-level-badge" style={{
-                fontSize: '0.75rem',
-                fontWeight: '900',
-                background: isBeginner ? '#2ecc7122' : '#1a4d8022',
-                color: isBeginner ? '#218c5a' : '#1a4d80',
-                padding: '4px 10px',
-                borderRadius: '100px',
-                border: `1.5px solid ${isBeginner ? '#2ecc7188' : '#1a4d8088'}`,
-                whiteSpace: 'nowrap'
-              }}>
-                급수: {trackLabel}
-              </span>
-
-              {isBeginner && <span style={{
-                fontSize: '0.75rem',
-                fontWeight: '900',
-                background: difficulty === 'EASY' ? '#557c5522' : difficulty === 'MEDIUM' ? '#ff9f4322' : '#ff6b6b22',
-                color: difficulty === 'EASY' ? '#557c55' : difficulty === 'MEDIUM' ? '#ff9f43' : '#ff6b6b',
-                padding: '3px 8px',
-                borderRadius: '100px',
-                border: '1.5px solid transparent'
-              }}>
-                난이도: {difficultyLabel}
-              </span>}
-            </span>
-            <span style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-color)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-              {comboCount > 0 && (
-                <span style={{
-                  fontSize: '0.75rem',
-                  fontWeight: '900',
-                  background: 'linear-gradient(135deg, #ff9f43 0%, #ff5e7e 100%)',
-                  color: '#ffffff',
-                  padding: '4px 10px',
-                  borderRadius: '100px',
-                  boxShadow: '0 4px 12px rgba(255, 94, 126, 0.4)',
-                  animation: 'pulse 1s infinite',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                  🔥 {comboCount} COMBO!
-                </span>
-              )}
-              <span>문제 {currentIndex + 1} / {quizzes.length}</span>
-            </span>
-          </div>
-
-          <div style={{ width: '100%', height: '8px', background: 'var(--bg-secondary)', borderRadius: '100px', overflow: 'hidden' }}>
-            <div
-              style={{
-                width: `${((currentIndex + 1) / quizzes.length) * 100}%`,
-                height: '100%',
-                background: 'var(--accent-color)',
-                borderRadius: '100px',
-                transition: 'width 0.4s ease'
-              }}
-            />
-          </div>
-
-          {/* ⏱️ 타임어택 서바이벌 토글 스위치 (6코스 모의고사일 때는 감춤) */}
-          {stageNumber !== 6 && (
-            <div className="time-attack-control-card" style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: '16px',
-              padding: '12px 18px',
-              background: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: '12px',
-              border: '1px solid var(--card-border)',
-              transition: 'all 0.3s'
-            }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ⏱️ 타임어택 서바이벌 모드 (제한시간 20초)
-              </span>
-              <label className="switch-custom" style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px' }}>
-                <input
-                  type="checkbox"
-                  checked={isTimeAttack}
-                  onChange={(e) => setIsTimeAttack(e.target.checked)}
-                  disabled={submitted}
-                  style={{ opacity: 0, width: 0, height: 0 }}
-                />
-                <span className="slider-custom" style={{
-                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                  backgroundColor: isTimeAttack ? 'var(--accent-color)' : 'rgba(139, 146, 182, 0.3)',
-                  borderRadius: '34px', transition: '.4s',
-                  boxShadow: isTimeAttack ? '0 0 10px var(--accent-color)' : 'none'
-                }}>
-                  <span style={{
-                    position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
-                    backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
-                    transform: isTimeAttack ? 'translateX(22px)' : 'translateX(0)'
-                  }} />
-                </span>
-              </label>
-            </div>
-          )}
-
-          {/* ⏱️ 타임어택 프로그레스 바 */}
-          {isTimeAttack && !submitted && (
-            <div style={{ marginTop: '14px', animation: 'fadeIn 0.3s' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: '800', marginBottom: '6px', color: timeRemaining <= 5 ? '#ff6b6b' : 'var(--text-secondary)' }}>
-                <span>⏰ 남은 시간: {timeRemaining}초</span>
-                {timeRemaining <= 5 && <span style={{ animation: 'pulse 0.5s infinite', color: '#ff6b6b' }}>🚨 마감 임박! 서두르세요!</span>}
-              </div>
-              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '100px', overflow: 'hidden' }}>
-                <div style={{
-                  width: `${(timeRemaining / 20) * 100}%`,
-                  height: '100%',
-                  background: timeRemaining <= 5 ? 'linear-gradient(90deg, #ff6b6b, #ff5e7e)' : 'linear-gradient(90deg, var(--accent-color), #00d2d3)',
-                  borderRadius: '100px',
-                  transition: 'width 1s linear',
-                  boxShadow: timeRemaining <= 5 ? '0 0 8px #ff6b6b' : '0 0 8px var(--accent-color)'
-                }} />
-              </div>
-            </div>
-          )}
-
-        </div>
+        <PlayProgress
+          stageTitle={stage.title}
+          isBeginner={isBeginner}
+          trackLabel={trackLabel}
+          difficulty={difficulty}
+          difficultyLabel={difficultyLabel}
+          comboCount={comboCount}
+          currentIndex={currentIndex}
+          total={quizzes.length}
+          showTimeAttack={stageNumber !== 6}
+          isTimeAttack={isTimeAttack}
+          setIsTimeAttack={setIsTimeAttack}
+          submitted={submitted}
+          timeRemaining={timeRemaining}
+        />
       )}
 
       {gameCompleted ? (
-        /* ==================== [결과 리포트 UI] ==================== */
-        <div className="glass-premium-card rainbow-border"
+        <PlayResult
+          stageTitle={stage.title}
+          trackLabel={trackLabel}
+          isBeginner={isBeginner}
+          difficultyLabel={difficultyLabel}
+          userScore={userScore}
+          total={quizzes.length}
+          totalPointsEarned={totalPointsEarned}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          style={{ padding: '48px 36px', textAlign: 'center', maxWidth: '650px', margin: '0 auto', background: 'rgba(255,255,255,0.04)' }}
-        >
-          <span style={{ fontSize: '5rem', display: 'block', marginBottom: '16px', animation: 'pulse 2.5s infinite' }}>🏆</span>
-          <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '8px', color: 'var(--text-primary)' }}>스테이지 완벽 격파!</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '600', marginBottom: '32px' }}>
-            {stage.title} [{trackLabel}{isBeginner ? ` • ${difficultyLabel}` : ''}] 코스를 성공적으로 완수하셨습니다!
-          </p>
-
-          <div className="report-summary-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '20px',
-            marginBottom: '40px',
-            background: 'rgba(255,255,255,0.04)',
-            backdropFilter: 'blur(8px)',
-            padding: '24px',
-            borderRadius: 'var(--custom-radius)',
-            border: '1px solid rgba(255,255,255,0.1)'
-          }}>
-            <div>
-              <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '6px' }}>최종 성적</span>
-              <span style={{ fontSize: '2.2rem', fontWeight: '900', color: 'var(--accent-color)' }}>
-                {userScore} / {quizzes.length} <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>개 정답</span>
-              </span>
-            </div>
-            <div>
-              <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '6px' }}>획득한 포인트</span>
-              <span style={{ fontSize: '2.2rem', fontWeight: '900', color: '#ff9f43' }}>
-                +{totalPointsEarned} <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>pts</span>
-              </span>
-            </div>
-          </div>
-
-          <Link href="/" className="glass-neon-btn" style={{
-            padding: '16px 40px',
-            fontSize: '1.05rem',
-            borderRadius: '100px',
-            textDecoration: 'none',
-            boxShadow: 'var(--neon-glow)'
-          }}>
-            🏠 로드맵 홈으로 복귀
-          </Link>
-        </div>
+        />
       ) : (
-        /* ==================== [3.5 캘리그래피그림판 연동 2단 레이아웃] ==================== */
-        <div className={`play-arena-grid ${isDrawingOpen && hasDrawingFeature ? 'drawing-active' : ''}`} style={{
-          transition: 'all 0.4s ease'
-        }}>
-
-          {/* [좌측 판넬]: 핵심 퀴즈 및 주관식 입력/제출지 */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-            <div className="glass-premium-card rainbow-border"
-              // onMouseMove={handleMouseMove}
-              // onMouseLeave={handleMouseLeave}
-              style={{ padding: '36px', display: 'flex', flexDirection: 'column', gap: '20px', background: 'rgba(255,255,255,0.04)' }}
-            >
-
-              <div className="play-action-bar-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                <div className="play-btn-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1)}
-                    disabled={!submitted && currentQuiz.quizType !== 'LISTENING'}
-                    className="outline-btn"
-                    style={{ padding: '6px 12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-                  >
+        <div className={`play-arena-grid ${isDrawingOpen && hasDrawingFeature ? 'drawing-active' : ''}`}>
+          {/* 왼쪽: 문제와 답 입력 */}
+          <div className="play-main">
+            <div className="glass-premium-card rainbow-border play-card">
+              <div className="play-action-bar-top">
+                <div className="play-btn-group">
+                  <button onClick={listen} disabled={!submitted && currentQuiz.quizType !== 'LISTENING'} className="outline-btn play-tool-btn">
                     🔊<span className="pc-only">발음 듣기</span><span className="mobile-only">듣기</span>
                   </button>
                   {hasDrawingFeature && (
-                    <button
-                      onClick={() => setIsDrawingOpen(!isDrawingOpen)}
-                      className="outline-btn"
-                      style={{
-                        padding: '6px 12px',
-                        fontSize: '0.85rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        borderColor: isDrawingOpen ? 'var(--accent-color)' : 'var(--card-border)'
-                      }}
-                    >
-											<span className="pc-only">
-                      🖌️ 손글씨 판별 그림판 {isDrawingOpen ? '접기' : '켜기'}
-											</span>
-											<span className="mobile-only">
-                      🖌️ 쓰기
-											</span>
+                    <button onClick={() => setIsDrawingOpen(!isDrawingOpen)} className={`outline-btn play-tool-btn${isDrawingOpen ? ' active' : ''}`}>
+                      <span className="pc-only">🖌️ 손글씨 판별 그림판 {isDrawingOpen ? '접기' : '켜기'}</span>
+                      <span className="mobile-only">🖌️ 쓰기</span>
                     </button>
                   )}
                 </div>
 
                 <button
                   onClick={handleAddBookmark}
-                  disabled={bookmarking || bookmarkedList[currentQuiz.japaneseWord]}
-                  className={`outline-btn ${bookmarkedList[currentQuiz.japaneseWord] ? 'bookmarked' : ''}`}
-                  style={{
-                    padding: '6px 12px',
-                    fontSize: '0.85rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    borderColor: bookmarkedList[currentQuiz.japaneseWord] ? 'var(--accent-color)' : 'var(--card-border)',
-                    color: bookmarkedList[currentQuiz.japaneseWord] ? 'var(--accent-color)' : 'var(--text-secondary)'
-                  }}
+                  disabled={bookmarking || isBookmarked}
+                  className={`outline-btn play-tool-btn bookmark-btn${isBookmarked ? ' bookmarked' : ''}`}
                 >
-                  ⭐ <span className="pc-only">{bookmarkedList[currentQuiz.japaneseWord] ? '단어장 저장됨' : '단어장에 추가'}</span><span className="mobile-only">단어장 저장</span>
+                  ⭐ <span className="pc-only">{isBookmarked ? '단어장 저장됨' : '단어장에 추가'}</span><span className="mobile-only">단어장 저장</span>
                 </button>
               </div>
 
-              {/* 퀴즈 질문 */}
-              {!assemblyBoard && <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '700', marginBottom: '12px', whiteSpace: 'pre-line' }}>
-                  <ReadableText text={currentQuiz.questionText
-                    .replace(/\[(?:N[12](?:-(?:EASY|MEDIUM|HARD|ASSEMBLY))?|BEGINNER-(?:EASY|MEDIUM|HARD))\]\s*/g, '')
-                    .replace(/\s*\((정답|정답은|정답인)?\s*:\s*[^)]+\)/g, '')
-                    .replace(/\s*\[(정답|정답은|정답인)?\s*:\s*[^\]]+\]/g, '')} />
-                </p>
-
-                {currentQuiz.quizType === 'READING' && (
-                  <section className="reading-passage" aria-label="독해 지문" lang="ja">
-                    <ReadableText text={currentQuiz.japaneseWord} />
-                  </section>
-                )}
-                 {!['LISTENING', 'READING'].includes(currentQuiz.quizType) && (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-
-                    {/* 붓글씨 기능이 활성화된 스테이지에서만 획수 가이드 배지 노출 */}
-
-
-                    {/* 정답 단어(japaneseWord) 스포일러 격리 차단 로직 */}
-                    {submitted ? (
-                      // 1) 제출이 끝났을 경우: 해설 검토를 위해 한자 단어 공개
-                      <h3 style={{ fontSize: '2.8rem', fontWeight: '900', color: 'var(--accent-color)', letterSpacing: '1px', marginTop: '6px' }}>
-                        <ReadableText text={currentQuiz.japaneseWord} />
-                      </h3>
-                    ) : (
-                      // 2) 플레이 중인 경우: 카테고리별 철저 분기
-                      currentQuiz.quizType === 'WORDLE' ? (
-                        <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-color)', letterSpacing: '1px', marginTop: '12px' }}>
-                          🧩 숨겨진 {currentQuiz.japaneseWord.length}글자 단어 맞추기
-                        </h3>
-                      ) : currentQuiz.quizType === 'ASSEMBLY' || !currentQuiz.japaneseWord || stage.category === 'GRAMMAR' || currentQuiz.questionText.includes('【文法形式】') || currentQuiz.questionText.includes('【文章の文法】') ? (
-                        // 문법 조사는 문장만 보고 사지선다를 풀어야 하므로 단어 노출 금지
-                        null
-                      ) : (
-                        // 문자 정복 등은 한자를 보고 풀어야 하므로 기존 한자 노출
-                        <h3 style={{ fontSize: '2.8rem', fontWeight: '900', color: 'var(--accent-color)', letterSpacing: '1px', marginTop: '6px' }}>
-                          <ReadableText text={currentQuiz.japaneseWord} />
-                        </h3>
-                      )
-                    )}
-
-                  </div>
-                )}
-
-                {/* 청해 파동 아레나 */}
-                {currentQuiz.quizType === 'LISTENING' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '10px 0' }}>
-                    <button
-                      onClick={() => speak(currentQuiz.japaneseWord, isBeginner ? 0.85 : 1)}
-                      style={{
-                        width: '100px',
-                        height: '100px',
-                        borderRadius: '50%',
-                        border: '3px solid var(--accent-color)',
-                        background: 'var(--bg-secondary)',
-                        fontSize: '2.5rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: 'var(--neon-glow)',
-                      }}
-                      className="pulse-ani"
-                    >
-                      🎧
-                    </button>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700' }}>
-                      스피커를 눌러 원어민 일본어 발음을 청취하세요.
-                    </span>
-                  </div>
-                )}
-              </div>}
+              {!assemblyBoard && <QuestionPrompt quiz={currentQuiz} stage={stage} submitted={submitted} onListen={listen} />}
 
               {assemblyBoard ? (
                 <N1SentenceAssembly key={currentQuiz.id} board={assemblyBoard} submitted={submitted} onSubmit={handleSubmission} />
               ) : currentQuiz.quizType === 'ASSEMBLY' ? (
                 <SentenceAssembly currentQuiz={currentQuiz} isBeginner={isBeginner} assemblyPads={assemblyPads} setAssemblyPads={setAssemblyPads} submitted={submitted} handleSubmission={handleSubmission} />
               ) : (
-                /* ==================== [기존 붓글씨 그림판 기반 주관식 제출 통합지] ==================== */
-                <>
-                  {(isBeginner || !currentQuiz.options?.length) && <div style={{
-                    marginTop: '10px',
-                    background: 'var(--bg-secondary)',
-                    padding: '16px',
-                    borderRadius: 'var(--custom-radius)',
-                    border: '1.5px dashed var(--card-border)'
-                  }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
-                      ✍️ 손글씨 주관식 정답 입력
-                    </span>
-
-                    <div className="input-submit-group" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <input
-                        type="text"
-                        value={typedAnswer}
-                        onChange={(e) => setTypedAnswer(e.target.value)}
-                        placeholder={hasDrawingFeature ? "그림판에 쓰거나 직접 입력" : "정답 입력"}
-                        disabled={submitted}
-                        style={{
-                          flexGrow: 1,
-                          padding: '14px 20px',
-                          fontSize: '1rem',
-                          fontWeight: '800',
-                          borderRadius: 'var(--custom-radius)',
-                          border: '2px solid var(--card-border)',
-                          background: 'var(--card-bg)',
-                          color: 'var(--text-primary)',
-                          outline: 'none'
-                        }}
-                      />
-
-                      <button
-                        onClick={() => handleSubmission(typedAnswer)}
-                        disabled={submitted || !typedAnswer}
-                        className="glow-btn"
-                        style={{
-                          padding: '14px 28px',
-                          fontSize: '0.9rem',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-												<span className="pc-only">주관식 제출 ➔</span>
-												<span className="mobile-only">➔</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  }
-                  {/* [기존 사지선다 보기도 하단 보조 힌트로 유지] */}
-                  {(currentQuiz.options && currentQuiz.options.length > 0) && (
-                    <div style={{ marginTop: '16px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
-                        {isBeginner ? '💡 참고용 객관식 보기' : '답안 선택'}
-                      </span>
-                      <QuestionOptions currentQuiz={currentQuiz} submitted={submitted} setTypedAnswer={setTypedAnswer} handleSubmission={handleSubmission} />
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* 워들 퀴즈 입력란 */}
-              {currentQuiz.quizType === 'WORDLE' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', marginTop: '20px' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block' }}>
-                    🧩 워들 퀴즈 전용 입력판 (칸별 글자 힌트 대입)
-                  </span>
-
-                  {wordleAttempts.map((attempt, attemptIdx) => (
-                    <div key={attemptIdx} style={{ display: 'flex', gap: '6px' }}>
-                      {attempt.guess.split('').map((char, charIdx) => {
-                        const colorMap = { green: 'var(--accent-color)', yellow: '#ffb37e', gray: '#8b92b6' };
-                        return (
-                          <div
-                            key={charIdx}
-                            style={{
-                              width: '42px',
-                              height: '42px',
-                              background: colorMap[attempt.feedback[charIdx]],
-                              color: '#ffffff',
-                              fontWeight: '800',
-                              fontSize: '1.1rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '8px'
-                            }}
-                          >
-                            {char}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-
-                  {!wordleFinished && (
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      {wordleInput.map((char, idx) => (
-                        <input
-                          key={idx}
-                          id={`wordle-${idx}`}
-                          type="text"
-                          maxLength={1}
-                          value={char}
-                          onChange={(e) => handleWordleChange(e.target.value, idx)}
-                          style={{
-                            width: '42px',
-                            height: '42px',
-                            background: 'var(--bg-secondary)',
-                            border: '2.5px solid var(--card-border)',
-                            color: 'var(--text-primary)',
-                            fontWeight: '800',
-                            fontSize: '1.1rem',
-                            textAlign: 'center',
-                            borderRadius: '8px',
-                            outline: 'none'
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {!submitted && (
-                    <button
-                      onClick={handleWordleSubmit}
-                      className="glow-btn"
-                      style={{ padding: '10px 24px', fontSize: '0.85rem' }}
-                    >
-                      정답 검증 (제출)
-                    </button>
-                  )}
-                </div>
-              )}
-
-            </div>
-
-            {/* 정오답 피드백 */}
-            {submitted && (
-              <div
-                className="premium-card question-feedback"
-                style={{
-                  padding: '20px 28px',
-                  background: isCorrect ? 'rgba(85, 124, 85, 0.08)' : 'rgba(255, 107, 107, 0.08)',
-                  borderColor: isCorrect ? 'var(--accent-color)' : '#ff6b6b',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <div>
-                  <span style={{
-                    fontSize: '1.1rem',
-                    fontWeight: '900',
-                    color: isCorrect ? 'var(--accent-color)' : '#ff6b6b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    {isCorrect ? '🎉 정답입니다!' : '😢 아쉬운 오답입니다...'}
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '2px 8px', borderRadius: '100px' }}>
-                      {isCorrect ? `+${pointsEarned} pts 획득` : '오답노트에 자동 적재'}
-                      {isCorrect && speedBonusEarned > 0 && ` (⚡ 속도 보너스 +${speedBonusEarned} pts 포함!)`}
-                    </span>
-                  </span>
-                  {currentQuiz.pronunciation && <p style={{ marginTop: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                    요미가나(발음): <strong style={{ color: 'var(--text-primary)' }}>{currentQuiz.pronunciation}</strong>
-                  </p>}
-                  <p style={{ marginTop: '4px', fontSize: '0.85rem', color: 'var(--accent-color)', fontWeight: '700' }}>
-                    {assemblyBoard ? '★ 정답: ' : '정답: '}<strong style={{ textDecoration: 'underline' }}><ReadableText text={currentQuiz.correctAnswer} /></strong>
-                    {isBeginner && <> 또는 <strong><ReadableText text={currentQuiz.japaneseWord} /></strong></>}
-                  </p>
-                  {assemblyBoard && (
-                    <p style={{ marginTop: '4px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      완성 문장: <ReadableText text={currentQuiz.japaneseWord} />
-                    </p>
-                  )}
-                  {currentQuiz.hint && (
-                    <p style={{ marginTop: '4px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      💡 설명: <ReadableText text={assemblyBoard ? currentQuiz.hint.replace(/\r?\n완성문:.*$/u, '') : currentQuiz.hint} />
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  onClick={handleNextQuiz}
-                  className="glow-btn"
-                  style={{ padding: '12px 24px' }}
-                >
-                  {currentIndex + 1 === quizzes.length ? '결과 확인 ➔' : '다음 문제 ➔'}
-                </button>
-              </div>
-            )}
-
-          </div>
-
-          {/* [우측 판넬]: 🖌️ 캘리그래피 손글씨 판독 그림판 */}
-          {isDrawingOpen && hasDrawingFeature && (
-            <div className="premium-card" style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-              height: 'fit-content',
-              borderColor: 'var(--accent-color)',
-              boxShadow: 'var(--neon-glow)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  🖌️ 손글씨 판독기 (Drawing OCR)
-                </h4>
-                <button
-                  onClick={() => setShowOverlayGuide(!showOverlayGuide)}
-                  style={{
-                    padding: '4px 10px',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    border: '1px solid var(--card-border)',
-                    background: showOverlayGuide ? 'var(--accent-color)' : 'transparent',
-                    color: showOverlayGuide ? '#ffffff' : 'var(--text-secondary)',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {showOverlayGuide ? '가이드 숨기기' : '정답 겹쳐보기 👁️'}
-                </button>
-              </div>
-
-              {/* 그림판 캔버스 영역 */}
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: '1',
-                background: 'var(--bg-secondary)',
-                borderRadius: '8px',
-                border: '2px solid var(--card-border)',
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-
-                {/* 정답 반투명 가이드라인 워터마크 */}
-                {showOverlayGuide && currentQuiz.quizType !== 'LISTENING' && (
-                  <div style={{
-                    position: 'absolute',
-                    fontSize: '6.5rem',
-                    fontWeight: '900',
-                    fontFamily: '"Noto Sans JP", sans-serif',
-                    color: 'var(--text-primary)',
-                    opacity: 0.13,
-                    pointerEvents: 'none',
-                    userSelect: 'none',
-                    textAlign: 'center',
-                    zIndex: 0,
-                    wordBreak: 'keep-all',
-                    maxWidth: '90%'
-                  }}>
-                    {currentQuiz.japaneseWord}
-                  </div>
-                )}
-
-                {/* 실제 그림을 그리는 HTML5 Canvas */}
-                <canvas
-                  ref={canvasRef}
-                  width={340}
-                  height={340}
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                  style={{
-                    position: 'absolute',
-                    top: 0, left: 0,
-                    width: '100%',
-                    height: '100%',
-                    cursor: 'crosshair',
-                    zIndex: 1,
-                    /* 터치 스크롤 완전 차단 - 그림 그리는 동안 페이지가 움직이지 않도록 */
-                    touchAction: 'none',
-                    WebkitTouchCallout: 'none',
-                    userSelect: 'none',
-                  }}
+                <AnswerInput
+                  quiz={currentQuiz}
+                  isBeginner={isBeginner}
+                  hasDrawingFeature={hasDrawingFeature}
+                  typedAnswer={typedAnswer}
+                  setTypedAnswer={setTypedAnswer}
+                  submitted={submitted}
+                  handleSubmission={handleSubmission}
                 />
-              </div>
+              )}
 
-              {/* 캔버스 조작 컨트롤러 */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1, marginRight: '16px' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>두께</span>
-                  <input
-                    type="range"
-                    min={2} max={16}
-                    value={brushSize}
-                    onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                    style={{ width: '100%', accentColor: 'var(--accent-color)' }}
-                  />
-                  <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>{brushSize}px</span>
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  {candidates.length > 0 && (
-                    <button
-                      onClick={() => {
-                        const firstChar = candidates[0];
-                        setTypedAnswer(prev => prev + firstChar);
-                        speak(firstChar);
-                        clearCanvas(false);
-                      }}
-                      disabled={submitted}
-                      className="glow-btn"
-                      style={{
-                        padding: '6px 14px',
-                        fontSize: '0.8rem',
-                        whiteSpace: 'nowrap',
-                        background: 'linear-gradient(135deg, var(--accent-color) 0%, #a29bfe 100%)',
-                        boxShadow: '0 0 10px rgba(84, 160, 255, 0.4)',
-                        border: 'none',
-                        borderRadius: '100px',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        fontWeight: '800',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      ✨ 즉시 입력 (1순위)
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => clearCanvas(false)}
-                    className="outline-btn"
-                    style={{ padding: '6px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-                  >
-                    🧹 그림판 지우기
-                  </button>
-                </div>
-              </div>
-
-              {/* ==================== [구글 실시간 문자 해독 결과 팝업 보드] ==================== */}
-              <div style={{
-                background: 'var(--bg-secondary)',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid var(--card-border)',
-                marginTop: '6px'
-              }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
-                  {recognizing ? '⏳ 인공지능이 손글씨 해독 중...' : '🧠 구글 실시간 해독 추천 (클릭 시 입력 및 자동 지우기):'}
-                </span>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', minHeight: '34px', alignItems: 'center' }}>
-                  {candidates.length === 0 ? (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic', paddingLeft: '4px' }}>
-                      왼쪽 그림판에 마우스/터치 펜으로 일본어를 그려주세요.
-                    </span>
-                  ) : (
-                    candidates.map((char, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setTypedAnswer(prev => prev + char);
-                          speak(char); // 입력 시 신나게 소리 발음
-                          clearCanvas(false); // 추천 단어 선택 시 자동으로 캔버스 초기화
-                        }}
-                        disabled={submitted}
-                        style={{
-                          background: 'var(--card-bg)',
-                          border: '1.5px solid var(--card-border)',
-                          color: 'var(--text-primary)',
-                          fontSize: '1rem',
-                          fontWeight: '900',
-                          padding: '6px 14px',
-                          borderRadius: '100px',
-                          cursor: 'pointer',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                          transition: 'all 0.15s'
-                        }}
-                        onMouseEnter={(e) => e.target.style.borderColor = 'var(--accent-color)'}
-                        onMouseLeave={(e) => e.target.style.borderColor = 'var(--card-border)'}
-                      >
-                        {char}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-
+              {currentQuiz.quizType === 'WORDLE' && (
+                <WordleBoard attempts={wordleAttempts} input={wordleInput} finished={wordleFinished} submitted={submitted} onChange={handleWordleChange} onSubmit={handleWordleSubmit} />
+              )}
             </div>
-          )}
 
-        </div>
-      )}
-      {/* 🏆 [3.8.5 프리미엄 우주선 슬라이딩 업적 잠금 해제 알림 토스트] */}
-      {achievementToast && (
-        <div style={{
-          position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          background: 'linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%)',
-          color: '#ffffff',
-          padding: '16px 28px',
-          borderRadius: '16px',
-          border: '2px solid #ff9f43',
-          boxShadow: '0 12px 40px rgba(255, 159, 67, 0.4), var(--neon-glow)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          zIndex: 100000,
-          animation: 'slideInRight 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-          maxWidth: '380px'
-        }}>
-          <span style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}>{achievementToast.icon}</span>
-          <div>
-            <span style={{
-              display: 'block',
-              fontSize: '0.75rem',
-              fontWeight: '900',
-              color: '#ff9f43',
-              textTransform: 'uppercase',
-              letterSpacing: '1.5px',
-              marginBottom: '2px'
-            }}>
-              🏆 ACHIEVEMENT UNLOCKED!
-            </span>
-            <strong style={{ display: 'block', fontSize: '1.1rem', fontWeight: '900', color: '#ffffff' }}>
-              {achievementToast.title}
-            </strong>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: '#b5c0d9', fontWeight: '600', marginTop: '2px' }}>
-              {achievementToast.desc}
-            </span>
+            {submitted && (
+              <AnswerFeedback
+                quiz={currentQuiz}
+                isCorrect={isCorrect}
+                isBeginner={isBeginner}
+                assemblyBoard={assemblyBoard}
+                pointsEarned={pointsEarned}
+                speedBonusEarned={speedBonusEarned}
+                isLast={currentIndex + 1 === quizzes.length}
+                onNext={handleNextQuiz}
+              />
+            )}
           </div>
+
+          {/* 오른쪽: 손글씨 판독 그림판 */}
+          {isDrawingOpen && hasDrawingFeature && (
+            <DrawingPanel
+              quiz={currentQuiz}
+              canvasRef={canvasRef}
+              drawHandlers={{ onMouseDown: startDrawing, onMouseMove: draw, onMouseUp: stopDrawing, onMouseLeave: stopDrawing, onTouchStart: startDrawing, onTouchMove: draw, onTouchEnd: stopDrawing }}
+              showOverlayGuide={showOverlayGuide}
+              setShowOverlayGuide={setShowOverlayGuide}
+              brushSize={brushSize}
+              setBrushSize={setBrushSize}
+              candidates={candidates}
+              recognizing={recognizing}
+              submitted={submitted}
+              onPick={pickCandidate}
+              onClear={() => clearCanvas(false)}
+            />
+          )}
         </div>
       )}
 
+      <AchievementToast toast={achievementToast} />
     </div>
   );
 }
