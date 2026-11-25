@@ -1,3 +1,9 @@
+// 완료된 일회성 작업: 복습을 2회 이상 한 미해결 오답을 해결 처리했습니다(DB를 바꿉니다).
+// 다시 실행하려면 의도를 확인한 뒤 --yes를 붙이세요: node scripts/archive/resolve-reviewed-wrong-answers.cjs --yes
+if (!process.argv.includes("--yes")) {
+  console.error("DB를 바꾸는 일회성 작업이라 --yes 없이는 실행하지 않습니다.");
+  process.exit(1);
+}
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 

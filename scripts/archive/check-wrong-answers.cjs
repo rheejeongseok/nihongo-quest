@@ -1,3 +1,4 @@
+// 읽기 전용 점검: 미해결 오답 목록을 출력합니다(DB를 바꾸지 않음).
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
