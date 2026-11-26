@@ -1,0 +1,40 @@
+/* 코스(아레나) 고르기 모달 (ArenaEntryModal.js) */
+/* 배경 오버레이는 modals.css의 .modal-overlay(.top) */
+.arena-modal { width: 92%; max-width: 38.75rem; max-height: 90vh; overflow-y: auto; padding: 1.5rem; border: 2px solid var(--accent-color); box-shadow: var(--neon-glow); text-align: center; }
+.arena-modal-icon { display: block; margin-bottom: 8px; font-size: 2.5rem; }
+.arena-modal .arena-modal-title.arena-modal-title { margin-bottom: 4px; font-size: 1.25rem; font-weight: 900; }
+.arena-modal-desc { margin-bottom: 1.25rem; color: var(--text-secondary); font-size: .82rem; }
+.arena-modal-label { margin-bottom: .5rem; color: var(--text-secondary); font-size: .7rem; font-weight: 800; letter-spacing: .5px; text-align: left; text-transform: uppercase; }
+
+/* 코스 버튼 (코스마다 다른 색 --course-color) */
+.arena-course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr)); gap: .375rem; margin-bottom: 1.25rem; }
+.arena-course {
+  display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .5rem .25rem; border: 1.5px solid var(--card-border); border-radius: .75rem;
+  background: rgba(255, 255, 255, .02); color: var(--text-primary); font-family: inherit; cursor: pointer; transition: all .2s ease; box-shadow: none;
+}
+.arena-course.selected { border: 2px solid var(--course-color); background: var(--bg-secondary); box-shadow: 0 0 .625rem color-mix(in srgb, var(--course-color) 12.5%, transparent); }
+.arena-course-emoji { font-size: 1.4rem; }
+.arena-course-title { font-size: .7rem; font-weight: 900; white-space: nowrap; }
+
+/* 초보 문자 코스: 문자표 */
+.arena-kana-guide { margin-bottom: 1rem; line-height: 1.7; text-align: left; }
+.arena-kana-guide summary { font-weight: 800; cursor: pointer; }
+.arena-kana-note { font-size: .8rem; }
+.arena-kana-chart { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; max-height: 12rem; overflow-y: auto; }
+.arena-kana-cell { padding: .4rem; border-radius: .4rem; background: var(--bg-secondary); text-align: center; }
+
+/* 초보 난이도 */
+.difficulty-btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .5rem; margin-bottom: 1.75rem; }
+.difficulty-btn {
+  --diff-color: #557c55;
+  padding: .6875rem .25rem; border: 1.5px solid var(--card-border); border-radius: .625rem; background: var(--bg-secondary); color: var(--text-secondary);
+  font-family: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; transition: all .2s; box-shadow: none;
+}
+.difficulty-btn.medium { --diff-color: #ff9f43; }
+.difficulty-btn.hard { --diff-color: #ff6b6b; }
+.difficulty-btn.active { border-color: var(--diff-color); background: var(--diff-color); color: #fff; box-shadow: 0 .25rem .625rem rgba(0, 0, 0, .1); }
+
+.arena-modal-actions { display: flex; justify-content: center; gap: .625rem; }
+.arena-modal-actions button { flex: 1; font-size: .82rem; }
+.arena-modal-close { padding: .625rem 1.25rem; }
+.arena-modal-enter { padding: .625rem 1.5rem; }

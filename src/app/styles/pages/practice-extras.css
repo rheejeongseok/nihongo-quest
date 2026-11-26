@@ -1,0 +1,21 @@
+/* 문장 조립 문제 (SentenceAssembly.js) */
+.assembly { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
+.assembly-label { color: var(--text-secondary); font-size: .85rem; font-weight: 800; }
+.assembly-board {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; min-height: 74px; padding: 16px 20px;
+  border: 2.5px dashed var(--accent-color); border-radius: var(--custom-radius); background: var(--bg-secondary); box-shadow: inset 0 2px 10px rgba(0, 0, 0, .1);
+}
+.assembly-empty { color: var(--text-secondary); font-size: .9rem; font-style: italic; }
+.assembly-empty.small { font-size: .85rem; }
+.assembly-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 12px 0; }
+.assembly-piece { padding: 10px 18px; border: 2px solid var(--card-border); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-size: .95rem; font-weight: 850; cursor: pointer; }
+.assembly-piece.placed { padding: 8px 16px; border: 0; background: linear-gradient(135deg, var(--accent-color) 0%, #9b5de5 100%); color: #fff; font-weight: inherit; box-shadow: 0 4px 10px rgba(155, 93, 229, .2); }
+.assembly-remove { margin-left: 4px; opacity: .7; }
+.assembly-submit { align-self: center; width: 100%; max-width: 300px; padding: 14px 28px; font-size: 1rem; }
+
+/* 손글씨 연습장 모달 머리 (CalligraphyPractice.js) */
+.calligraphy-modal-brand { display: flex; align-items: center; gap: 8px; }
+.calligraphy-modal-emoji { font-size: 1.4rem; }
+.calligraphy-modal-header .calligraphy-modal-title.calligraphy-modal-title { color: var(--text-primary); font-size: 1.15rem; font-weight: 900; }
+.calligraphy-modal-sub { color: var(--text-secondary); font-size: .75rem; }
+.canvas-pane-title { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }

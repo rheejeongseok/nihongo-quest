@@ -1,0 +1,37 @@
+/* 모달 공통 배경과 단어 상세·학습 계정 모달 */
+.modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .6); backdrop-filter: blur(10px); }
+.modal-overlay.top { z-index: 99999; }
+
+/* 단어 상세 (WordDetailModal.js) */
+.word-modal { position: relative; width: 90%; max-width: 520px; padding: 36px; border: 2px solid var(--accent-color); box-shadow: var(--neon-glow); text-align: left; }
+.word-modal-close { position: absolute; top: 20px; right: 20px; border: 0; background: none; color: var(--text-secondary); font-size: 1.2rem; font-weight: 900; cursor: pointer; }
+.word-modal-kicker { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
+.word-modal-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.word-modal .word-modal-head h2 { margin: 0; color: var(--text-primary); font-size: 2.2rem; font-weight: 900; }
+.word-modal-reading { color: var(--text-secondary); font-size: 1.1rem; font-weight: 700; }
+.word-modal-meaning { margin-bottom: 24px; padding: 10px 16px; border-left: 4px solid var(--accent-color); border-radius: 8px; background: var(--bg-secondary); }
+.word-modal-label { display: block; color: var(--text-secondary); font-size: .75rem; font-weight: 800; text-transform: uppercase; }
+.word-modal-meaning p { margin: 4px 0 0; color: var(--accent-color); font-size: 1.1rem; font-weight: 800; }
+.word-modal-example { margin-bottom: 28px; padding: 20px; border: 1px solid rgba(255, 179, 126, .25); border-radius: var(--custom-radius); background: rgba(255, 179, 126, .05); }
+.word-modal-example-label { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; color: #ffb37e; font-size: .8rem; font-weight: 900; }
+.word-modal-example-jp { margin-bottom: 10px; color: var(--text-primary); font-size: 1.1rem; font-weight: 700; line-height: 1.6; word-break: keep-all; }
+.word-modal-example-kr { margin: 0; color: var(--text-secondary); font-size: .9rem; font-weight: 600; line-height: 1.5; }
+.word-modal-actions { display: flex; gap: 12px; }
+.word-modal-actions button { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: .9rem; }
+.word-modal-speak { flex: 1; padding: 12px 20px; }
+.word-modal-speak-all { flex: 1.2; padding: 12px 24px; background: linear-gradient(135deg, var(--accent-color) 0%, #ff9494 100%); }
+
+/* 학습 계정 (AccountModal.js) */
+.account-modal { width: 90%; max-width: 28.75rem; padding: 2rem; border: 2px solid var(--accent-color); box-shadow: var(--neon-glow); text-align: center; }
+.account-modal-icon { display: block; margin-bottom: 12px; font-size: 3rem; }
+.account-modal .account-modal-title.account-modal-title { margin-bottom: 8px; font-size: 1.3rem; font-weight: 900; }
+.account-modal-desc { margin-bottom: 24px; color: var(--text-secondary); font-size: .85rem; line-height: 1.6; }
+.account-modal-field { margin-bottom: 24px; }
+.account-modal-input {
+  width: 100%; padding: .75rem 1rem; border: 1.5px solid var(--card-border); border-radius: var(--custom-radius); background: var(--bg-secondary);
+  color: var(--text-primary); font-size: .95rem; font-weight: 700; text-align: center; outline: none; transition: border-color .2s; box-shadow: inset 0 2px 4px rgba(0, 0, 0, .05);
+}
+.account-modal-actions { display: flex; justify-content: center; gap: .75rem; }
+.account-modal-actions button { flex: 1; font-size: .85rem; }
+.account-modal-cancel { padding: .625rem 1.25rem; }
+.account-modal-save { padding: .625rem 1.5rem; }

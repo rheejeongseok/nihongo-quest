@@ -195,11 +195,11 @@ export default function CalligraphyPractice({ open, targetLevel, onClose, setUse
 
             {/* 모달 헤더 */}
             <div data-modal-drag-handle className="calligraphy-modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.4rem' }}>🌱</span>
+              <div className="calligraphy-modal-brand">
+                <span className="calligraphy-modal-emoji">🌱</span>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)' }}>왕초보 문자 비법서 & 손글씨 연습장</h3>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>히라가나/가타카나 표준 50음도 정복 코스</p>
+                  <h3 className="calligraphy-modal-title">왕초보 문자 비법서 & 손글씨 연습장</h3>
+                  <p className="calligraphy-modal-sub">히라가나/가타카나 표준 50음도 정복 코스</p>
                 </div>
               </div>
               <button
@@ -262,7 +262,7 @@ export default function CalligraphyPractice({ open, targetLevel, onClose, setUse
                 {/* 우측: 드로잉 연습장 */}
                 <div className="beginner-right-pane">
                   <div className="canvas-panel">
-                    <h4 className="beginner-pane-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <h4 className="beginner-pane-title canvas-pane-title">
                       ✍️ {isHiraganaTab ? '히라가나' : '가타카나'} 손글씨 연습장
                     </h4>
                     <p className="canvas-header-desc">
