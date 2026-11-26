@@ -3,9 +3,9 @@
    ======================================================== */
 /* 전역 가로 스크롤 완전 격리 차단 */
 html, body {
-  max-width: 100% !important; /* 100vw → 100% (vw는 스크롤바 포함으로 overflow 유발) */
+  max-width: 100%; /* 100vw → 100% (vw는 스크롤바 포함으로 overflow 유발) */
   overflow-x: hidden !important;
-  width: 100% !important;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -16,28 +16,28 @@ html, body {
   }
   
   .container {
-    padding: 0 4vw !important; /* 기기 너비의 4% 패딩 부여 */
-    max-width: 100% !important; /* 100vw → 100% */
-    width: 100% !important;
-    overflow-x: hidden !important;
+    padding: 0 4vw; /* 기기 너비의 4% 패딩 부여 */
+    max-width: 100%; /* 100vw → 100% */
+    width: 100%;
+    overflow-x: hidden;
   }
   
   main {
-    padding: 3vw 0 !important;
-    overflow-x: hidden !important;
+    padding: 3vw 0;
+    overflow-x: hidden;
   }
   
   /* [2. 유동형 반응형 폰트 밸런스 - rem 대통합 및 중구난방 정리] */
   h1 {
-    font-size: 1.25rem !important; /* 모바일 대제목 콤팩트화 */
-    letter-spacing: -0.03em !important;
-    line-height: 1.25 !important;
+    font-size: 1.25rem; /* 모바일 대제목 콤팩트화 */
+    letter-spacing: -0.03em;
+    line-height: 1.25;
     margin-bottom: 8px !important;
   }
   
   h2 {
     font-size: 1.12rem !important; /* 모바일 중제목 콤팩트화 */
-    letter-spacing: -0.02em !important;
+    letter-spacing: -0.02em;
     margin-bottom: 12px !important;
   }
   
@@ -53,49 +53,49 @@ html, body {
   .home-banner-title {
     font-size: 1.25rem !important;
     margin-bottom: 6px !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
   }
 
   .home-banner-desc {
     font-size: 0.78rem !important;
-    line-height: 1.35 !important;
+    line-height: 1.35;
   }
 
   /* 대시보드 및 아레나 모바일 폰트 완벽 단정화 */
 
   .arena-card-title {
-    font-size: 1.05rem !important;
+    font-size: 1.05rem;
   }
 
   .arena-card-desc {
-    font-size: 0.78rem !important;
+    font-size: 0.78rem;
   }
 
   .arena-card-footer-label {
-    font-size: 0.72rem !important;
+    font-size: 0.72rem;
   }
 
   /* [3. 프리미엄 카드 모바일 유동식 레이아웃 & 가로 스크롤 완전 차단 가드] */
   html, body, #__next, main, .container {
-    overflow-x: hidden !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    position: relative !important;
-    box-sizing: border-box !important;
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
   }
 
   body {
-    padding-bottom: 5.75rem !important; /* 92px → 5.75rem */
+    padding-bottom: 5.75rem; /* 92px → 5.75rem */
   }
 
   /* 📱 모바일 드로워 오픈 시 하단 고정 버튼 우아하게 페이드 아웃 및 뷰포트 하단 낙하 */
   body[data-drawer-open='true'] .mo-arena-btn {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    visibility: hidden !important;
-    transform: translate(-50%, 35px) !important; /* 아래로 부드럽게 하강 침강하며 은폐 */
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transform: translate(-50%, 35px); /* 아래로 부드럽게 하강 침강하며 은폐 */
   }
 
   /* 플로팅 고정 버튼의 움직임을 한없이 럭셔리하게 만드는 트랜지션 서명 */
@@ -106,8 +106,8 @@ html, body {
   .glass-premium-card, .premium-card {
     padding: 3vw; /* 카드 기본 여백. 화면별 CSS가 필요하면 덮어씀 */
     min-height: auto !important;
-    border-radius: 3vw !important;
-    width: 100% !important;
+    border-radius: 3vw;
+    width: 100%;
   }
   
   /* [4. 콤팩트 모바일 1단 헤더 - 로고와 햄버거 트리거만 간결 정렬] */
@@ -119,37 +119,37 @@ html, body {
   }
 
   header.header-glass .container.header-container {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    height: 3.75rem !important; /* 60px → 3.75rem */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 3.75rem; /* 60px → 3.75rem */
     padding: 0 1rem !important; /* 16px → 1rem */
-    gap: 0 !important;
-    grid-template-columns: unset !important;
-    grid-template-rows: unset !important;
+    gap: 0;
+    grid-template-columns: unset;
+    grid-template-rows: unset;
   }
 
   .header-logo {
-    display: flex !important;
-    align-items: center !important;
+    display: flex;
+    align-items: center;
   }
 
   .header-logo .logo-text {
-    font-size: 1.1rem !important; /* 모바일 로고 콤팩트화 */
+    font-size: 1.1rem; /* 모바일 로고 콤팩트화 */
   }
 
   /* 모바일 햄버거 버튼 트리거 */
   .mobile-menu-trigger {
-    background: none !important;
-    border: none !important;
-    color: var(--text-primary) !important;
-    font-size: 1.8rem !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 4px !important;
-    outline: none !important;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    outline: none;
     /* transition: transform 0.2s ease !important; */
   }
 
@@ -161,29 +161,29 @@ html, body {
      모바일 사이드 드로워 슬라이드 메뉴 프리미엄 디자인
      ======================================================== */
   .mobile-drawer-overlay {
-    position: fixed !important;
-    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-    background: rgba(0, 0, 0, 0.4) !important;
-    backdrop-filter: blur(8px) !important;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 99999 !important;
-    display: flex !important;
-    justify-content: flex-end !important;
+    z-index: 99999;
+    display: flex;
+    justify-content: flex-end;
   }
 
   .mobile-drawer-content {
-    width: 18.4375rem !important; /* 295px → 18.4375rem */
+    width: 18.4375rem; /* 295px → 18.4375rem */
     max-width: 82vw !important;
-    height: 100% !important;
-    background: var(--card-bg) !important;
-    border-left: 1.5px solid var(--card-border) !important;
-    box-shadow: -0.5rem 0 2.2rem rgba(0, 0, 0, 0.12) !important; /* -8px 35px → rem */
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 1.625rem 1.25rem !important; /* 26px 20px → rem */
-    position: relative !important;
+    height: 100%;
+    background: var(--card-bg);
+    border-left: 1.5px solid var(--card-border);
+    box-shadow: -0.5rem 0 2.2rem rgba(0, 0, 0, 0.12); /* -8px 35px → rem */
+    display: flex;
+    flex-direction: column;
+    padding: 1.625rem 1.25rem; /* 26px 20px → rem */
+    position: relative;
     transform: translateX(100%);
-    overflow-y: auto !important;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch !important;
     animation: drawer-slide-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   }
@@ -207,32 +207,32 @@ html, body {
   }
 
   .drawer-header {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1.2px solid var(--card-border) !important;
-    padding-bottom: 0.875rem !important; /* 14px → 0.875rem */
-    margin-bottom: 1.5rem !important; /* 24px → 1.5rem */
+    padding-bottom: 0.875rem; /* 14px → 0.875rem */
+    margin-bottom: 1.5rem; /* 24px → 1.5rem */
   }
 
   .drawer-logo {
-    font-size: 1.15rem !important;
-    font-weight: 900 !important;
-    letter-spacing: -0.5px !important;
-    color: var(--text-primary) !important;
-    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%) !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .drawer-close-btn {
-    background: none !important;
-    border: none !important;
-    color: var(--text-secondary) !important;
-    font-size: 1.1rem !important;
-    font-weight: 500 !important;
-    cursor: pointer !important;
-    padding: 4px !important;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px;
     transition: transform 0.2s ease !important;
   }
 
@@ -241,42 +241,42 @@ html, body {
   }
 
   .drawer-section {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important; /* 8px → 0.5rem */
-    margin-bottom: 1.5rem !important; /* 24px → 1.5rem */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* 8px → 0.5rem */
+    margin-bottom: 1.5rem; /* 24px → 1.5rem */
   }
 
   .drawer-sec-label {
-    font-size: 0.68rem !important;
-    font-weight: 800 !important;
-    color: var(--text-secondary) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
-    opacity: 0.8 !important;
-    margin-bottom: 4px !important;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    margin-bottom: 4px;
   }
 
   .drawer-nav {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important; /* 8px → 0.5rem */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* 8px → 0.5rem */
   }
 
   .drawer-nav-item {
-    display: flex !important;
-    align-items: center !important;
+    display: flex;
+    align-items: center;
     padding: 12px 16px !important; /* 터치하기 넉넉하고 시크한 패딩 */
     font-size: 0.84rem !important;
     font-weight: 700 !important;
     color: var(--text-primary) !important;
-    text-decoration: none !important;
-    border-radius: 10px !important;
+    text-decoration: none;
+    border-radius: 10px;
     border: none !important; /* 칙칙하고 올드한 보더 완전 파쇄! */
     background: rgba(120, 120, 120, 0.05) !important; /* 뒷배경이 맑게 투영되는 은은한 틴트 */
-    box-shadow: none !important; /* 그림자 삭제로 플랫 모던함 극대화 */
-    position: relative !important;
-    overflow: hidden !important;
+    box-shadow: none; /* 그림자 삭제로 플랫 모던함 극대화 */
+    position: relative;
+    overflow: hidden;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
 
@@ -305,39 +305,39 @@ html, body {
   }
 
   .drawer-footer {
-    margin-top: 1.5rem !important; /* 24px → 1.5rem */
+    margin-top: 1.5rem; /* 24px → 1.5rem */
     border-top: 1px solid var(--card-border) !important;
-    padding-top: 1rem !important; /* 16px → 1rem */
-    text-align: center !important;
-    padding-bottom: 0.75rem !important; /* 12px → 0.75rem */
+    padding-top: 1rem; /* 16px → 1rem */
+    text-align: center;
+    padding-bottom: 0.75rem; /* 12px → 0.75rem */
   }
 
   .drawer-footer p {
-    font-size: 0.7rem !important;
-    color: var(--text-secondary) !important;
-    font-weight: 700 !important;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 700;
   }
 
   .version-label {
-    font-size: 0.6rem !important;
-    color: var(--text-secondary) !important;
-    opacity: 0.5 !important;
-    display: block !important;
-    margin-top: 4px !important;
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    display: block;
+    margin-top: 4px;
   }
 
   /* [5. 동기화 패널 유동형 정렬] */
   /* [모바일 글래스모피즘 흐릿함 파쇄 및 선명도 극대화 치트키] */
   .glass-premium-card {
-    backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px) !important;
-    background: var(--card-bg) !important; /* 흐릿한 투명도 제거, 테마 고유의 단단하고 쨍한 카드 배경 대입 */
-    border: 1.5px solid var(--card-border) !important; /* 경계선을 확실하고 맑게 복원 */
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05) !important;
+    background: var(--card-bg); /* 흐릿한 투명도 제거, 테마 고유의 단단하고 쨍한 카드 배경 대입 */
+    border: 1.5px solid var(--card-border); /* 경계선을 확실하고 맑게 복원 */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
   }
 
 	.glass-premium-card .count-title span {
-		display:none !important;
+		display:none;
 	}
 
 	.glass-premium-card .count-timer {
@@ -358,15 +358,15 @@ html, body {
 
   /* [8. N1 아레나 카드 - 모바일 2컬럼 대학 퀵 메뉴 격자 대개조] */
   .arena-cards-grid {
-    grid-template-columns: 1fr 1fr !important; /* 2컬럼 바둑판 대변환! */
+    grid-template-columns: 1fr 1fr; /* 2컬럼 바둑판 대변환! */
     gap: 3vw !important;
   }
   
   .arena-cards-grid > div {
     padding: 3.5vw !important;
     min-height: 140px !important; /* 콤팩트 격자 높이 */
-    border-radius: 3vw !important;
-    justify-content: space-between !important;
+    border-radius: 3vw;
+    justify-content: space-between;
   }
 
   /* 마지막 5번째 아레나 카드는 가로 100% 확장하여 안정적 그리드 균형 확보 */
@@ -385,8 +385,8 @@ html, body {
   }
 
   .arena-card-badge {
-    font-size: 0.65rem !important;
-    padding: 2px 6px !important;
+    font-size: 0.65rem;
+    padding: 2px 6px;
   }
 
   .arena-cards-grid h4 {
@@ -408,15 +408,15 @@ html, body {
   }
 
   .arena-card-footer-label {
-    display: none !important; /* 모바일 그리드 내부 공간확보를 위해 문구 은폐 */
+    display: none; /* 모바일 그리드 내부 공간확보를 위해 문구 은폐 */
   }
 
   .arena-cards-grid button {
-    width: 100% !important;
+    width: 100%;
     padding: 6px 12px !important;
     font-size: 0.72rem !important;
-    border-radius: 100px !important;
-    justify-content: center !important;
+    border-radius: 100px;
+    justify-content: center;
   }
   
   .arena-cards-grid h4 {
@@ -434,13 +434,13 @@ html, body {
 
   /* [9. 퀴즈 실전 플레이 화면 - 가로폭에 자석처럼 붙는 뷰] */
   .play-arena-grid {
-    grid-template-columns: 1fr !important;
-    gap: 4vw !important;
-    width: 100% !important;
+    grid-template-columns: 1fr;
+    gap: 4vw;
+    width: 100%;
   }
   
   .play-arena-grid .glass-premium-card {
-    padding: 5vw !important;
+    padding: 5vw;
   }
   
   /* 상태바 텍스트 밀림 복구 */
@@ -457,33 +457,33 @@ html, body {
   
   /* 주관식 입력 폼 반응형 비례화 */
   .play-arena-grid input[type="text"] {
-    padding: 3vw 4vw !important;
-    font-size: calc(0.8rem + 0.3vw) !important;
-    border-radius: 2vw !important;
+    padding: 3vw 4vw;
+    font-size: calc(0.8rem + 0.3vw);
+    border-radius: 2vw;
   }
   
   .play-arena-grid .glow-btn {
     padding: 3vw 5vw !important;
-    font-size: calc(0.8rem + 0.2vw) !important;
-    border-radius: 2vw !important;
+    font-size: calc(0.8rem + 0.2vw);
+    border-radius: 2vw;
   }
 
   /* 사지선다 버튼 1열 유동화 */
   .options-grid {
-    grid-template-columns: 1fr !important;
-    gap: 2.5vw !important;
+    grid-template-columns: 1fr;
+    gap: 2.5vw;
   }
   
   .options-grid button {
-    font-size: calc(0.75rem + 0.2vw) !important;
-    padding: 2.5vw 3vw !important;
-    border-radius: 2vw !important;
+    font-size: calc(0.75rem + 0.2vw);
+    padding: 2.5vw 3vw;
+    border-radius: 2vw;
   }
 
   /* [10. 캘리그래피 그림판 & 구글 OCR 뷰포트 맞춤] */
   .play-arena-grid .premium-card {
-    padding: 4vw !important;
-    border-radius: 3vw !important;
+    padding: 4vw;
+    border-radius: 3vw;
   }
   
   /* 모바일 그림판 가로폭 터짐 방지 - 부모 카드의 가로 82% 수준으로 유동 스케일링 */
@@ -509,10 +509,10 @@ html, body {
 
   /* [12. 난이도 조절 우아한 모달 팝업] */
   .modal-premium-content {
-    padding: 6vw 4vw !important;
-    width: 90vw !important;
+    padding: 6vw 4vw;
+    width: 90vw;
     max-width: 340px !important;
-    border-radius: 4vw !important;
+    border-radius: 4vw;
   }
   
   .modal-premium-content h3 {
@@ -525,15 +525,15 @@ html, body {
   }
   
   .modal-premium-content .difficulty-btn-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
     gap: 2vw !important;
-    margin-bottom: 5vw !important;
+    margin-bottom: 5vw;
   }
   
   .modal-premium-content .difficulty-btn-grid button {
-    padding: 3vw !important;
-    font-size: calc(0.75rem + 0.2vw) !important;
-    border-radius: 2vw !important;
+    padding: 3vw;
+    font-size: calc(0.75rem + 0.2vw);
+    border-radius: 2vw;
   }
 
   /* [13. 단어장 및 오답노트 모바일 최적화] */

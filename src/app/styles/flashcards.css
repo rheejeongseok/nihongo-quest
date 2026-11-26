@@ -59,19 +59,19 @@
 /* 각 테마별 보완 */
 :root[data-concept='chalkboard'] .flashcard-front,
 :root[data-concept='chalkboard'] .flashcard-back {
-  background: #1e352f !important;
-  border: 2px dashed rgba(255, 255, 255, 0.5) !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
+  background: #1e352f;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 :root[data-concept='eco'] .flashcard-front,
 :root[data-concept='eco'] .flashcard-back {
-  background: #fdfbf7 !important;
-  border: 1px solid var(--text-secondary) !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
-  border-radius: 4px !important;
+  background: #fdfbf7;
+  border: 1px solid var(--text-secondary);
+  backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 4px;
 }
 
 /* 플래시 카드 세부 장식 */

@@ -52,24 +52,24 @@
   }
   .dashboard-overview > .dday-countdown-card {
     min-width: 0;
-    margin-bottom: 0 !important;
-    padding: 12px 16px !important;
-    gap: 12px !important;
+    margin-bottom: 0;
+    padding: 12px 16px;
+    gap: 12px;
     border-radius: 14px;
-    box-shadow: none !important;
+    box-shadow: none;
   }
   .dashboard-overview > .dday-countdown-card:first-child { grid-column: 1 / -1; }
-  .dashboard-overview .dday-heading { gap: 10px !important; min-width: 0; }
-  .dashboard-overview .dday-icon { font-size: 1.5rem !important; animation: none !important; }
-  .dashboard-overview .count-title { font-size: 0.9rem !important; flex-wrap: wrap; }
-  .dashboard-overview .dday-details p { font-size: 0.75rem !important; }
-  .dashboard-overview .count-timer { gap: 6px !important; }
+  .dashboard-overview .dday-heading { gap: 10px; min-width: 0; }
+  .dashboard-overview .dday-icon { font-size: 1.5rem; animation: none !important; }
+  .dashboard-overview .count-title { font-size: 0.9rem; flex-wrap: wrap; }
+  .dashboard-overview .dday-details p { font-size: 0.75rem; }
+  .dashboard-overview .count-timer { gap: 6px; }
   .dashboard-overview .count-timer-value {
-    min-width: 34px !important;
-    height: 32px !important;
-    font-size: 1rem !important;
-    border-width: 1px !important;
-    box-shadow: none !important;
+    min-width: 34px;
+    height: 32px;
+    font-size: 1rem;
+    border-width: 1px;
+    box-shadow: none;
   }
   .arena-section-container { margin-top: 24px; }
   .arena-section-title { font-size: 1.15rem; margin-bottom: 14px; }
@@ -141,37 +141,37 @@
 .arena-card-title { margin-bottom: 8px; }
 .arena-card-desc { margin-top: 2px; }
 .play-arena-grid :is(p, .options-grid button) { line-height: 1.85 !important; }
-.play-arena-grid .options-grid button { min-width: 0; gap: 8px; text-overflow: clip !important; }
+.play-arena-grid .options-grid button { min-width: 0; gap: 8px; text-overflow: clip; }
 @media (min-width: 769px) {
   .dashboard-overview { margin-bottom: 16px; }
   .arena-section-container { margin-top: 16px; }
   .arena-cards-grid { row-gap: 16px; }
 }
 @media (max-width: 768px) {
-  .play-arena-grid .options-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 12px !important; }
+  .play-arena-grid .options-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
 }
 
 @media (max-width: 768px) {
   .dashboard-overview { display: grid; gap: 8px; margin-bottom: 16px; }
   .dashboard-overview .dday-countdown-card {
-    margin: 0 !important;
-    padding: 10px 12px !important;
-    gap: 10px !important;
-    border: 1px solid var(--card-border) !important;
+    margin: 0;
+    padding: 10px 12px;
+    gap: 10px;
+    border: 1px solid var(--card-border);
     border-radius: 12px;
-    background: var(--card-bg) !important;
-    box-shadow: none !important;
+    background: var(--card-bg);
+    box-shadow: none;
     animation: none !important;
   }
-  .dashboard-overview .dday-heading { gap: 0 !important; min-width: 0; flex: 1; }
+  .dashboard-overview .dday-heading { gap: 0; min-width: 0; flex: 1; }
   .dashboard-overview .dday-icon,
   .dashboard-overview .dday-date-prefix,
-  .dashboard-overview .count-timer-unit { display: none !important; }
-  .dashboard-overview .count-title { font-size: 0.8rem !important; }
-  .dashboard-overview .dday-countdown-card { row-gap: 6px !important; }
+  .dashboard-overview .count-timer-unit { display: none; }
+  .dashboard-overview .count-title { font-size: 0.8rem; }
+  .dashboard-overview .dday-countdown-card { row-gap: 6px; }
   .dashboard-overview .dday-registration { font-size: 0.68rem; gap: 4px 8px; line-height: 1.5; }
-  .dashboard-overview .dday-details p { margin-top: 3px !important; font-size: 0.68rem !important; }
-  .dashboard-overview .count-timer { margin: 0 !important; flex-shrink: 0; }
+  .dashboard-overview .dday-details p { margin-top: 3px; font-size: 0.68rem; }
+  .dashboard-overview .count-timer { margin: 0; flex-shrink: 0; }
   .dashboard-overview .count-timer-summary {
     display: inline-flex;
     align-items: center;

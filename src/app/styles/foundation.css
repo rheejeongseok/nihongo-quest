@@ -128,8 +128,8 @@ h2 {
 }
 
 .nav-item.active {
-  color: #ffffff !important;
-  background: var(--accent-color) !important;
+  color: #ffffff;
+  background: var(--accent-color);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
@@ -191,10 +191,10 @@ h2 {
 
 /* 테마별 특수 다크 글래스 필터링 */
 :root[data-theme='cyber'] .glass-premium-card {
-  background: rgba(18, 19, 28, 0.85) !important; /* 다크 모드 시인성 확보를 위해 불투명도 0.85 극대화 */
-  border: 1.5px solid rgba(0, 240, 255, 0.25) !important;
+  background: rgba(18, 19, 28, 0.85); /* 다크 모드 시인성 확보를 위해 불투명도 0.85 극대화 */
+  border: 1.5px solid rgba(0, 240, 255, 0.25);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
-              inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+              inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 /* 3D 틸팅 무지개 광택 Sweep 가상요소 */

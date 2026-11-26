@@ -2,16 +2,16 @@
    15. D-DAY NEON GRADIENT FLOWING BORDER ANIMATION
    ======================================================== */
 .dday-countdown-card {
-  position: relative !important;
-  border: 2px solid transparent !important;
+  position: relative;
+  border: 2px solid transparent;
   background-image: 
     linear-gradient(var(--card-bg), var(--card-bg)), 
-    linear-gradient(90deg, #ff9494, #ffb37e, #a6cf98, #90b4fc, #b19ffb, #ff9494) !important;
-  background-origin: border-box !important;
-  background-clip: padding-box, border-box !important;
-  background-size: 200% 100% !important;
+    linear-gradient(90deg, #ff9494, #ffb37e, #a6cf98, #90b4fc, #b19ffb, #ff9494);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: 200% 100%;
   animation: borderMove 6s linear infinite !important;
-  box-shadow: 0 8px 32px rgba(84, 160, 255, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(84, 160, 255, 0.15);
   transition: box-shadow 0.3s ease !important;
 }
 
@@ -139,7 +139,7 @@
 
 .alphabet-cell.active .cell-char,
 .alphabet-cell.active .cell-roman {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 .alphabet-cell.empty {
@@ -495,30 +495,30 @@
 /* 📱 모바일 환경 오십음도 그리드 압축 최적화 (가로 스크롤 완전 억제) */
 @media (max-width: 768px) {
   .alphabet-grid {
-    gap: 6px !important;
+    gap: 6px;
   }
   
   .alphabet-cell {
-    min-height: 48px !important;
-    padding: 6px 4px !important;
-    border-radius: 8px !important;
+    min-height: 48px;
+    padding: 6px 4px;
+    border-radius: 8px;
   }
   
   .cell-char {
-    font-size: 1.15rem !important;
+    font-size: 1.15rem;
   }
   
   .cell-roman {
-    font-size: 0.58rem !important;
-    margin-top: 1px !important;
+    font-size: 0.58rem;
+    margin-top: 1px;
   }
   
   .alphabet-grid-container {
-    padding: 2px !important;
+    padding: 2px;
   }
 
 	.calligraphy-modal-body {
-		padding:0.4rem !important;
+		padding:0.4rem;
 	}
 
 	.beginner-tabs-container {
@@ -526,7 +526,7 @@
 	}
 
 	.beginner-tab-btn {
-		padding:0.4rem 0.4rem !important;
+		padding:0.4rem 0.4rem;
 	}
 }
 
