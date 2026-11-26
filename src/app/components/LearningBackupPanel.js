@@ -5,16 +5,16 @@ export default function LearningBackupPanel({ type, backup, expanded, onToggle }
   const noun = type === 'bookmarks' ? '단어' : '오답 복습 기록';
   const { backupCode, inputCode, setInputCode, exporting, importing,
     handleExportCode, handleImportCode, handleJsonExport, handleJsonImport } = backup;
-  return <div className="glass-premium-card rainbow-border sync-hub-premium-card" style={{ marginBottom: '32px' }}>
+  return <div className="glass-premium-card rainbow-border sync-hub-premium-card">
     <button type="button" className={`sync-hub-header${expanded ? ' expanded' : ''}`} onClick={onToggle}
-      aria-expanded={expanded} style={{ width: '100%', border: 0, background: 'none', color: 'inherit', textAlign: 'left', padding: 0, cursor: 'pointer' }}>
+      aria-expanded={expanded}>
       <div className="sync-hub-title-box">
-        <h3 className="sync-hub-title" style={{ margin: 0 }}>{label} 데이터 동기화 센터</h3>
-        <p className="sync-hub-desc" style={{ margin: '4px 0 0' }}>{type === 'bookmarks' ? '저장한 단어' : '복습 기록'}를 백업하거나 다른 기기의 데이터를 가져옵니다.</p>
+        <h3 className="sync-hub-title">{label} 데이터 동기화 센터</h3>
+        <p className="sync-hub-desc">{type === 'bookmarks' ? '저장한 단어' : '복습 기록'}를 백업하거나 다른 기기의 데이터를 가져옵니다.</p>
       </div>
       <span aria-hidden="true">{expanded ? '▴' : '▾'}</span>
     </button>
-    {expanded && <div className="sync-hub-grid" style={{ marginTop: '20px', borderTop: '1px solid var(--card-border)', paddingTop: '20px' }}>
+    {expanded && <div className="sync-hub-grid">
       <div className="sync-hub-section export-section">
         <h4 className="sync-section-title">📤 {label} 백업 코드 추출</h4>
         <p className="sync-section-desc">현재 {noun}를 텍스트 코드로 압축 복사하거나 파일로 다운로드합니다.</p>
@@ -39,7 +39,7 @@ export default function LearningBackupPanel({ type, backup, expanded, onToggle }
           <div className="file-import-box">
             <span className="file-import-label">JSON 백업 파일 복구:</span>
             <label className="file-upload-custom-btn">📂 파일 선택
-              <input type="file" accept=".json" onChange={handleJsonImport} style={{ display: 'none' }} />
+              <input type="file" accept=".json" onChange={handleJsonImport} hidden />
             </label>
           </div>
         </div>

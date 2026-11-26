@@ -46,7 +46,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="simple-ui" suppressHydrationWarning>
         <Header />
-        <main style={{ position: "relative", zIndex: 1 }}>{children}</main>
+        <main className="app-main">{children}</main>
         <AppToast />
         <PwaInstallPrompt />
         <ModalDragController />

@@ -62,27 +62,14 @@ export default function JlptTimer() {
   ];
 
   return (
-    <div className='count-timer' style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+    <div className="count-timer">
       <span className="count-timer-summary">D-{timeLeft.days}</span>
       {units.map((unit) => (
-        <div className="count-timer-unit" key={unit.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="count-timer-value" style={{
-            minWidth: '54px',
-            height: '54px',
-            background: 'var(--bg-secondary)',
-            border: `2px solid ${unit.color}`,
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.4rem',
-            fontWeight: '950',
-            color: unit.color,
-            boxShadow: `0 0 10px ${unit.color}22`
-          }}>
+        <div className="count-timer-unit" key={unit.label} style={{ '--unit-color': unit.color }}>
+          <div className="count-timer-value">
             {String(unit.value).padStart(2, '0')}
           </div>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '800', marginTop: '4px' }}>
+          <span className="count-timer-label">
             {unit.label}
           </span>
         </div>

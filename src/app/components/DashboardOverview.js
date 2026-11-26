@@ -13,36 +13,18 @@ export default function DashboardOverview({ targetLevel, examInfo, registrationI
       <div className="glass-premium-card rainbow-border dday-countdown-card"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        style={{
-          marginBottom: '32px',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-          padding: '24px 30px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '20px'
-        }}
       >
-        <div className="dday-heading" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span className="dday-icon" style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))', animation: 'float 3s infinite' }}>📅</span>
+        <div className="dday-heading">
+          <span className="dday-icon">📅</span>
           <div className="dday-details">
-            <h4 className='count-title' style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h4 className="count-title">
               {targetLevel === 'BEGINNER' ? 'JLPT N5~N3 D-Day' : 'JLPT N1 D-Day'}
-              <span style={{
-                fontSize: '0.75rem',
-                background: 'rgba(84, 160, 255, 0.1)',
-                color: '#54a0ff',
-                padding: '2px 8px',
-                borderRadius: '100px',
-                border: '1px solid rgba(84, 160, 255, 0.2)',
-                fontWeight: '800'
-              }}>
+              <span className="dday-exam-type">
                 {examInfo.type}
               </span>
             </h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '600' }}>
-              <span className="dday-date-prefix">목표 시험 일시: </span><strong style={{ color: 'var(--accent-color)' }}>{examInfo.dateStr} 13:10</strong>
+            <p className="dday-date">
+              <span className="dday-date-prefix">목표 시험 일시: </span><strong>{examInfo.dateStr} 13:10</strong>
             </p>
           </div>
         </div>

@@ -1,0 +1,43 @@
+/* 메인 화면 부품: 데이터 없음 안내, D-Day 카드, 시험 카운트다운, 코스 카드 색, 사지선다 보기, 백업 패널 */
+.app-main { position: relative; z-index: 1; }
+.quest-home { min-height: calc(100vh - 5rem); }
+
+/* 학습 데이터가 비어 있을 때 */
+.db-empty { max-width: 650px; margin: 0 auto; padding: 48px 32px; border: 2px dashed var(--card-border); border-radius: var(--custom-radius); background: var(--card-bg); box-shadow: var(--neon-glow); text-align: center; }
+.db-empty-icon { display: block; margin-bottom: 20px; font-size: 4rem; animation: pulse 2s infinite; }
+.db-empty h2 { margin-bottom: 16px; font-size: 1.6rem; font-weight: 700; }
+.db-empty-lead { margin-bottom: 32px; color: var(--text-secondary); font-size: .95rem; line-height: 1.7; }
+.db-empty-note { color: var(--text-secondary); line-height: 1.6; }
+
+/* JLPT D-Day 카드 */
+.dday-countdown-card { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 32px; padding: 24px 30px; background: linear-gradient(135deg, rgba(255, 255, 255, .04) 0%, rgba(255, 255, 255, .01) 100%); }
+.dday-heading { display: flex; align-items: center; gap: 16px; }
+.dday-icon { font-size: 2.5rem; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .2)); animation: float 3s infinite; }
+.dday-countdown-card .count-title { display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-size: 1.15rem; font-weight: 900; }
+.dday-exam-type { padding: 2px 8px; border: 1px solid rgba(84, 160, 255, .2); border-radius: 100px; background: rgba(84, 160, 255, .1); color: #54a0ff; font-size: .75rem; font-weight: 800; }
+.dday-date { margin-top: 4px; color: var(--text-secondary); font-size: .85rem; font-weight: 600; }
+.dday-date strong { color: var(--accent-color); }
+
+/* 시험까지 남은 일·시·분·초 (색은 칸마다 --unit-color) */
+.count-timer { display: flex; align-items: center; gap: 12px; }
+.count-timer-unit { display: flex; flex-direction: column; align-items: center; }
+.count-timer-value {
+  display: flex; align-items: center; justify-content: center; min-width: 54px; height: 54px; border: 2px solid var(--unit-color); border-radius: 8px;
+  background: var(--bg-secondary); color: var(--unit-color); font-size: 1.4rem; font-weight: 950; box-shadow: 0 0 10px color-mix(in srgb, var(--unit-color) 13.3%, transparent);
+}
+.count-timer-label { margin-top: 4px; color: var(--text-secondary); font-size: .7rem; font-weight: 800; }
+
+/* 코스 카드: 코스마다 다른 색(--course-color) */
+.arena-card-wrapper { box-shadow: 0 8px 30px rgba(0, 0, 0, .02), 0 0 20px color-mix(in srgb, var(--course-color) 3.9%, transparent); }
+.arena-card-badge { border: 1px solid color-mix(in srgb, var(--course-color) 40%, transparent); background: color-mix(in srgb, var(--course-color) 13.3%, transparent); color: var(--course-color); }
+
+/* 사지선다 보기 */
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.option-btn { overflow: hidden; padding: 10px 14px; font-size: .8rem; text-align: left; text-overflow: ellipsis; white-space: normal; word-break: keep-all; }
+
+/* 백업(동기화) 패널 */
+.sync-hub-premium-card { margin-bottom: 32px; }
+.sync-hub-header { width: 100%; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
+.sync-hub-title { margin: 0; }
+.sync-hub-desc { margin: 4px 0 0; }
+.sync-hub-grid { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--card-border); }

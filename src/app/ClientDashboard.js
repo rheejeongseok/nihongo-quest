@@ -439,7 +439,7 @@ export default function ClientDashboard() {
                 : '일본의 오늘을 읽으며, 문맥 속 어휘를 익혀 보세요.'}
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="news-head-actions">
             <span className={`nhk-status-badge ${targetLevel === 'BEGINNER' || newsSource === 'daily-rss' ? 'realtime' : 'fallback'}`}>
               {newsLoading
                 ? '불러오는 중'
@@ -459,24 +459,7 @@ export default function ClientDashboard() {
                 disabled={newsLoading || newsRefreshing}
                 title={targetLevel === 'BEGINNER' ? '회화 5개 다시 뽑기' : '저장된 뉴스에서 다시 뽑기'}
                 aria-label={targetLevel === 'BEGINNER' ? '회화 5개 다시 뽑기' : '뉴스 다시 뽑기'}
-                className="news-refresh-button"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '2rem',
-                  height: '2rem',
-                  borderRadius: '50%',
-                  border: '1.5px solid var(--card-border)',
-                  background: 'var(--bg-secondary)',
-                  color: 'var(--text-secondary)',
-                  cursor: (newsLoading || newsRefreshing) ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                  animation: newsRefreshing ? 'spin 0.8s linear infinite' : 'none',
-                  opacity: (newsLoading || newsRefreshing) ? 0.5 : 1
-                }}
+                className={`news-refresh-button${newsRefreshing ? ' spinning' : ''}`}
               >
                 ↻
               </button>
@@ -627,31 +610,16 @@ export default function ClientDashboard() {
 
                           {/* 딕테이션 훈련 슬롯 활성화 */}
                           {dictatingNews === idx && (
-                            <div className="fade-in" style={{
-                              background: 'rgba(255,255,255,0.02)',
-                              border: '1.5px dashed var(--card-border)',
-                              padding: '20px',
-                              borderRadius: '12px',
-                              marginBottom: '18px'
-                            }}>
-                              <h5 style={{ fontWeight: '900', fontSize: '0.9rem', marginBottom: '8px', color: 'var(--accent-color)' }}>
+                            <div className="fade-in dictation-box">
+                              <h5>
                                 ✍️ {targetLevel === 'BEGINNER' ? '왕초보 일상 회화' : 'N1 실시간 뉴스'} 받아쓰기
                               </h5>
-                              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.6' }}>
+                              <p className="dictation-guide">
                                 아래 지문을 귀로 잘 청취하고, 빈칸에 들어갈 기초 단어를 맞춰 적어 보세요!
                               </p>
 
                               {/* 빈칸 변환 원문 렌더링 */}
-                              <div style={{
-                                background: 'var(--bg-secondary)',
-                                padding: '14px 18px',
-                                borderRadius: '8px',
-                                fontSize: '0.95rem',
-                                color: 'var(--text-primary)',
-                                lineHeight: '1.8',
-                                marginBottom: '16px',
-                                borderLeft: '4px solid var(--accent-color)'
-                              }}>
+                              <div className="dictation-text">
                                 {(() => {
                                   let text = item.description;
                                   item.n1Words.forEach((wordObj, wIdx) => {
@@ -662,12 +630,12 @@ export default function ClientDashboard() {
                               </div>
 
                               {/* 주관식 빈칸 기입 란 */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <div className="dictation-blanks">
                                 {item.n1Words.map((wordObj, wIdx) => {
                                   const isInputCorrect = dictationCorrects[wIdx];
                                   return (
-                                    <div key={wIdx} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                                    <div key={wIdx} className="dictation-blank">
+                                      <span className="dictation-hint">
                                         [빈칸 {wIdx + 1}] 힌트: {wordObj.meaning} [{wordObj.reading}]
                                       </span>
                                       <input
@@ -676,24 +644,10 @@ export default function ClientDashboard() {
                                         disabled={dictationChecked}
                                         value={dictationInputs[wIdx] || ''}
                                         onChange={(e) => setDictationInputs(prev => ({ ...prev, [wIdx]: e.target.value }))}
-                                        style={{
-                                          padding: '6px 12px',
-                                          fontSize: '0.85rem',
-                                          border: `2px solid ${dictationChecked ? (isInputCorrect ? 'var(--accent-color)' : '#ff6b6b') : 'var(--card-border)'}`,
-                                          borderRadius: '6px',
-                                          background: 'var(--card-bg)',
-                                          color: 'var(--text-primary)',
-                                          outline: 'none',
-                                          flexGrow: 1,
-                                          maxWidth: '220px'
-                                        }}
+                                        className={`dictation-input${dictationChecked ? (isInputCorrect ? ' correct' : ' wrong') : ''}`}
                                       />
                                       {dictationChecked && (
-                                        <span style={{
-                                          fontSize: '0.8rem',
-                                          fontWeight: '800',
-                                          color: isInputCorrect ? 'var(--accent-color)' : '#ff6b6b'
-                                        }}>
+                                        <span className={`dictation-result${isInputCorrect ? ' correct' : ' wrong'}`}>
                                           {isInputCorrect ? '✓ 정답!' : `✗ 오답 (정답: ${wordObj.word})`}
                                         </span>
                                       )}
@@ -706,8 +660,7 @@ export default function ClientDashboard() {
                               {!dictationChecked ? (
                                 <button
                                   onClick={() => handleDictationSubmit(item)}
-                                  className="glow-btn"
-                                  style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
+                                  className="glow-btn dictation-action"
                                 >
                                   🔍 딕테이션 채점 및 제출
                                 </button>
@@ -718,8 +671,7 @@ export default function ClientDashboard() {
                                     setDictationInputs({});
                                     setDictationCorrects({});
                                   }}
-                                  className="outline-btn"
-                                  style={{ marginTop: '16px', padding: '8px 20px', fontSize: '0.8rem', cursor: 'pointer' }}
+                                  className="outline-btn dictation-action"
                                 >
                                   🔄 다시 훈련하기
                                 </button>
@@ -759,12 +711,7 @@ export default function ClientDashboard() {
 
       {/* 🚀 모바일 전용 아레나 팝업 트리거 단축 버튼 (하단 플로팅 고정 고도화 - React Portal로 스태킹 컨텍스트 완벽 이탈) */}
       {mounted && !isArenaModalOpen && createPortal(
-        <div className="mobile-only animate-scale mo-arena-btn" style={{
-          position: 'fixed',
-          bottom: 'max(12px, env(safe-area-inset-bottom))',
-          right: 'calc(max(12px, env(safe-area-inset-right)) + 60px)',
-          zIndex: 4100
-        }}>
+        <div className="mobile-only animate-scale mo-arena-btn">
           <button
             onClick={() => {
               const startStage = getDynamicStages()[0];
@@ -773,19 +720,6 @@ export default function ClientDashboard() {
             className="glass-neon-btn"
             aria-label="아레나 코스 선택"
             title="아레나 코스 선택"
-            style={{
-              width: '48px',
-              height: '48px',
-              justifyContent: 'center',
-              padding: 0,
-              fontSize: '1.4rem',
-              borderRadius: '100px',
-              boxShadow: 'var(--neon-glow)',
-              backdropFilter: 'blur(0.75rem)',
-              WebkitBackdropFilter: 'blur(0.75rem)',
-              background: 'var(--card-bg)',
-              border: '1.5px solid var(--accent-color)'
-            }}
           >
             <span aria-hidden="true">🏟️</span>
           </button>

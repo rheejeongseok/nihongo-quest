@@ -224,7 +224,7 @@ export default function Header() {
         </nav>
 
         {/* 우측 유틸리티 영역 (PC 전용) */}
-        <div className="header-btns pc-only" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="header-btns pc-only">
           {/* ⚡ 글로벌 등급 전환 캡슐 기어 */}
           <div className="target-level-pill-switch" role="group" aria-label="학습 트랙 선택">
             {[['N1', 'N1 마스터'], ['BEGINNER', '초보 스타터']].map(([level, label]) =>
@@ -242,15 +242,12 @@ export default function Header() {
           </button>
 
 					{/* 🛠️ [PC 전용 설정 및 학습 도구 통합 드롭다운] */}
-          <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+          <div className="tools-menu" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setIsToolsOpen(!isToolsOpen)}
-              className="header-premium-btn"
+              className="header-premium-btn tools-toggle"
               aria-expanded={isToolsOpen}
-              style={{
-                borderColor: THEMES.find(t => t.id === currentTheme)?.color || 'var(--card-border)',
-                boxShadow: isToolsOpen ? 'var(--neon-glow)' : 'none'
-              }}
+              style={{ '--theme-color': THEMES.find(t => t.id === currentTheme)?.color }}
             >
               <span className="tools-label-full">설정 & 학습 도구</span>
               <span className="tools-label-short">학습 도구</span>
@@ -260,47 +257,20 @@ export default function Header() {
             </button>
 
             {isToolsOpen && (
-              <div className="tools-dropdown fade-in" style={{
-                position: 'absolute',
-                top: 'calc(100% + 0.5rem)',
-                right: 0,
-                background: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                borderRadius: 'var(--custom-radius)',
-                boxShadow: '0 0.75rem 1.875rem rgba(0,0,0,0.15)',
-                padding: '0.875rem',
-                minWidth: '15rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-                zIndex: 1000
-              }}>
+              <div className="tools-dropdown fade-in">
                 {/* 테마 선택 섹션 */}
                 <div>
-                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div className="tools-section-label">
                     <span>🎨</span> 인터페이스 테마
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem' }}>
+                  <div className="tools-choice-grid">
                     {THEMES.map((t) => (
                       <button
                         key={t.id}
                         onClick={() => changeTheme(t.id)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.375rem',
-                          padding: '0.4375rem 0.375rem',
-                          border: currentTheme === t.id ? `1.5px solid ${t.color}` : '1.5px solid var(--card-border)',
-                          background: currentTheme === t.id ? 'var(--bg-secondary)' : 'transparent',
-                          color: 'var(--text-primary)',
-                          borderRadius: '0.5rem',
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                          fontSize: '0.75rem',
-                          fontWeight: currentTheme === t.id ? '700' : '500',
-                          transition: 'all 0.2s ease',
-                        }}
+                        className={`tools-choice${currentTheme === t.id ? ' selected' : ''}`}
+                        aria-pressed={currentTheme === t.id}
+                        style={{ '--choice-color': t.color }}
                       >
                         <span>{t.emoji}</span>
                         <span>{t.name.split(' ')[0]}</span>
@@ -311,30 +281,16 @@ export default function Header() {
 
                 {/* 비주얼 컨셉 변경 섹션 */}
                 <div>
-                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div className="tools-section-label">
                     <span>🕹️</span> 비주얼 컨셉 모드
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem' }}>
+                  <div className="tools-choice-grid">
                     {CONCEPTS.map((c) => (
                       <button
                         key={c.id}
                         onClick={() => changeConcept(c.id)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.375rem',
-                          padding: '0.4375rem 0.375rem',
-                          border: currentConcept === c.id ? `1.5px solid var(--accent-color)` : '1.5px solid var(--card-border)',
-                          background: currentConcept === c.id ? 'var(--bg-secondary)' : 'transparent',
-                          color: 'var(--text-primary)',
-                          borderRadius: '0.5rem',
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                          fontSize: '0.75rem',
-                          fontWeight: currentConcept === c.id ? '700' : '500',
-                          transition: 'all 0.2s ease',
-                        }}
+                        className={`tools-choice${currentConcept === c.id ? ' selected' : ''}`}
+                        aria-pressed={currentConcept === c.id}
                       >
                         <span>{c.emoji}</span>
                         <span>{c.name.split(' ')[0]}</span>
@@ -344,14 +300,14 @@ export default function Header() {
                 </div>
 
                 {/* 구분선 */}
-                <div style={{ height: '1.2px', background: 'var(--card-border)', opacity: 0.7 }}></div>
+                <div className="tools-divider"></div>
 
                 {/* 일본어 학습 도구 섹션 */}
                 <div>
-                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div className="tools-section-label tight">
                     <span>📖</span> 일본어 학습 도구
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <div className="tools-link-list">
                     <Link href="/wrong-notes" className="tools-dropdown-item" onClick={() => setIsToolsOpen(false)}>
                       📓 오답노트 ➔
                     </Link>

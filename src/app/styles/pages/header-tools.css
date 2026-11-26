@@ -1,0 +1,21 @@
+/* PC 헤더 오른쪽: 설정 & 학습 도구 드롭다운 (Header.js) */
+.header-btns { display: flex; align-items: center; gap: .75rem; }
+.tools-menu { position: relative; }
+.tools-toggle { border-color: var(--theme-color, var(--card-border)); box-shadow: none; }
+.tools-toggle[aria-expanded="true"] { box-shadow: var(--neon-glow); }
+.tools-dropdown {
+  position: absolute; top: calc(100% + .5rem); right: 0; z-index: 1000; display: flex; flex-direction: column; gap: .75rem;
+  min-width: 15rem; padding: .875rem; border: 1px solid var(--card-border); border-radius: var(--custom-radius);
+  background: var(--card-bg); box-shadow: 0 .75rem 1.875rem rgba(0, 0, 0, .15);
+}
+.tools-section-label { display: flex; align-items: center; gap: .25rem; margin-bottom: .5rem; color: var(--text-secondary); font-size: .7rem; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+.tools-section-label.tight { margin-bottom: .375rem; }
+.tools-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .375rem; }
+.tools-choice {
+  display: flex; align-items: center; justify-content: center; gap: .375rem; padding: .4375rem .375rem;
+  border: 1.5px solid var(--card-border); border-radius: .5rem; background: transparent; color: var(--text-primary);
+  font-family: inherit; font-size: .75rem; font-weight: 500; cursor: pointer; transition: all .2s ease;
+}
+.tools-choice.selected { border-color: var(--choice-color, var(--accent-color)); background: var(--bg-secondary); font-weight: 700; }
+.tools-divider { height: 1.2px; background: var(--card-border); opacity: .7; }
+.tools-link-list { display: flex; flex-direction: column; gap: .25rem; }

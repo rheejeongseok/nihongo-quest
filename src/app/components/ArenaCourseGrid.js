@@ -34,9 +34,7 @@ export default function ArenaCourseGrid({ targetLevel, getDynamicStages, categor
                 className="glass-premium-card rainbow-border interactive-arena arena-card-wrapper"
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
-                style={{
-                  boxShadow: `0 8px 30px rgba(0, 0, 0, 0.02), 0 0 20px ${meta.color}0a`
-                }}
+                style={{ '--course-color': meta.color }}
               >
                 {/* 상단: 카테고리 정보 및 아이콘 */}
                 <div className="arena-card-body-wrapper">
@@ -44,11 +42,6 @@ export default function ArenaCourseGrid({ targetLevel, getDynamicStages, categor
                     <span className="arena-card-emoji">{stage.emoji || meta.emoji}</span>
                     <span
                       className="arena-card-badge"
-                      style={{
-                        background: `${meta.color}22`,
-                        color: meta.color,
-                        border: `1px solid ${meta.color}66`
-                      }}
                     >
                       {stage.category === 'KANA' ? '문자 입문' : stage.category === 'MOCK_EXAM' ? '실전 리허설' : dynamicLabel}
                     </span>
