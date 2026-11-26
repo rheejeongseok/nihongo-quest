@@ -7,7 +7,7 @@
 .word-modal-close { position: absolute; top: 20px; right: 20px; border: 0; background: none; color: var(--text-secondary); font-size: 1.2rem; font-weight: 900; cursor: pointer; }
 .word-modal-kicker { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
 .word-modal-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
-.word-modal .word-modal-head h2 { margin: 0; color: var(--text-primary); font-size: 2.2rem; font-weight: 900; }
+.word-modal .word-modal-head h2.word-modal-word { margin: 0; color: var(--text-primary); font-size: 2.2rem; font-weight: 900; }
 .word-modal-reading { color: var(--text-secondary); font-size: 1.1rem; font-weight: 700; }
 .word-modal-meaning { margin-bottom: 24px; padding: 10px 16px; border-left: 4px solid var(--accent-color); border-radius: 8px; background: var(--bg-secondary); }
 .word-modal-label { display: block; color: var(--text-secondary); font-size: .75rem; font-weight: 800; text-transform: uppercase; }

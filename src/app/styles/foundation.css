@@ -92,12 +92,6 @@ h2 {
   text-decoration: none;
 }
 
-.logo-emoji {
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-  margin-top: -0.3rem; /* -5px → -0.3rem */
-  /* animation: pulse 3s infinite; */
-}
-
 .logo-text {
   font-size: 1.35rem;
   font-weight: 800;
@@ -106,11 +100,6 @@ h2 {
   background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%);
   background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-.logo-highlight {
-  color: var(--accent-color);
-  -webkit-text-fill-color: var(--accent-color);
 }
 
 .header-nav {
@@ -142,11 +131,6 @@ h2 {
   color: #ffffff !important;
   background: var(--accent-color) !important;
   box-shadow: 0 4px 12px var(--accent-glow);
-}
-
-.header-theme-wrapper {
-  display: flex;
-  align-items: center;
 }
 
 /* ========================================================
@@ -283,230 +267,15 @@ h2 {
 
 /* 대시보드 정보 그리드 */
 
-.card-header-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.card-title {
-  font-size: 1.2rem;
-  font-weight: 900;
-  margin-bottom: 4px;
-  color: var(--text-primary);
-}
-
-.card-desc {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.35;
-}
-
-.card-footer-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-top: auto; /* 자석처럼 카드 바닥에 고정 */
-  padding-top: 6px;
-}
-
-.card-stat-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  display: block;
-}
-
-.card-stat-label-small {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  display: block;
-  margin-top: 2px;
-}
-
-.card-stat-value {
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: var(--accent-color);
-  text-shadow: 0 2px 8px var(--accent-glow);
-}
-
-.card-stat-value.streak-color {
-  color: #ff6b6b;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.card-stat-unit {
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.card-stat-unit-text {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
 /* 스트릭 잔디 */
-.streak-grass-container {
-  display: flex;
-  gap: 4px;
-}
 
 /* ========================================================
    스마트 복습 & 단어 센터 퀵 버튼 스타일 (PC)
    ======================================================== */
-.study-hub-box {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  margin-top: auto;
-}
-
-.study-hub-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  border-radius: 10px;
-  text-decoration: none;
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  font-weight: 800;
-  transition: all 0.2s ease;
-}
-
-.wrong-hub {
-  background: rgba(255, 107, 107, 0.05);
-  border: 1.2px solid rgba(255, 107, 107, 0.18);
-}
-
-.wrong-hub:hover {
-  background: rgba(255, 107, 107, 0.12) !important;
-}
-
-.bookmark-hub {
-  background: rgba(85, 124, 85, 0.05);
-  border: 1.2px solid rgba(85, 124, 85, 0.18);
-}
-
-.bookmark-hub:hover {
-  background: rgba(85, 124, 85, 0.12) !important;
-}
-
-.study-hub-badge {
-  padding: 2px 8px;
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #ffffff;
-}
-
-.wrong-badge {
-  background: #ff6b6b;
-}
-
-.bookmark-badge {
-  background: var(--accent-color);
-}
-
-.streak-grass-node {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.streak-grass-node.active {
-  background: var(--accent-color);
-  box-shadow: var(--neon-glow);
-}
-
-.streak-grass-node.inactive {
-  background: rgba(255,255,255,0.05);
-}
 
 /* 배지 그룹 */
-.badge-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-  margin-bottom: 16px;
-}
-
-.custom-badge {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(4px);
-  color: var(--text-primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 100px;
-  border: 1px solid rgba(255,255,255,0.1);
-}
 
 /* 메달 섹션 */
-.medals-section {
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(4px);
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px dashed rgba(255,255,255,0.15);
-  margin-top: 8px;
-}
-
-.achievement-medals-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 6px;
-}
-
-.medals-sec-title {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.medal-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: help;
-  transition: all 0.2s;
-}
-
-.medal-emoji-wrapper {
-  font-size: 1.8rem;
-  padding: 4px;
-  border-radius: 50%;
-  border: 1.5px solid transparent;
-}
-
-.medal-emoji-wrapper.unlocked {
-  background: rgba(255, 159, 67, 0.15);
-  border: 1.5px solid #ff9f43;
-  box-shadow: 0 4px 10px rgba(255, 159, 67, 0.25);
-}
-
-.medal-label {
-  font-size: 0.65rem;
-  font-weight: 800;
-  margin-top: 4px;
-  color: var(--text-secondary);
-}
-
-.medal-label.unlocked {
-  color: var(--accent-color);
-}
 
 /* N1 실전 아레나 섹션 */
 .arena-section-container {

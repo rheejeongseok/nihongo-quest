@@ -13,7 +13,7 @@ export default function WordDetailModal({ selectedWord, setSelectedWord, speak }
         <span data-modal-drag-handle className="word-modal-kicker">⭐ 단어 상세 정보</span>
 
         <div className="word-modal-head">
-          <h2>{selectedWord.word}</h2>
+          <h2 className="word-modal-word">{selectedWord.word}</h2>
           <span className="word-modal-reading">[{selectedWord.reading}]</span>
         </div>
 

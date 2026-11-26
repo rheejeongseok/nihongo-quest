@@ -28,8 +28,6 @@
   outline: 3px solid rgba(255, 148, 148, 0.7);
   outline-offset: 3px;
 }
-
-.study-hub-short-label { display: none; }
 .dday-registration {
   flex-basis: 100%;
   display: flex;
@@ -73,19 +71,6 @@
     border-width: 1px !important;
     box-shadow: none !important;
   }
-  .dashboard-overview .card-title { font-size: 0.9rem; margin-bottom: 0; overflow-wrap: normal; }
-  .dashboard-overview .card-desc { display: none; }
-  .dashboard-overview .card-stat-value { font-size: 1.35rem; }
-  .dashboard-overview .card-stat-unit,
-  .dashboard-overview .card-stat-unit-text { font-size: 0.8rem; }
-  .dashboard-overview .card-stat-label,
-  .dashboard-overview .card-stat-label-small { font-size: 0.7rem; }
-  .dashboard-overview .streak-grass-node { width: 10px; height: 10px; border-radius: 3px; }
-  .dashboard-overview .study-hub-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-  .dashboard-overview .study-hub-item { padding: 8px; gap: 4px; font-size: 0.75rem; flex-wrap: wrap; }
-  .dashboard-overview .study-hub-badge { font-size: 0.65rem; padding: 2px 6px; white-space: nowrap; }
-  .dashboard-overview .study-hub-full-label { display: none; }
-  .dashboard-overview .study-hub-short-label { display: inline; }
   .arena-section-container { margin-top: 24px; }
   .arena-section-title { font-size: 1.15rem; margin-bottom: 14px; }
   .arena-cards-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
@@ -155,7 +140,6 @@
 .arena-section-container { margin-bottom: 24px; }
 .arena-card-title { margin-bottom: 8px; }
 .arena-card-desc { margin-top: 2px; }
-.nhk-news-raw-desc { line-height: 1.95 !important; letter-spacing: 0.015em; }
 .play-arena-grid :is(p, .options-grid button) { line-height: 1.85 !important; }
 .play-arena-grid .options-grid button { min-width: 0; gap: 8px; text-overflow: clip !important; }
 @media (min-width: 769px) {

@@ -50,7 +50,6 @@ body.simple-ui {
 :root body.simple-ui .library-page > div:first-child p { font-size: .85rem !important; line-height: 1.8 !important; }
 :root body.simple-ui .sync-hub-premium-card { padding: 18px 20px !important; margin-bottom: 24px !important; }
 :root body.simple-ui .sync-hub-header { gap: 12px; }
-:root body.simple-ui .sync-hub-icon { display: none; }
 :root body.simple-ui .sync-hub-title { font-size: .9rem !important; font-weight: 750 !important; }
 :root body.simple-ui .sync-hub-desc { font-size: .75rem !important; line-height: 1.7 !important; }
 :root body.simple-ui :is(.backup-code-preview,.sync-hub-section,.flashcard-example-box) { border-radius: 9px; background: var(--bg-secondary); box-shadow: none; }
@@ -63,9 +62,7 @@ body.simple-ui {
 :root body.simple-ui .flashcard-progress-bar-fill { background: var(--accent-color) !important; box-shadow: none !important; }
 :root body.simple-ui .stage-info-container { gap: 12px; flex-wrap: wrap; }
 :root body.simple-ui .stage-info-container > span { flex-wrap: wrap; }
-:root body.simple-ui .stage-info-container span[style*="border-radius"] { border-radius: 6px !important; box-shadow: none !important; animation: none !important; }
 :root body.simple-ui .practice-level-badge { background: var(--bg-secondary) !important; color: var(--accent-color) !important; border: 1px solid var(--card-border) !important; }
-:root body.simple-ui .stage-info-container span[style*="linear-gradient"] { background: var(--bg-secondary) !important; color: var(--accent-color) !important; }
 :root body.simple-ui .time-attack-control-card { background: var(--bg-secondary) !important; border: 1px solid var(--card-border) !important; border-radius: 10px !important; box-shadow: none !important; }
 :root body.simple-ui .play-arena-grid { gap: 20px !important; }
 :root body.simple-ui .play-arena-grid > div > .glass-premium-card { padding: 24px !important; }
@@ -84,8 +81,6 @@ body.simple-ui {
 :root body.simple-ui .calligraphy-modal-header h3 { font-size: 1rem !important; }
 :root body.simple-ui :is(.sync-toast-message-floating,.toast-container) { box-shadow: 0 6px 24px rgba(0,0,0,.12) !important; border-radius: 10px; }
 :root body.simple-ui :is(.pulse-ani,.pulse-dot,.flashcard-hint-text) { animation: none !important; }
-:root body.simple-ui [style*="animation: pulse"], .simple-ui [style*="animation: float"] { animation: none !important; }
-:root body.simple-ui canvas[style*="position: fixed"] { display: none; }
 :root body.simple-ui .pwa-install-button { box-shadow: none !important; background: var(--card-bg) !important; color: var(--text-primary) !important; border: 1px solid var(--card-border) !important; }
 :root:is([data-theme=cyber],[data-theme=neon-dream],[data-theme=nordic-frost]) .simple-ui { --button-on-accent: #10252b; }
 @media (max-width: 768px) {

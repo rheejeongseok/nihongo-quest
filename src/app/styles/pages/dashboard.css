@@ -4,7 +4,7 @@
 
 /* 학습 데이터가 비어 있을 때 */
 .db-empty { max-width: 650px; margin: 0 auto; padding: 48px 32px; border: 2px dashed var(--card-border); border-radius: var(--custom-radius); background: var(--card-bg); box-shadow: var(--neon-glow); text-align: center; }
-.db-empty-icon { display: block; margin-bottom: 20px; font-size: 4rem; animation: pulse 2s infinite; }
+.db-empty-icon { display: block; margin-bottom: 20px; font-size: 4rem; }
 .db-empty h2 { margin-bottom: 16px; font-size: 1.6rem; font-weight: 700; }
 .db-empty-lead { margin-bottom: 32px; color: var(--text-secondary); font-size: .95rem; line-height: 1.7; }
 .db-empty-note { color: var(--text-secondary); line-height: 1.6; }
@@ -12,7 +12,7 @@
 /* JLPT D-Day 카드 */
 .dday-countdown-card { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 32px; padding: 24px 30px; background: linear-gradient(135deg, rgba(255, 255, 255, .04) 0%, rgba(255, 255, 255, .01) 100%); }
 .dday-heading { display: flex; align-items: center; gap: 16px; }
-.dday-icon { font-size: 2.5rem; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .2)); animation: float 3s infinite; }
+.dday-icon { font-size: 2.5rem; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .2)); }
 .dday-countdown-card .count-title { display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-size: 1.15rem; font-weight: 900; }
 .dday-exam-type { padding: 2px 8px; border: 1px solid rgba(84, 160, 255, .2); border-radius: 100px; background: rgba(84, 160, 255, .1); color: #54a0ff; font-size: .75rem; font-weight: 800; }
 .dday-date { margin-top: 4px; color: var(--text-secondary); font-size: .85rem; font-weight: 600; }

@@ -24,12 +24,6 @@
 	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.sync-hub-icon {
-  font-size: 2.2rem;
-  filter: drop-shadow(0 0 10px var(--accent-color));
-  animation: floatIcon 3s ease-in-out infinite;
-}
-
 @keyframes floatIcon {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
@@ -285,17 +279,6 @@
 /* ========================================================
    실시간 클라우드 닉네임 연동 & 스켈레톤 디자인 추가
    ======================================================== */
-.card-skeleton-pulse {
-  display: inline-block;
-  min-width: 140px;
-  height: 24px;
-  background: linear-gradient(90deg, var(--card-border) 25%, var(--bg-secondary) 50%, var(--card-border) 75%);
-  background-size: 200% 100%;
-  animation: card-skeleton-shimmer 1.5s infinite linear;
-  border-radius: 4px;
-  vertical-align: middle;
-  color: transparent !important;
-}
 
 @keyframes card-skeleton-shimmer {
   0% { background-position: 200% 0; }
